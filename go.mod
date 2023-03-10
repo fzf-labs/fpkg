@@ -1,6 +1,6 @@
 module futil
 
-go 1.19
+go 1.20
 
 require (
 	github.com/Timothylock/go-signin-with-apple v0.0.0-20220114155622-499fb6086c70

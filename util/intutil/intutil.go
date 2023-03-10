@@ -23,18 +23,15 @@ func Abs(a int) int {
 
 // RandInt 随机int
 func RandInt(min, max int) int {
-	rand.Seed(time.Now().UnixNano())
-	return min + rand.Intn(max-min)
+	return min + rand.New(rand.NewSource(time.Now().UnixNano())).Intn(max-min)
 }
 
 // RandInt64 随机int64
 func RandInt64(min, max int64) int64 {
-	rand.Seed(time.Now().UnixNano())
-	return min + rand.Int63n(max-min)
+	return min + rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(max-min)
 }
 
 // RandomIntWithSeed 在 [min, max) 处返回一个随机整数
 func RandomIntWithSeed(min, max int, seed int64) int {
-	rand.Seed(seed)
-	return min + rand.Intn(max-min)
+	return min + rand.New(rand.NewSource(time.Now().UnixNano())).Intn(max-min)
 }

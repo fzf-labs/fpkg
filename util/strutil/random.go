@@ -19,8 +19,7 @@ func Random(n int) string {
 	sl := len(str)
 	for i := 0; i < n; i++ {
 		// 1607400451937462000
-		rand.Seed(time.Now().UnixNano())
-		idx := rand.Intn(sl) // 0 - 25
+		idx := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(sl) // 0 - 25
 		cs[i] = str[idx]
 	}
 	return string(cs)
@@ -40,8 +39,7 @@ func RandomChars(n int, char ...string) string {
 	sl := len(str)
 	for i := 0; i < n; i++ {
 		// 1607400451937462000
-		rand.Seed(time.Now().UnixNano())
-		idx := rand.Intn(sl) // 0 - 25
+		idx := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(sl) // 0 - 25
 		cs[i] = str[idx]
 	}
 	return string(cs)
@@ -54,8 +52,7 @@ func RandomNumber(n int) string {
 	sl := len(str)
 	for i := 0; i < n; i++ {
 		// 1607400451937462000
-		rand.Seed(time.Now().UnixNano())
-		idx := rand.Intn(sl) // 0 - 25
+		idx := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(sl) // 0 - 25
 		cs[i] = str[idx]
 	}
 	return string(cs)

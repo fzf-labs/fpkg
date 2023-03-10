@@ -43,8 +43,7 @@ func clotheColor() string {
 	random[12] = "Pink"
 	random[13] = "Red"
 	random[14] = "White"
-	rand.Seed(time.Now().UnixNano())
-	return random[rand.Intn(15)]
+	return random[rand.New(rand.NewSource(time.Now().UnixNano())).Intn(15)]
 }
 
 func accessoriesType() string {
@@ -56,8 +55,7 @@ func accessoriesType() string {
 	random[4] = "Round"
 	random[5] = "Sunglasses"
 	random[6] = "Wayfarers"
-	rand.Seed(time.Now().UnixNano())
-	return random[rand.Intn(7)]
+	return random[rand.New(rand.NewSource(time.Now().UnixNano())).Intn(7)]
 }
 
 func avatarStyle() string {
@@ -78,8 +76,7 @@ func clotheType() string {
 	random[6] = "ShirtCrewNeck"
 	random[7] = "ShirtScoopNeck"
 	random[8] = "ShirtVNeck"
-	rand.Seed(time.Now().UnixNano())
-	return random[rand.Intn(9)]
+	return random[rand.New(rand.NewSource(time.Now().UnixNano())).Intn(9)]
 }
 
 func eyeType() string {
@@ -96,8 +93,7 @@ func eyeType() string {
 	random[9] = "Surprised"
 	random[10] = "Wink"
 	random[11] = "WinkWacky"
-	rand.Seed(time.Now().UnixNano())
-	return random[rand.Intn(12)]
+	return random[rand.New(rand.NewSource(time.Now().UnixNano())).Intn(12)]
 }
 
 func eyebrowType() string {
@@ -114,8 +110,7 @@ func eyebrowType() string {
 	random[9] = "UnibrowNatural"
 	random[10] = "UpDown"
 	random[11] = "UpDownNatural"
-	rand.Seed(time.Now().UnixNano())
-	return random[rand.Intn(12)]
+	return random[rand.New(rand.NewSource(time.Now().UnixNano())).Intn(12)]
 }
 
 func facialHairColor() string {
@@ -128,8 +123,7 @@ func facialHairColor() string {
 	random[5] = "BrownDark"
 	random[6] = "Platinum"
 	random[7] = "Red"
-	rand.Seed(time.Now().UnixNano())
-	return random[rand.Intn(8)]
+	return random[rand.New(rand.NewSource(time.Now().UnixNano())).Intn(8)]
 }
 
 func facialHairType() string {
@@ -140,8 +134,7 @@ func facialHairType() string {
 	random[3] = "BeardMajestic"
 	random[4] = "MoustacheFancy"
 	random[5] = "MoustacheMagnum"
-	rand.Seed(time.Now().UnixNano())
-	return random[rand.Intn(6)]
+	return random[rand.New(rand.NewSource(time.Now().UnixNano())).Intn(6)]
 }
 
 func hairColor() string {
@@ -157,8 +150,7 @@ func hairColor() string {
 	random[8] = "Platinum"
 	random[9] = "Red"
 	random[10] = "SilverGray"
-	rand.Seed(time.Now().UnixNano())
-	return random[rand.Intn(11)]
+	return random[rand.New(rand.NewSource(time.Now().UnixNano())).Intn(11)]
 }
 
 func hatColor() string {
@@ -178,8 +170,7 @@ func hatColor() string {
 	random[12] = "Pink"
 	random[13] = "Red"
 	random[14] = "White"
-	rand.Seed(time.Now().UnixNano())
-	return random[rand.Intn(15)]
+	return random[rand.New(rand.NewSource(time.Now().UnixNano())).Intn(15)]
 }
 
 func mouthType() string {
@@ -196,8 +187,7 @@ func mouthType() string {
 	random[9] = "Tongue"
 	random[10] = "Twinkle"
 	random[11] = "Vomit"
-	rand.Seed(time.Now().UnixNano())
-	return random[rand.Intn(12)]
+	return random[rand.New(rand.NewSource(time.Now().UnixNano())).Intn(12)]
 }
 
 func skinColor() string {
@@ -209,8 +199,7 @@ func skinColor() string {
 	random[4] = "Brown"
 	random[5] = "DarkBrown"
 	random[6] = "Black"
-	rand.Seed(time.Now().UnixNano())
-	return random[rand.Intn(7)]
+	return random[rand.New(rand.NewSource(time.Now().UnixNano())).Intn(7)]
 }
 
 func topType() string {
@@ -250,6 +239,5 @@ func topType() string {
 	random[32] = "ShortHairSides"
 	random[33] = "ShortHairTheCaesar"
 	random[34] = "ShortHairTheCaesarSidePart"
-	rand.Seed(time.Now().UnixNano())
-	return random[rand.Intn(35)]
+	return random[rand.New(rand.NewSource(time.Now().UnixNano())).Intn(35)]
 }
