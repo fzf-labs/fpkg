@@ -1,3 +1,3 @@
-## futil
+## Futil
 
-futil是常用 Go 工具函数封装.
+`futil`是常用 Go 工具函数封装.
