@@ -12,8 +12,8 @@ import (
 	"time"
 )
 
-// MysqlConfig 配置
-type MysqlConfig struct {
+// GormMysqlConfig 配置
+type GormMysqlConfig struct {
 	DataSourceName  string        `json:"DataSourceName"`
 	MaxIdleConn     int           `json:"MaxIdleConn"`
 	MaxOpenConn     int           `json:"MaxOpenConn"`
@@ -22,7 +22,8 @@ type MysqlConfig struct {
 	Tracing         bool          `json:"tracing"`
 }
 
-func NewMysql(cfg *MysqlConfig) (*gorm.DB, error) {
+// NewGormMysql 初始化gorm mysql 客户端
+func NewGormMysql(cfg *GormMysqlConfig) (*gorm.DB, error) {
 	sqlDB, err := sql.Open("mysql", cfg.DataSourceName)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("open mysql failed! err: %+v", err))
