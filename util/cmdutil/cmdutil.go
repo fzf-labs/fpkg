@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os/exec"
 	"runtime"
+	"strings"
 )
 
 // ExecCommand 执行cmd命令
@@ -24,6 +25,7 @@ func ExecCommand(command string) (stdout, stderr string, err error) {
 		stderr = errout.String()
 	}
 	stdout = out.String()
+	stdout = strings.Trim(stdout, "\n")
 	return
 }
 

@@ -122,8 +122,8 @@ func ReaderMimeType(r io.Reader) (mime string) {
 	return http.DetectContentType(buf[:n])
 }
 
-// ReaderMimeTypeByBytes 获取文件的mime和ext后缀(使用扩展包)
-func ReaderMimeTypeByBytes(r io.Reader) (mime string, ext string) {
+// ReaderMimeTypeAndExt 获取文件的mime和ext后缀(使用扩展包)
+func ReaderMimeTypeAndExt(r io.Reader) (mime string, ext string) {
 	reader, err := mimetype.DetectReader(r)
 	if err != nil {
 		return "", ""

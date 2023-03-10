@@ -56,6 +56,7 @@ func (a *AuthQq) GetState(state string) string {
 	return state
 }
 
+// AuthorizationCode
 // code -> accessToken
 // 文档：https://wiki.connect.qq.com/%E4%BD%BF%E7%94%A8authorization_code%E8%8E%B7%E5%8F%96access_token
 // 接口：https://graph.qq.com/oauth2.0/token
@@ -67,17 +68,18 @@ func (a *AuthQq) AuthorizationCode(code string) (*AccessToken, error) {
 		SetQueryParam("client_secret", a.config.ClientSecret).
 		SetQueryParam("code", code).
 		SetQueryParam("redirect_uri", a.config.RedirectUrl).
-		SetResult(&accessToken).
+		SetSuccessResult(&accessToken).
 		Get("https://graph.qq.com/oauth2.0/token")
 	if err != nil {
 		return nil, err
 	}
-	if resp.IsError() {
+	if resp.IsSuccessState() {
 		return nil, fmt.Errorf("http response err")
 	}
 	return &accessToken, nil
 }
 
+// GetOpenid
 // 文档：https://wiki.connect.qq.com/%E8%8E%B7%E5%8F%96%E7%94%A8%E6%88%B7openid_oauth2-0
 // 接口：https://graph.qq.com/oauth2.0/me
 func (a *AuthQq) GetOpenid(accessToken string) (client_id string, openid string, unionid string, err error) {
@@ -96,7 +98,7 @@ func (a *AuthQq) GetOpenid(accessToken string) (client_id string, openid string,
 	return
 }
 
-// 获取用户信息
+// GetUserInfo 获取用户信息
 // 文档：https://wiki.connect.qq.com/get_user_info
 // 接口：https://graph.qq.com/user/get_user_info
 func (a *AuthQq) GetUserInfo(accessToken string) (*UserInfo, error) {
@@ -139,6 +141,7 @@ func (a *AuthQq) GetUserInfo(accessToken string) (*UserInfo, error) {
 	return userInfo, nil
 }
 
+// GetUserInfoByCode
 // 根据code获取用户信息
 // 流程为先使用code换取accessToken，然后根据accessToken获取用户信息
 func (a *AuthQq) GetUserInfoByCode(code string) (*UserInfo, error) {

@@ -25,5 +25,5 @@ func KSUid() string { //2HhWuYvDuhvsOZWcVTujThVHPWf
 
 func KSUidByTime() string {
 	s, _ := ksuid.NewRandomWithTime(time.Now())
-	return strings.ToUpper(s.String())
+	return strings.ToLower(s.String())
 }

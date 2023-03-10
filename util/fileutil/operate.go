@@ -4,7 +4,9 @@ import (
 	"archive/zip"
 	"bufio"
 	"bytes"
+	"crypto/sha1"
 	"encoding/csv"
+	"encoding/hex"
 	"fmt"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
@@ -654,4 +656,14 @@ func Move(srcPath string, dstPath string) error {
 // Ext 文件扩展名
 func Ext(path string) string {
 	return strings.ToLower(filepath.Ext(path))
+}
+
+// Sha1 文件sha1值
+func Sha1(file io.Reader) (string, error) {
+	hash := sha1.New()
+	_, err := io.Copy(hash, file)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(hash.Sum(nil)), nil
 }

@@ -20,14 +20,15 @@ type SpeechResp struct {
 	Length     int    `json:"length"`
 }
 
+// GetWord 获取一言
 func GetWord() (word string, err error) {
 	var response SpeechResp
 	client := req.C()
-	resp, err := client.R().SetResult(&response).Post("https://v1.hitokoto.cn/?c=k")
+	resp, err := client.R().SetSuccessResult(&response).Post("https://v1.hitokoto.cn/?c=k")
 	if err != nil {
 		return "", err
 	}
-	if !resp.IsSuccess() {
+	if !resp.IsSuccessState() {
 		return "", fmt.Errorf("bad response status: %s", resp.Status)
 	}
 	word = response.Hitokoto

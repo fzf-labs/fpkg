@@ -1,7 +1,9 @@
 package iputil
 
 import (
+	"encoding/json"
 	"github.com/pkg/errors"
+	"io"
 	"math"
 	"net"
 	"net/http"
@@ -104,6 +106,43 @@ func GetLocalIp() string {
 		}
 	})
 	return localIP
+}
+
+type IPInfo struct {
+	Origin string `json:"origin"`
+}
+
+// GetPublicIPByHttp 获取公网ip
+func GetPublicIPByHttp() (string, error) {
+	resp, err := http.Get("http://httpbin.org/ip")
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var ipInfo IPInfo
+	err = json.Unmarshal(body, &ipInfo)
+	if err != nil {
+		return "", err
+	}
+
+	return ipInfo.Origin, nil
+}
+
+// GetPublicIP 获取公网ip
+func GetPublicIP() string {
+	conn, err := net.Dial("udp", "114.114.114.114:80")
+	if err != nil {
+		return ""
+	}
+	defer conn.Close()
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	return localAddr.IP.String()
 }
 
 // GetRealIP 获取真实IP
