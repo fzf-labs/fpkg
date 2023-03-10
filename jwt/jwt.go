@@ -2,7 +2,7 @@ package jwt
 
 import (
 	"context"
-	"futil/conv"
+	"github.com/fzf-labs/futil/conv"
 	"github.com/go-redis/redis/v8"
 	jwts "github.com/golang-jwt/jwt"
 	"github.com/pkg/errors"

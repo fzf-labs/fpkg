@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"futil/cache/collectioncache"
+	"github.com/fzf-labs/futil/cache/collectioncache"
 	"time"
 )
 

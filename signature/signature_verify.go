@@ -6,8 +6,8 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"futil/conv"
-	"futil/util/timeutil"
+	"github.com/fzf-labs/futil/conv"
+	"github.com/fzf-labs/futil/util/timeutil"
 	"strings"
 	"time"
 

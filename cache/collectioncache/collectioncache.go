@@ -2,7 +2,7 @@ package collectioncache
 
 import (
 	"container/list"
-	"futil/sync/singleflight"
+	"github.com/fzf-labs/futil/sync/singleflight"
 	"log"
 	"sync"
 	"sync/atomic"

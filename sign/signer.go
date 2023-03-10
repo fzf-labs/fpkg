@@ -2,7 +2,7 @@ package sign
 
 import (
 	"fmt"
-	"futil/util/strutil"
+	"github.com/fzf-labs/futil/util/strutil"
 	"net/url"
 	"sort"
 	"strconv"

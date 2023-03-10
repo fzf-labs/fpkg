@@ -1,7 +1,7 @@
 package gen
 
 import (
-	"futil/db"
+	"github.com/fzf-labs/futil/db"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"gorm.io/gen"

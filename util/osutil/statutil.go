@@ -2,9 +2,9 @@ package osutil
 
 import (
 	"fmt"
-	"futil/conv"
-	"futil/util/cmdutil"
-	"futil/util/iputil"
+	"github.com/fzf-labs/futil/conv"
+	"github.com/fzf-labs/futil/util/cmdutil"
+	"github.com/fzf-labs/futil/util/iputil"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/host"

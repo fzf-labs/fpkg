@@ -3,7 +3,7 @@ package qq
 import (
 	"encoding/json"
 	"fmt"
-	"futil/util/uuidutil"
+	"github.com/fzf-labs/futil/util/uuidutil"
 	"github.com/imroc/req/v3"
 	"github.com/tidwall/gjson"
 	"strconv"

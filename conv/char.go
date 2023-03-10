@@ -3,8 +3,8 @@ package conv
 import (
 	"encoding/json"
 	"fmt"
-	"futil/binary"
-	"futil/reflection"
+	"github.com/fzf-labs/futil/binary"
+	"github.com/fzf-labs/futil/reflection"
 	"math"
 	"reflect"
 	"strconv"

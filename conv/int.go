@@ -1,7 +1,7 @@
 package conv
 
 import (
-	"futil/binary"
+	"github.com/fzf-labs/futil/binary"
 	"strconv"
 )
 

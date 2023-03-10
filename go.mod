@@ -1,4 +1,4 @@
-module futil
+module github.com/fzf-labs/futil
 
 go 1.20
 

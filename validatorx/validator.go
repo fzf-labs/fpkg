@@ -2,7 +2,7 @@ package validatorx
 
 import (
 	"fmt"
-	"futil/validatorx/custom"
+	"github.com/fzf-labs/futil/validatorx/custom"
 	"github.com/go-playground/locales/en"
 	"github.com/go-playground/locales/zh"
 	ut "github.com/go-playground/universal-translator"

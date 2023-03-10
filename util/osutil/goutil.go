@@ -1,7 +1,7 @@
 package osutil
 
 import (
-	"futil/util/cmdutil"
+	"github.com/fzf-labs/futil/util/cmdutil"
 	"github.com/pkg/errors"
 	"regexp"
 	"runtime"

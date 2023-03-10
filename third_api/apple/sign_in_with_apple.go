@@ -3,8 +3,8 @@ package apple
 import (
 	"context"
 	"fmt"
-	"futil/util/strutil"
 	"github.com/Timothylock/go-signin-with-apple/apple"
+	"github.com/fzf-labs/futil/util/strutil"
 	"github.com/pyihe/apple_validator"
 )
 
