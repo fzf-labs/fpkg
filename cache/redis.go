@@ -7,17 +7,11 @@ import (
 	"strings"
 )
 
-type RedisConfig struct {
-	Host string
-	Pass string
-	Type string
-}
-
 // NewGoRedis 初始化go-redis客户端
-func NewGoRedis(cfg RedisConfig, db int) (*redis.Client, error) {
+func NewGoRedis(addr string, pass string, db int) (*redis.Client, error) {
 	Client := redis.NewClient(&redis.Options{
-		Addr:     cfg.Host,
-		Password: cfg.Pass,
+		Addr:     addr,
+		Password: pass,
 		DB:       db,
 	})
 	_, err := Client.Ping(context.Background()).Result()
