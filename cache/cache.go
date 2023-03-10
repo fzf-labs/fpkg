@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"github.com/coocood/freecache"
+	"futil/cache/collectioncache"
 	"github.com/dtm-labs/rockscache"
 	"time"
 )
@@ -38,28 +38,19 @@ func (p *Key) RocksCacheDel(rc *rockscache.Client) error {
 }
 
 // CollectionCache 进程内缓存生成
-func (p *Key) CollectionCache(fc *freecache.Cache, fn func() (string, error)) (string, error) {
-	fcRes, err := fc.Get([]byte(p.Key()))
-	if err != nil && err != freecache.ErrNotFound {
-		return "", err
-	}
-	if len(fcRes) > 0 {
-		return string(fcRes), nil
-	}
-	res, err := fn()
+func (p *Key) CollectionCache(cc *collectioncache.Cache, fn func() (string, error)) (string, error) {
+	take, err := cc.TakeWithExpire(p.Key(), p.TTL()/20, func() (interface{}, error) {
+		return fn()
+	})
 	if err != nil {
 		return "", err
 	}
-	err = fc.Set([]byte(p.Key()), []byte(res), p.TTLSecond()/20)
-	if err != nil {
-		return "", err
-	}
-	return res, nil
+	return take.(string), nil
 }
 
 // CollectionCacheDel 进程内缓存
-func (p *Key) CollectionCacheDel(fc *freecache.Cache) error {
-	fc.Del([]byte(p.Key()))
+func (p *Key) CollectionCacheDel(cc *collectioncache.Cache) error {
+	cc.Del(p.Key())
 	return nil
 }
 
@@ -67,28 +58,23 @@ func (p *Key) CollectionCacheDel(fc *freecache.Cache) error {
 // 1.查询进程内的缓存,有则返回,无则去获取rockscache.
 // 2.进程内缓存的过期时间请务必设置远小于redis.例小20倍
 // 3.进程内缓存在数据发生更新时,未做删除处理,所以请务必谨慎.(一般需要去做订阅redis的pub/sub)
-func (p *Key) CollectionRocksCache(fc *freecache.Cache, rc *rockscache.Client, fn func() (string, error)) (string, error) {
-	fcRes, err := fc.Get([]byte(p.Key()))
-	if err != nil && err != freecache.ErrNotFound {
-		return "", err
-	}
-	if len(fcRes) > 0 {
-		return string(fcRes), nil
-	}
-	rcRes, err := rc.Fetch(p.Key(), p.TTL(), fn)
+func (p *Key) CollectionRocksCache(cc *collectioncache.Cache, rc *rockscache.Client, fn func() (string, error)) (string, error) {
+	ccRes, err := cc.TakeWithExpire(p.Key(), p.TTL()/20, func() (interface{}, error) {
+		rcRes, err := rc.Fetch(p.Key(), p.TTL(), fn)
+		if err != nil {
+			return nil, err
+		}
+		return rcRes, nil
+	})
 	if err != nil {
 		return "", err
 	}
-	err = fc.Set([]byte(p.Key()), []byte(rcRes), p.TTLSecond()/20)
-	if err != nil {
-		return "", err
-	}
-	return rcRes, nil
+	return ccRes.(string), nil
 }
 
 // CollectionRocksCacheDel 进程内缓存
-func (p *Key) CollectionRocksCacheDel(fc *freecache.Cache, rc *rockscache.Client) error {
-	fc.Del([]byte(p.Key()))
+func (p *Key) CollectionRocksCacheDel(cc *collectioncache.Cache, rc *rockscache.Client) error {
+	cc.Del(p.Key())
 	err := rc.TagAsDeleted(p.Key())
 	if err != nil {
 		return err

@@ -48,7 +48,9 @@ require (
 	golang.org/x/text v0.7.0
 	golang.org/x/time v0.3.0
 	gorm.io/driver/mysql v1.4.7
+	gorm.io/gen v0.3.21
 	gorm.io/gorm v1.24.6
+	gorm.io/plugin/opentelemetry v0.1.1
 	gorm.io/sharding v0.5.3
 )
 
@@ -114,6 +116,7 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.38.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
+	go.opentelemetry.io/otel/metric v0.36.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/goleak v1.2.1 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
@@ -127,4 +130,7 @@ require (
 	gopkg.in/mail.v2 v2.3.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gorm.io/datatypes v1.0.7 // indirect
+	gorm.io/hints v1.1.1 // indirect
+	gorm.io/plugin/dbresolver v1.4.1 // indirect
 )

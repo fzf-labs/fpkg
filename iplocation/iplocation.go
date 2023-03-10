@@ -2,7 +2,7 @@ package iplocation
 
 import (
 	"fmt"
-	"futil/once"
+	"futil/sync/once"
 	"github.com/lionsoul2014/ip2region/binding/golang/xdb"
 )
 

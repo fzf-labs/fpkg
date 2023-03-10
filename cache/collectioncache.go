@@ -1,15 +1,20 @@
 package cache
 
-import "github.com/coocood/freecache"
-
-const (
-	defaultCacheSize = 1024 * 1024 * 100
+import (
+	"futil/cache/collectioncache"
+	"time"
 )
 
-func NewDefaultCollectionCache() *freecache.Cache {
-	return freecache.NewCache(defaultCacheSize)
+// NewDefaultCollectionCache 默认进程内缓存
+func NewDefaultCollectionCache() *collectioncache.Cache {
+	return NewCollectionCache("default", time.Minute, 10000)
 }
 
-func NewCollectionCache(size int) *freecache.Cache {
-	return freecache.NewCache(size)
+// NewCollectionCache 进程内缓存
+func NewCollectionCache(name string, duration time.Duration, limit int) *collectioncache.Cache {
+	cache, err := collectioncache.NewCache(duration, collectioncache.WithLimit(limit), collectioncache.WithName(name))
+	if err != nil {
+		panic("collectionCache err:" + err.Error())
+	}
+	return cache
 }

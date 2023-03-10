@@ -3,15 +3,26 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"futil/db/plugin/otelgorm"
 	"github.com/pkg/errors"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
+	"gorm.io/plugin/opentelemetry/tracing"
+	"time"
 )
 
-func NewGorm(cfg *MysqlConfig) (*gorm.DB, error) {
+// MysqlConfig 配置
+type MysqlConfig struct {
+	DataSourceName  string        `json:"DataSourceName"`
+	MaxIdleConn     int           `json:"MaxIdleConn"`
+	MaxOpenConn     int           `json:"MaxOpenConn"`
+	ConnMaxLifeTime time.Duration `json:"ConnMaxLifeTime"`
+	ShowLog         bool          `json:"ShowLog"`
+	Tracing         bool          `json:"tracing"`
+}
+
+func NewMysql(cfg *MysqlConfig) (*gorm.DB, error) {
 	sqlDB, err := sql.Open("mysql", cfg.DataSourceName)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("open mysql failed! err: %+v", err))
@@ -21,6 +32,7 @@ func NewGorm(cfg *MysqlConfig) (*gorm.DB, error) {
 	sqlDB.SetMaxOpenConns(cfg.MaxOpenConn)
 	// 用于设置闲置的连接数.设置闲置的连接数则当开启的一个连接使用完成后可以放在池里等候下一次使用。
 	sqlDB.SetMaxIdleConns(cfg.MaxIdleConn)
+	// 设置连接可以重复使用的最长时间.
 	sqlDB.SetConnMaxLifetime(cfg.ConnMaxLifeTime)
 	gormConfig := gorm.Config{
 		NamingStrategy: schema.NamingStrategy{SingularTable: true},
@@ -33,9 +45,10 @@ func NewGorm(cfg *MysqlConfig) (*gorm.DB, error) {
 		return nil, errors.New(fmt.Sprintf("database connection failed!  err: %+v", err))
 	}
 	db.Set("gorm:table_options", "CHARSET=utf8mb4")
-	err = db.Use(otelgorm.NewOtelPlugin())
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("OpenTracing new failed!  err: %+v", err))
+	if cfg.Tracing {
+		if err := db.Use(tracing.NewPlugin()); err != nil {
+			return nil, errors.New(fmt.Sprintf("db use tracing failed!  err: %+v", err))
+		}
 	}
 	return db, nil
 }

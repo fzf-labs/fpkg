@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// NewShardingPlugin 按雪花算法
 func NewShardingPlugin(table string, shardingKey string, num uint) *sharding.Sharding {
 	return sharding.Register(sharding.Config{
 		ShardingKey:         shardingKey,
