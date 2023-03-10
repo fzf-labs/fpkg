@@ -10,7 +10,6 @@ require (
 	github.com/apache/rocketmq-client-go/v2 v2.1.1
 	github.com/bytedance/sonic v1.8.3
 	github.com/casbin/casbin/v2 v2.51.2
-	github.com/coocood/freecache v1.2.3
 	github.com/dtm-labs/rockscache v0.1.0
 	github.com/gabriel-vasile/mimetype v1.4.1
 	github.com/go-mail/mail v2.3.1+incompatible
@@ -39,9 +38,6 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/teris-io/shortid v0.0.0-20220617161101-71ec9f2aa569
 	github.com/tidwall/gjson v1.14.2
-	go.opentelemetry.io/contrib v1.15.0
-	go.opentelemetry.io/otel v1.14.0
-	go.opentelemetry.io/otel/trace v1.14.0
 	go.uber.org/ratelimit v0.2.0
 	golang.org/x/crypto v0.6.0
 	golang.org/x/net v0.7.0
@@ -116,7 +112,9 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.38.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
+	go.opentelemetry.io/otel v1.14.0 // indirect
 	go.opentelemetry.io/otel/metric v0.36.0 // indirect
+	go.opentelemetry.io/otel/trace v1.14.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/goleak v1.2.1 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
