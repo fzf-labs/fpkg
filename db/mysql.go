@@ -19,7 +19,7 @@ type GormMysqlConfig struct {
 	MaxOpenConn     int           `json:"MaxOpenConn"`
 	ConnMaxLifeTime time.Duration `json:"ConnMaxLifeTime"`
 	ShowLog         bool          `json:"ShowLog"`
-	Tracing         bool          `json:"tracing"`
+	Tracing         bool          `json:"Tracing"`
 }
 
 // NewGormMysql 初始化gorm mysql 客户端

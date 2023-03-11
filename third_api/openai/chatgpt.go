@@ -44,6 +44,7 @@ type CompletionsResp struct {
 	} `json:"usage"`
 }
 
+// Completions  gpt3接口
 func (c *ChatGPT) Completions(msg string) (string, error) {
 	var result string
 	url := "https://api.openai.com/v1/completions"
@@ -101,6 +102,7 @@ type ChatCompletionsResp struct {
 	} `json:"usage"`
 }
 
+// ChatCompletions gpt3.5接口
 func (c *ChatGPT) ChatCompletions(messages []ChatMessage) (*ChatMessage, error) {
 	log.Println(messages)
 	var result *ChatMessage

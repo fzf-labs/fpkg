@@ -25,7 +25,7 @@ require (
 	github.com/imroc/req/v3 v3.33.1
 	github.com/klauspost/compress v1.15.15
 	github.com/lionsoul2014/ip2region/binding/golang v0.0.0-20220809014037-e2cef46748df
-	github.com/mssola/user_agent v0.5.3
+	github.com/mssola/useragent v1.0.0
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/petermattis/goid v0.0.0-20220712135657-ac599d9cba15
 	github.com/pkg/errors v0.9.1

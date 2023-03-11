@@ -13,7 +13,7 @@ var (
 	buildTime = "" // build date in ISO8601 format, output of $(date -u +'%Y-%m-%dT%H:%M:%SZ')
 )
 
-// Info contains versioning information.
+// Info 包含版本控制信息。
 type Info struct {
 	GitCommit string `json:"git_commit"`
 	GitBranch string `json:"git_branch"`
@@ -23,7 +23,7 @@ type Info struct {
 	Platform  string `json:"platform"`
 }
 
-// String returns info as a human-friendly version string.
+// String 人性化版本字符串返回信息。
 func (info *Info) String() string {
 	return fmt.Sprintf("%s (%s) [%s]", info.GitBranch, info.GitCommit, info.BuildTime)
 }
@@ -40,6 +40,7 @@ func Get() Info {
 	}
 }
 
+// Parse 格式化
 func Parse(b bool) {
 	if b {
 		ver := Get()

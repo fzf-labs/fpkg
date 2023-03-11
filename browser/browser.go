@@ -12,7 +12,10 @@ var commands = map[string]string{
 	"linux":   "xdg-open",
 }
 
-// Open 打开浏览器
+// Open
+// @Description: 打开浏览器
+// @param uri
+// @return error
 func Open(uri string) error {
 	run, ok := commands[runtime.GOOS]
 	if !ok {

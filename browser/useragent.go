@@ -1,6 +1,6 @@
-package userAgent
+package browser
 
-import "github.com/mssola/user_agent"
+import "github.com/mssola/useragent"
 
 type Ua struct {
 	Mozilla        string
@@ -15,8 +15,12 @@ type Ua struct {
 	BrowserVersion string
 }
 
-func UaSearch(s string) Ua {
-	ua := user_agent.New(s)
+// UaParse
+// @Description:
+// @param s
+// @return Ua
+func UaParse(s string) Ua {
+	ua := useragent.New(s)
 	var uaStruct Ua
 	uaStruct.Mozilla = ua.Mozilla()
 	uaStruct.Platform = ua.Platform()

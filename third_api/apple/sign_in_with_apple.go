@@ -23,6 +23,7 @@ type SignInWithApple struct {
 	Cfg *SignInWithAppleConfig
 }
 
+// NewSignInWithApple 初始化
 func NewSignInWithApple(cfg *SignInWithAppleConfig) *SignInWithApple {
 	return &SignInWithApple{Cfg: cfg}
 }

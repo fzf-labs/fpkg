@@ -31,7 +31,7 @@ type AccessToken struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-// 基本配置
+// AuthConfig 基本配置
 type AuthConfig struct {
 	ClientId     string
 	ClientSecret string
@@ -39,12 +39,12 @@ type AuthConfig struct {
 	ApplyUnionId string
 }
 
-// QQ授权登录
+// AuthQq QQ授权登录
 type AuthQq struct {
 	config *AuthConfig //配置信息
 }
 
-// QQ授权登录实例化
+// NewAuthQq QQ授权登录实例化
 func NewAuthQq(conf *AuthConfig) *AuthQq {
 	return &AuthQq{config: conf}
 }
@@ -56,7 +56,7 @@ func (a *AuthQq) GetState(state string) string {
 	return state
 }
 
-// AuthorizationCode
+// AuthorizationCode 获取accessToken
 // code -> accessToken
 // 文档：https://wiki.connect.qq.com/%E4%BD%BF%E7%94%A8authorization_code%E8%8E%B7%E5%8F%96access_token
 // 接口：https://graph.qq.com/oauth2.0/token
@@ -79,7 +79,7 @@ func (a *AuthQq) AuthorizationCode(code string) (*AccessToken, error) {
 	return &accessToken, nil
 }
 
-// GetOpenid
+// GetOpenid 获取openid
 // 文档：https://wiki.connect.qq.com/%E8%8E%B7%E5%8F%96%E7%94%A8%E6%88%B7openid_oauth2-0
 // 接口：https://graph.qq.com/oauth2.0/me
 func (a *AuthQq) GetOpenid(accessToken string) (client_id string, openid string, unionid string, err error) {

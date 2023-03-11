@@ -20,7 +20,7 @@ type SpeechResp struct {
 	Length     int    `json:"length"`
 }
 
-// GetWord 获取一言
+// GetWord 每日一言
 func GetWord() (word string, err error) {
 	var response SpeechResp
 	client := req.C()
