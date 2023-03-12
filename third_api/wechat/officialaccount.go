@@ -10,8 +10,8 @@ import (
 )
 
 type OfficialAccountConfig struct {
-	AppID     string `json:"AppId"`     //appid
-	AppSecret string `json:"AppSecret"` //appsecret
+	AppID     string `json:"AppId"`
+	AppSecret string `json:"AppSecret"`
 }
 
 var (
@@ -24,6 +24,7 @@ type OfficialAccount struct {
 	officialAccount *officialaccount.OfficialAccount
 }
 
+// NewOfficialAccount 实例化公众号
 func NewOfficialAccount(cfg *OfficialAccountConfig, cache *RedisCache) *OfficialAccount {
 	officialAccountOnce.Do(
 		func() {
@@ -50,6 +51,7 @@ func (oa *OfficialAccount) GetUserInfo(accessToken, openID string) (oauth.UserIn
 	return oa.officialAccount.GetOauth().GetUserInfo(accessToken, openID, "")
 }
 
+// GetQrcode 获取二维码
 func (oa *OfficialAccount) GetQrcode(SceneStr string) (string, error) {
 	ticket, err := oa.officialAccount.GetBasic().GetQRTicket(&basic.Request{
 		ExpireSeconds: 600,

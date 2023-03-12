@@ -4,11 +4,9 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"net/http"
+	"github.com/imroc/req/v3"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -45,7 +43,7 @@ func (f *FeiShu) SendMsg(msg string) error {
 	if err != nil {
 		return err
 	}
-	sendMsg := SendMsg{
+	param := SendMsg{
 		Timestamp: strconv.FormatInt(timestamp, 10),
 		Sign:      sign,
 		MsgType:   "text",
@@ -55,17 +53,13 @@ func (f *FeiShu) SendMsg(msg string) error {
 			Text: msg,
 		},
 	}
-	marshal, err := json.Marshal(sendMsg)
+	resp, err := req.R().SetBody(param).Post(f.cfg.Url)
 	if err != nil {
 		return err
 	}
-	// request
-	result, err := http.Post(f.cfg.Url, "application/json", strings.NewReader(string(marshal)))
-	if err != nil {
-		fmt.Printf("post failed, err:%v\n", err)
-		return err
+	if !resp.IsSuccessState() {
+		return fmt.Errorf("bad response status: %s", resp.Status)
 	}
-	defer result.Body.Close()
 	return nil
 }
 

@@ -24,6 +24,7 @@ type WxMiniProgram struct {
 	wxMiniProgram *miniprogram.MiniProgram
 }
 
+// NewMiniProgram 实例化小程序
 func NewMiniProgram(cfg *MiniProgramConfig, cache *RedisCache) *WxMiniProgram {
 	miniProgramOnce.Do(func() {
 		wc := wechat.NewWechat()
@@ -41,7 +42,8 @@ func NewMiniProgram(cfg *MiniProgramConfig, cache *RedisCache) *WxMiniProgram {
 	return &wxMiniProgram
 }
 
-func (w *WxMiniProgram) MiniGameUrlScheme(envVersion urlscheme.EnvVersion) (string, error) {
+// GetMiniUrlScheme 获取小程序UrlScheme
+func (w *WxMiniProgram) GetMiniUrlScheme(envVersion urlscheme.EnvVersion) (string, error) {
 	return w.wxMiniProgram.GetSURLScheme().Generate(&urlscheme.USParams{
 		JumpWxa: &urlscheme.JumpWxa{
 			Path:       "",
@@ -54,7 +56,8 @@ func (w *WxMiniProgram) MiniGameUrlScheme(envVersion urlscheme.EnvVersion) (stri
 	})
 }
 
-func (w *WxMiniProgram) MiniGameUrlLink(envVersion string) (string, error) {
+// GetMiniUrlLink 获取小程序UrlLink
+func (w *WxMiniProgram) GetMiniUrlLink(envVersion string) (string, error) {
 	return w.wxMiniProgram.GetURLLink().Generate(&urllink.ULParams{
 		Path:           "",
 		Query:          "",
