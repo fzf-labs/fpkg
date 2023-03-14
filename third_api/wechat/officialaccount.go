@@ -1,12 +1,13 @@
 package wechat
 
 import (
+	"sync"
+
 	"github.com/silenceper/wechat/v2"
 	"github.com/silenceper/wechat/v2/officialaccount"
 	"github.com/silenceper/wechat/v2/officialaccount/basic"
 	"github.com/silenceper/wechat/v2/officialaccount/config"
 	"github.com/silenceper/wechat/v2/officialaccount/oauth"
-	"sync"
 )
 
 type OfficialAccountConfig struct {

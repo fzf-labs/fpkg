@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-redis/redis/v8"
-	xrate "golang.org/x/time/rate"
+	xRate "golang.org/x/time/rate"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
 )
 
+// redis 实现的令牌桶
 const (
 	// to be compatible with aliyun redis, we cannot use `local key = KEYS[1]` to reuse the key
 	// KEYS[1] as tokens_key
@@ -44,7 +45,7 @@ return allowed`
 	pingInterval    = time.Millisecond * 100
 )
 
-// A RedisTokenBucket controls how frequently events are allowed to happen with in one second.
+// RedisTokenBucket 控制事件在一秒钟内发生的频率。
 type RedisTokenBucket struct {
 	rate           int // 每秒生成几个令牌
 	burst          int // 令牌桶最大值
@@ -53,12 +54,11 @@ type RedisTokenBucket struct {
 	timestampKey   string
 	rescueLock     sync.Mutex
 	redisAlive     uint32
-	rescueLimiter  *xrate.Limiter
+	rescueLimiter  *xRate.Limiter
 	monitorStarted bool
 }
 
-// NewTokenLimiter returns a new TokenLimiter that allows events up to rate and permits
-// bursts of at most burst tokens.
+// NewTokenLimiter 返回一个新的令牌限制器，该令牌限制器允许事件达到速率，并允许最多突发令牌的突发。
 func NewTokenLimiter(rate, burst int, store *redis.Client, key string) *RedisTokenBucket {
 	tokenKey := fmt.Sprintf(tokenFormat, key)
 	timestampKey := fmt.Sprintf(timestampFormat, key)
@@ -70,18 +70,16 @@ func NewTokenLimiter(rate, burst int, store *redis.Client, key string) *RedisTok
 		tokenKey:      tokenKey,
 		timestampKey:  timestampKey,
 		redisAlive:    1,
-		rescueLimiter: xrate.NewLimiter(xrate.Every(time.Second/time.Duration(rate)), burst),
+		rescueLimiter: xRate.NewLimiter(xRate.Every(time.Second/time.Duration(rate)), burst),
 	}
 }
 
-// Allow is shorthand for AllowN(time.Now(), 1).
+// Allow 是AllowN(time.Now()，1) 的简写。
 func (lim *RedisTokenBucket) Allow() bool {
 	return lim.AllowN(time.Now(), 1)
 }
 
-// AllowN reports whether n events may happen at time now.
-// Use this method if you intend to drop / skip events that exceed the rate rate.
-// Otherwise use Reserve or Wait.
+// AllowN 报告现在是否可能发生n个事件。如果您打算删除超出速率的跳过事件，请使用此方法。否则使用保留或等待。
 func (lim *RedisTokenBucket) AllowN(now time.Time, n int) bool {
 	return lim.reserveN(now, n)
 }
@@ -150,7 +148,6 @@ func (lim *RedisTokenBucket) waitForRedis() {
 	}()
 
 	for range ticker.C {
-		// TODO: optimize
 		val, _ := lim.store.Ping(context.Background()).Result()
 		if val == "PONG" {
 			atomic.StoreUint32(&lim.redisAlive, 1)
