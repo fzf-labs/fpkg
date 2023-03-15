@@ -1,5 +1,3 @@
-// Package errorx provide an enhanced error implements for go,
-// allow with stacktraces and wrap another error.
 package errx
 
 import (
