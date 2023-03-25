@@ -3,6 +3,7 @@ package sliutil
 import (
 	"bytes"
 	"fmt"
+	"golang.org/x/exp/constraints"
 	"math"
 	"math/rand"
 	"reflect"
@@ -64,6 +65,66 @@ func Chunk[T any](slice []T, size int) [][]T {
 	}
 
 	return result
+}
+
+// First 返回第一个元素，如果没有元素则返回零值。
+func First[T any](ss []T) T {
+	if len(ss) == 0 {
+		var zeroValue T
+		return zeroValue
+	}
+	return ss[0]
+}
+
+// Last 返回最后一个元素，如果没有元素则返回0值。
+func Last[T any](ss []T) T {
+	if len(ss) == 0 {
+		var zeroValue T
+		return zeroValue
+	}
+	return ss[len(ss)-1]
+}
+
+// Bottom 将从底部返回n个元素
+// 这意味着元素来自切片的末尾
+// 对于这个n == 2的[1,2,3]切片，将返回[3,2]
+// 如果切片的元素较少，那么n将返回所有元素
+// 如果n < 0，它将返回空切片。
+func Bottom[T any](ss []T, n int) (top []T) {
+	var lastIndex = len(ss) - 1
+	for i := lastIndex; i > -1 && n > 0; i-- {
+		top = append(top, ss[i])
+		n--
+	}
+
+	return
+}
+
+// DropTop DropTop会返回剩下的切片在去掉上面n个元素后如果切片的元素少于n那么它会返回空切片如果n < 0它会返回空切片。
+func DropTop[T any](ss []T, n int) (drop []T) {
+	if n < 0 || n >= len(ss) {
+		return
+	}
+
+	// Copy ss, to make sure no memory is overlapping between input and
+	// output. See issue #145.
+	drop = make([]T, len(ss)-n)
+	copy(drop, ss[n:])
+
+	return
+}
+
+// DropWhile 当f(item)为真时，从切片中删除项目。然后，返回每个元素，直到切片为空。它遵循与Python中itertools中的dropwhile()函数相同的逻辑。
+func DropWhile[T comparable](ss []T, f func(s T) bool) (ss2 []T) {
+	ss2 = make([]T, len(ss))
+	copy(ss2, ss)
+	for i, value := range ss2 {
+		if !f(value) {
+			return ss2[i:]
+		}
+	}
+
+	return []T{}
 }
 
 // Compact 创建一个删除零值( false、nil、0、"")的切片。
@@ -577,6 +638,25 @@ func UpdateAt[T any](slice []T, index int, value T) []T {
 	return slice
 }
 
+// Random 根据rand返回一个随机元素。源，或者零。
+func Random[T constraints.Integer | constraints.Float](ss []T, source rand.Source) T {
+	n := len(ss)
+
+	// Avoid the extra allocation.
+	if n < 1 {
+		return 0
+	}
+
+	if n < 2 {
+		return ss[0]
+	}
+
+	rnd := rand.New(source)
+	i := rnd.Intn(n)
+
+	return ss[i]
+}
+
 // Unique 删除切片中的重复元素。
 func Unique[T comparable](slice []T) []T {
 	if len(slice) == 0 {
@@ -713,6 +793,47 @@ func Shuffle[T any](slice []T) []T {
 	}
 
 	return result
+}
+
+// Sort 排序
+// Sort的工作原理类似于Sort . slicetype()。然而，不像sort。SliceType返回的切片将被重新分配，以不修改输入切片。
+func Sort[T constraints.Ordered](ss []T) []T {
+	//避免分配。如果有一个或更少的元素，它已经排序。
+	if len(ss) < 2 {
+		return ss
+	}
+
+	sorted := make([]T, len(ss))
+	copy(sorted, ss)
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i] < sorted[j]
+	})
+
+	return sorted
+}
+
+// SortUsing SortUsing的工作原理类似于sort.Slice。然而，不像sort。切片返回的切片将被重新分配，以不修改输入切片。
+func SortUsing[T any](ss []T, less func(a, b T) bool) []T {
+	// Avoid the allocation. If there is one element or less it is already
+	// sorted.
+	if len(ss) < 2 {
+		return ss
+	}
+
+	sorted := make([]T, len(ss))
+	copy(sorted, ss)
+	sort.Slice(sorted, func(i, j int) bool {
+		return less(sorted[i], sorted[j])
+	})
+
+	return sorted
+}
+
+// AreSorted 如果切片已经排序，AreSorted将返回true。它是一个包装器
+func AreSorted[T constraints.Ordered](ss []T) bool {
+	return sort.SliceIsSorted(ss, func(i, j int) bool {
+		return ss[i] < ss[j]
+	})
 }
 
 // SortByField 按字段返回排序的切片
