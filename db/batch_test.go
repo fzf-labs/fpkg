@@ -19,7 +19,7 @@ func TestBatchUpdateToSqlArray(t *testing.T) {
 	demo4 := &Demo{4, "xiexie", 13.0}
 	demo5 := &Demo{5, "OOP", 12.0}
 	demo = append(demo, demo1, demo2, demo3, demo4, demo5)
-	sqls, err := BatchUpdateToSqlArray("demo_tab", demo)
+	sqls, err := MysqlBatchUpdateToSqlArray("demo_tab", demo)
 	if err != nil {
 		t.Log(err)
 	}

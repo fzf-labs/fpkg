@@ -1,26 +1,24 @@
 package gen
 
 import (
-	"github.com/fzf-labs/fpkg/db"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"gorm.io/gen"
+	"gorm.io/gorm"
 	"strings"
 	"unicode"
 )
 
 type Config struct {
-	MysqlConfig  *db.GormMysqlConfig
 	OutPath      string
 	ModelPkgPath string
 }
 
-func Generation(conf Config) {
+func Generation(db *gorm.DB, conf Config) {
 	g := gen.NewGenerator(gen.Config{
 		OutPath:      conf.OutPath,
 		ModelPkgPath: conf.ModelPkgPath,
 	})
-	db, _ := db.NewGormMysql(conf.MysqlConfig)
 	g.UseDB(db)
 	g.WithDataTypeMap(dataMap)
 	g.WithJSONTagNameStrategy(func(c string) string {

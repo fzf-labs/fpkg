@@ -10,8 +10,8 @@ import (
 	"strings"
 )
 
-// BatchUpdateToSqlArray 批量更新
-func BatchUpdateToSqlArray(tableName string, dataList interface{}) ([]string, error) {
+// MysqlBatchUpdateToSqlArray 批量更新
+func MysqlBatchUpdateToSqlArray(tableName string, dataList interface{}) ([]string, error) {
 	//dataList 的数据类型
 	kind := reflect.TypeOf(dataList).Kind()
 	if kind != reflect.Slice {

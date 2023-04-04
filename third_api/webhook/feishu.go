@@ -27,7 +27,21 @@ func NewFeiShuByCfg(cfg *FeiShuConfig) *FeiShu {
 	return &FeiShu{cfg: cfg}
 }
 
-type SendMsg struct {
+func (f *FeiShu) GenSign(secret string, timestamp int64) (string, error) {
+	//timestamp + key 做sha256, 再进行base64 encode
+	stringToSign := fmt.Sprintf("%v", timestamp) + "\n" + secret
+
+	var data []byte
+	h := hmac.New(sha256.New, []byte(stringToSign))
+	_, err := h.Write(data)
+	if err != nil {
+		return "", err
+	}
+	signature := base64.StdEncoding.EncodeToString(h.Sum(nil))
+	return signature, nil
+}
+
+type SendText struct {
 	Timestamp string `json:"timestamp"`
 	Sign      string `json:"sign"`
 	MsgType   string `json:"msg_type"`
@@ -36,14 +50,14 @@ type SendMsg struct {
 	} `json:"content"`
 }
 
-// SendMsg 发送消息
-func (f *FeiShu) SendMsg(msg string) error {
+// SendText 发送文本消息
+func (f *FeiShu) SendText(msg string) error {
 	timestamp := time.Now().Unix()
 	sign, err := f.GenSign(f.cfg.Sign, timestamp)
 	if err != nil {
 		return err
 	}
-	param := SendMsg{
+	param := SendText{
 		Timestamp: strconv.FormatInt(timestamp, 10),
 		Sign:      sign,
 		MsgType:   "text",
@@ -63,16 +77,59 @@ func (f *FeiShu) SendMsg(msg string) error {
 	return nil
 }
 
-func (f *FeiShu) GenSign(secret string, timestamp int64) (string, error) {
-	//timestamp + key 做sha256, 再进行base64 encode
-	stringToSign := fmt.Sprintf("%v", timestamp) + "\n" + secret
+type SendInteractive struct {
+	Timestamp string `json:"timestamp"`
+	Sign      string `json:"sign"`
+	MsgType   string `json:"msg_type"`
+	Card      Card   `json:"card"`
+}
 
-	var data []byte
-	h := hmac.New(sha256.New, []byte(stringToSign))
-	_, err := h.Write(data)
+type Card struct {
+	Elements []struct {
+		Tag  string `json:"tag"`
+		Text struct {
+			Content string `json:"content"`
+			Tag     string `json:"tag"`
+		} `json:"text,omitempty"`
+		Actions []struct {
+			Tag  string `json:"tag"`
+			Text struct {
+				Content string `json:"content"`
+				Tag     string `json:"tag"`
+			} `json:"text"`
+			Url   string `json:"url"`
+			Type  string `json:"type"`
+			Value struct {
+			} `json:"value"`
+		} `json:"actions,omitempty"`
+	} `json:"elements"`
+	Header struct {
+		Title struct {
+			Content string `json:"content"`
+			Tag     string `json:"tag"`
+		} `json:"title"`
+	} `json:"header"`
+}
+
+// SendInteractive 发送消息卡片
+func (f *FeiShu) SendInteractive(card Card) error {
+	timestamp := time.Now().Unix()
+	sign, err := f.GenSign(f.cfg.Sign, timestamp)
 	if err != nil {
-		return "", err
+		return err
 	}
-	signature := base64.StdEncoding.EncodeToString(h.Sum(nil))
-	return signature, nil
+	param := SendInteractive{
+		Timestamp: strconv.FormatInt(timestamp, 10),
+		Sign:      sign,
+		MsgType:   "text",
+		Card:      card,
+	}
+	resp, err := req.R().SetBody(param).Post(f.cfg.Url)
+	if err != nil {
+		return err
+	}
+	if !resp.IsSuccessState() {
+		return fmt.Errorf("bad response status: %s", resp.Status)
+	}
+	return nil
 }

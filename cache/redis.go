@@ -3,17 +3,34 @@ package cache
 import (
 	"bufio"
 	"context"
+	"github.com/go-redis/redis/extra/redisotel/v8"
 	"github.com/go-redis/redis/v8"
 	"strings"
+	"time"
 )
 
+type GoRedisConfig struct {
+	Addr         string        `json:"addr"`
+	Password     string        `json:"password"`
+	DB           int           `json:"db"`
+	DialTimeout  time.Duration `json:"dialTimeout"`
+	WriteTimeout time.Duration `json:"writeTimeout"`
+	ReadTimeout  time.Duration `json:"readTimeout"`
+}
+
 // NewGoRedis 初始化go-redis客户端
-func NewGoRedis(addr string, pass string, db int) (*redis.Client, error) {
+func NewGoRedis(cfg GoRedisConfig) (*redis.Client, error) {
 	Client := redis.NewClient(&redis.Options{
-		Addr:     addr,
-		Password: pass,
-		DB:       db,
+		Addr:         cfg.Addr,
+		Password:     cfg.Password,
+		DB:           cfg.DB,
+		DialTimeout:  cfg.DialTimeout,
+		WriteTimeout: cfg.WriteTimeout,
+		ReadTimeout:  cfg.ReadTimeout,
 	})
+	//添加链路追踪
+	Client.AddHook(redisotel.NewTracingHook())
+	//ping 检测一下
 	_, err := Client.Ping(context.Background()).Result()
 	if err != nil {
 		return nil, err

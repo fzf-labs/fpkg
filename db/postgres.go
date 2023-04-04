@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/pkg/errors"
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
@@ -12,8 +12,8 @@ import (
 	"time"
 )
 
-// GormMysqlClientConfig 配置
-type GormMysqlClientConfig struct {
+// GormPostgresClientConfig 配置
+type GormPostgresClientConfig struct {
 	DataSourceName  string        `json:"DataSourceName"`
 	MaxIdleConn     int           `json:"MaxIdleConn"`
 	MaxOpenConn     int           `json:"MaxOpenConn"`
@@ -22,8 +22,8 @@ type GormMysqlClientConfig struct {
 	Tracing         bool          `json:"Tracing"`
 }
 
-// NewGormMysqlClient 初始化gorm mysql 客户端
-func NewGormMysqlClient(cfg *GormMysqlClientConfig) (*gorm.DB, error) {
+// NewGormPostgresClient 初始化gorm Postgres 客户端
+func NewGormPostgresClient(cfg *GormPostgresClientConfig) (*gorm.DB, error) {
 	sqlDB, err := sql.Open("mysql", cfg.DataSourceName)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("open mysql failed! err: %+v", err))
@@ -41,7 +41,7 @@ func NewGormMysqlClient(cfg *GormMysqlClientConfig) (*gorm.DB, error) {
 	if cfg.ShowLog {
 		gormConfig.Logger = logger.Default.LogMode(logger.Info)
 	}
-	db, err := gorm.Open(mysql.New(mysql.Config{Conn: sqlDB}), &gormConfig)
+	db, err := gorm.Open(postgres.New(postgres.Config{Conn: sqlDB}), &gormConfig)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("database connection failed!  err: %+v", err))
 	}
