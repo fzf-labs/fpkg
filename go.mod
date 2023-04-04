@@ -8,7 +8,7 @@ require (
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.4+incompatible
 	github.com/aliyunmq/mq-http-go-sdk v1.0.3
 	github.com/apache/rocketmq-client-go/v2 v2.1.1
-	github.com/bytedance/sonic v1.8.3
+	github.com/bytedance/sonic v1.8.7
 	github.com/casbin/casbin/v2 v2.51.2
 	github.com/dtm-labs/rockscache v0.1.0
 	github.com/gabriel-vasile/mimetype v1.4.1
@@ -45,6 +45,7 @@ require (
 	golang.org/x/text v0.7.0
 	golang.org/x/time v0.3.0
 	gorm.io/driver/mysql v1.4.7
+	gorm.io/driver/postgres v1.4.8
 	gorm.io/gen v0.3.21
 	gorm.io/gorm v1.24.6
 	gorm.io/plugin/opentelemetry v0.1.1
@@ -79,6 +80,8 @@ require (
 	github.com/google/pprof v0.0.0-20211214055906-6f57359322fd // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgx/v5 v5.3.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect

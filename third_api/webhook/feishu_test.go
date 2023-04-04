@@ -10,7 +10,7 @@ func TestFeiShu_SendMsg(t *testing.T) {
 		Url:  "",
 		Sign: "",
 	})
-	err := feiShu.SendMsg("测试")
+	err := feiShu.SendText("测试")
 	if err != nil {
 		return
 	}
