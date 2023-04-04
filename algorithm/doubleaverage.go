@@ -5,11 +5,7 @@ import (
 	"time"
 )
 
-// DoubleAverage
-// @Description: 二倍均值算法
-// @param amount
-// @param num
-// @return []float64
+// DoubleAverage 二倍均值算法 抢红包
 func DoubleAverage(amount float64, num int) []float64 {
 	result := make([]float64, num)
 	if num == 0 {

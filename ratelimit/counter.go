@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// @Description:  单机版计数器
-type counter struct {
+// Counter 单机版计数器
+type Counter struct {
 	rate  int           //限制值
 	count int           //计数值
 	begin time.Time     //计数开始时间
@@ -15,8 +15,8 @@ type counter struct {
 }
 
 // NewCounter 单机版计数器 构造函数
-func NewCounter(rate int, cycle time.Duration) *counter {
-	return &counter{
+func NewCounter(rate int, cycle time.Duration) *Counter {
+	return &Counter{
 		rate:  rate,
 		count: 0,
 		begin: time.Now(),
@@ -25,7 +25,7 @@ func NewCounter(rate int, cycle time.Duration) *counter {
 }
 
 // Allow 是否允许通过
-func (c *counter) Allow() bool {
+func (c *Counter) Allow() bool {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
