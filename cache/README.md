@@ -6,8 +6,7 @@
 
 ### 进程内缓存:
 
-freecache: https://github.com/coocood/freecache
-
+`github.com/zeromicro/go-zero/core/collection/cache`
 
 
 ### 一致性缓存:

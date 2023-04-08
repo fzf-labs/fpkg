@@ -7,7 +7,7 @@ import (
 // Handle 消费者业务方法
 type Handle func(string) error
 
-// 不同类型mq的实现接口
+// IMQ 不同类型mq的实现接口
 type IMQ interface {
 	// Publish 生产普通消息
 	Publish(b *BusinessConfig, msg string) error
