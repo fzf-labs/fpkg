@@ -9,15 +9,10 @@ import (
 	"unicode"
 )
 
-type Config struct {
-	OutPath      string
-	ModelPkgPath string
-}
-
-func Generation(db *gorm.DB, conf Config) {
+func Generation(db *gorm.DB, dataMap map[string]func(detailType string) (dataType string), outPath string, modelPkgPath string) {
 	g := gen.NewGenerator(gen.Config{
-		OutPath:      conf.OutPath,
-		ModelPkgPath: conf.ModelPkgPath,
+		OutPath:      outPath,
+		ModelPkgPath: modelPkgPath,
 	})
 	g.UseDB(db)
 	g.WithDataTypeMap(dataMap)
@@ -31,10 +26,13 @@ func Generation(db *gorm.DB, conf Config) {
 	g.Execute()
 }
 
-var dataMap = map[string]func(detailType string) (dataType string){
+var defaultMySqlDataMap = map[string]func(detailType string) (dataType string){
 	"int":     func(detailType string) (dataType string) { return "int64" },
 	"tinyint": func(detailType string) (dataType string) { return "int32" },
 	"json":    func(string) string { return "datatypes.JSON" },
+}
+var defaultPostgresDataMap = map[string]func(detailType string) (dataType string){
+	"json": func(string) string { return "datatypes.JSON" },
 }
 
 // UpperCamelCase 下划线单词转为大写驼峰单词

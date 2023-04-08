@@ -24,7 +24,7 @@ type GormPostgresClientConfig struct {
 
 // NewGormPostgresClient 初始化gorm Postgres 客户端
 func NewGormPostgresClient(cfg *GormPostgresClientConfig) (*gorm.DB, error) {
-	sqlDB, err := sql.Open("mysql", cfg.DataSourceName)
+	sqlDB, err := sql.Open("pgx", cfg.DataSourceName)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("open mysql failed! err: %+v", err))
 	}
@@ -43,7 +43,7 @@ func NewGormPostgresClient(cfg *GormPostgresClientConfig) (*gorm.DB, error) {
 	}
 	db, err := gorm.Open(postgres.New(postgres.Config{Conn: sqlDB}), &gormConfig)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("database connection failed!  err: %+v", err))
+		return nil, errors.New(fmt.Sprintf("postgres database connection failed!  err: %+v", err))
 	}
 	db.Set("gorm:table_options", "CHARSET=utf8mb4")
 	if cfg.Tracing {

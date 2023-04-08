@@ -43,7 +43,7 @@ func NewGormMysqlClient(cfg *GormMysqlClientConfig) (*gorm.DB, error) {
 	}
 	db, err := gorm.Open(mysql.New(mysql.Config{Conn: sqlDB}), &gormConfig)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("database connection failed!  err: %+v", err))
+		return nil, errors.New(fmt.Sprintf("mysql database connection failed!  err: %+v", err))
 	}
 	db.Set("gorm:table_options", "CHARSET=utf8mb4")
 	if cfg.Tracing {
