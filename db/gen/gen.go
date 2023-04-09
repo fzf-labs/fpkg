@@ -1,8 +1,11 @@
 package gen
 
 import (
+	"fmt"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gen"
 	"gorm.io/gorm"
 	"strings"
@@ -10,29 +13,57 @@ import (
 )
 
 func Generation(db *gorm.DB, dataMap map[string]func(detailType string) (dataType string), outPath string, modelPkgPath string) {
+	// 初始化
 	g := gen.NewGenerator(gen.Config{
 		OutPath:      outPath,
 		ModelPkgPath: modelPkgPath,
 	})
+	// 使用数据库
 	g.UseDB(db)
+	// 自定义字段类型映射
 	g.WithDataTypeMap(dataMap)
+	// json 小驼峰模型命名
 	g.WithJSONTagNameStrategy(func(c string) string {
 		return LowerCamelCase(c)
 	})
-	// generate all table from database
+	// 从数据库中生成所有表
 	g.ApplyBasic(g.GenerateAllTable()...)
-	// apply diy interfaces on structs or table models
+	// 在结构或表模型上应用diy接口
 	//g.ApplyInterface(func(model.Method) {}, g.GenerateModel("user"))
 	g.Execute()
 }
 
+// 默认mysql字段类型映射
 var defaultMySqlDataMap = map[string]func(detailType string) (dataType string){
 	"int":     func(detailType string) (dataType string) { return "int64" },
 	"tinyint": func(detailType string) (dataType string) { return "int32" },
 	"json":    func(string) string { return "datatypes.JSON" },
 }
+
+// 默认Postgres字段类型映射
 var defaultPostgresDataMap = map[string]func(detailType string) (dataType string){
 	"json": func(string) string { return "datatypes.JSON" },
+}
+
+// ConnectDB 数据库连接
+func ConnectDB(dbType string, dsn string) *gorm.DB {
+	var db *gorm.DB
+	var err error
+	switch dbType {
+	case "mysql":
+		db, err = gorm.Open(mysql.Open(dsn))
+		if err != nil {
+			panic(fmt.Errorf("connect mysql db fail: %s", err))
+		}
+	case "postgres":
+		db, err = gorm.Open(postgres.Open(dsn))
+		if err != nil {
+			panic(fmt.Errorf("connect postgres db fail: %s", err))
+		}
+	default:
+		panic(fmt.Errorf(" db type err"))
+	}
+	return db
 }
 
 // UpperCamelCase 下划线单词转为大写驼峰单词
