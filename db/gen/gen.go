@@ -33,15 +33,15 @@ func Generation(db *gorm.DB, dataMap map[string]func(detailType string) (dataTyp
 	g.Execute()
 }
 
-// 默认mysql字段类型映射
-var defaultMySqlDataMap = map[string]func(detailType string) (dataType string){
+// DefaultMySqlDataMap 默认mysql字段类型映射
+var DefaultMySqlDataMap = map[string]func(detailType string) (dataType string){
 	"int":     func(detailType string) (dataType string) { return "int64" },
 	"tinyint": func(detailType string) (dataType string) { return "int32" },
 	"json":    func(string) string { return "datatypes.JSON" },
 }
 
-// 默认Postgres字段类型映射
-var defaultPostgresDataMap = map[string]func(detailType string) (dataType string){
+// DefaultPostgresDataMap 默认Postgres字段类型映射
+var DefaultPostgresDataMap = map[string]func(detailType string) (dataType string){
 	"json": func(string) string { return "datatypes.JSON" },
 }
 

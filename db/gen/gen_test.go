@@ -17,7 +17,7 @@ func TestGenerationPostgres(t *testing.T) {
 	if err != nil {
 		return
 	}
-	Generation(client, defaultMySqlDataMap, "./", "./")
+	Generation(client, DefaultMySqlDataMap, "./", "./")
 }
 
 func TestGenerationMysql(t *testing.T) {
@@ -32,5 +32,5 @@ func TestGenerationMysql(t *testing.T) {
 	if err != nil {
 		return
 	}
-	Generation(client, defaultPostgresDataMap, "./", "./")
+	Generation(client, DefaultPostgresDataMap, "./", "./")
 }
