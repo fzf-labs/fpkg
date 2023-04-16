@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"github.com/dtm-labs/rockscache"
 	"github.com/fzf-labs/fpkg/cache/collectioncache"
 	"time"
@@ -28,13 +29,13 @@ func (p *Key) TTLSecond() int {
 }
 
 // RocksCache  rocks缓存生成
-func (p *Key) RocksCache(rc *rockscache.Client, fn func() (string, error)) (string, error) {
-	return rc.Fetch(p.Key(), p.TTL(), fn)
+func (p *Key) RocksCache(rc *rockscache.Client, ctx context.Context, fn func() (string, error)) (string, error) {
+	return rc.Fetch2(ctx, p.Key(), p.TTL(), fn)
 }
 
 // RocksCacheDel rocks缓存缓存删除
-func (p *Key) RocksCacheDel(rc *rockscache.Client) error {
-	return rc.TagAsDeleted(p.Key())
+func (p *Key) RocksCacheDel(rc *rockscache.Client, ctx context.Context) error {
+	return rc.TagAsDeleted2(ctx, p.Key())
 }
 
 // CollectionCache 进程内缓存生成
