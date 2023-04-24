@@ -1,4 +1,4 @@
-package cache
+package redis
 
 import (
 	"context"
@@ -53,9 +53,7 @@ func (rl *RedisLock) Acquire() (bool, error) {
 // AcquireCtx 使用给定的 ctx 获取锁。
 func (rl *RedisLock) AcquireCtx(ctx context.Context) (bool, error) {
 	seconds := atomic.LoadUint32(&rl.seconds)
-	resp, err := rl.store.Eval(ctx, lockCommand, []string{rl.key}, []string{
-		rl.id, strconv.Itoa(int(seconds)*millisPerSecond + tolerance),
-	}).Result()
+	resp, err := rl.store.Eval(ctx, lockCommand, []string{rl.key}, rl.id, strconv.Itoa(int(seconds)*millisPerSecond+tolerance)).Result()
 	if err == redis.Nil {
 		return false, nil
 	} else if err != nil {
@@ -81,7 +79,7 @@ func (rl *RedisLock) Release() (bool, error) {
 
 // ReleaseCtx 使用给定的 ctx 释放锁。
 func (rl *RedisLock) ReleaseCtx(ctx context.Context) (bool, error) {
-	resp, err := rl.store.Eval(ctx, delCommand, []string{rl.key}, []string{rl.id}).Result()
+	resp, err := rl.store.Eval(ctx, delCommand, []string{rl.key}, rl.id).Result()
 	if err != nil {
 		return false, err
 	}
