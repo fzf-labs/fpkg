@@ -1,8 +1,9 @@
 package conv
 
 import (
-	"github.com/fzf-labs/fpkg/binary"
 	"strconv"
+
+	"github.com/fzf-labs/fpkg/binary"
 )
 
 // Float32 converts `any` to float32.

@@ -3,12 +3,13 @@ package conv
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fzf-labs/fpkg/binary"
-	"github.com/fzf-labs/fpkg/reflection"
 	"math"
 	"reflect"
 	"strconv"
 	"time"
+
+	"github.com/fzf-labs/fpkg/binary"
+	"github.com/fzf-labs/fpkg/reflection"
 )
 
 // Byte converts `any` to byte.

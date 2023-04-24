@@ -3,7 +3,6 @@ package sliutil
 import (
 	"bytes"
 	"fmt"
-	"golang.org/x/exp/constraints"
 	"math"
 	"math/rand"
 	"reflect"
@@ -11,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"golang.org/x/exp/constraints"
 )
 
 // Contain 检查值是否在切片中

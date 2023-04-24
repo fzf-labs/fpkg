@@ -1,8 +1,9 @@
 package sliutil
 
 import (
-	"golang.org/x/exp/constraints"
 	"math"
+
+	"golang.org/x/exp/constraints"
 )
 
 // Sum 求和是所有元素的和。

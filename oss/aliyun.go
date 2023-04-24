@@ -1,10 +1,11 @@
 package oss
 
 import (
-	aliOssSdk "github.com/aliyun/aliyun-oss-go-sdk/oss"
-	"github.com/pkg/errors"
 	"io"
 	"strings"
+
+	aliOssSdk "github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"github.com/pkg/errors"
 )
 
 // AliConfig oss 上传配置

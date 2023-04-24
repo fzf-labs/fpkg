@@ -3,9 +3,10 @@ package ratelimit
 import (
 	"context"
 	"errors"
-	"github.com/go-redis/redis/v8"
 	"strconv"
 	"time"
+
+	"github.com/go-redis/redis/v8"
 )
 
 // redis 实现的滑动窗口

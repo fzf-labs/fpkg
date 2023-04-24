@@ -2,6 +2,7 @@ package iplocation
 
 import (
 	"fmt"
+
 	"github.com/fzf-labs/fpkg/sync/once"
 	"github.com/lionsoul2014/ip2region/binding/golang/xdb"
 )

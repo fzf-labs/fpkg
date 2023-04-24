@@ -2,10 +2,11 @@ package sign
 
 import (
 	"fmt"
-	"github.com/fzf-labs/fpkg/conv"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/fzf-labs/fpkg/conv"
 )
 
 // Verifier define struct

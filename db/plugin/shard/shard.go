@@ -1,8 +1,9 @@
 package shard
 
 import (
-	"gorm.io/sharding"
 	"time"
+
+	"gorm.io/sharding"
 )
 
 // NewShardingPlugin 按雪花算法

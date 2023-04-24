@@ -1,8 +1,9 @@
 package conv
 
 import (
-	"github.com/fzf-labs/fpkg/binary"
 	"strconv"
+
+	"github.com/fzf-labs/fpkg/binary"
 )
 
 // Int converts `any` to int.

@@ -2,6 +2,9 @@ package validatorx
 
 import (
 	"fmt"
+	"reflect"
+	"strings"
+
 	"github.com/fzf-labs/fpkg/validatorx/custom"
 	"github.com/go-playground/locales/en"
 	"github.com/go-playground/locales/zh"
@@ -10,8 +13,6 @@ import (
 	enTranslations "github.com/go-playground/validator/v10/translations/en"
 	zhTranslations "github.com/go-playground/validator/v10/translations/zh"
 	"github.com/pkg/errors"
-	"reflect"
-	"strings"
 )
 
 var Validator = NewValidator()

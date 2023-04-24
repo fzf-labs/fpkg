@@ -6,10 +6,11 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"github.com/fzf-labs/fpkg/conv"
-	"github.com/fzf-labs/fpkg/util/timeutil"
 	"strings"
 	"time"
+
+	"github.com/fzf-labs/fpkg/conv"
+	"github.com/fzf-labs/fpkg/util/timeutil"
 
 	"github.com/pkg/errors"
 )

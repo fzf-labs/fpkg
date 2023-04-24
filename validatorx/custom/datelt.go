@@ -1,8 +1,9 @@
 package custom
 
 import (
-	"github.com/go-playground/validator/v10"
 	"time"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type DateLt struct {

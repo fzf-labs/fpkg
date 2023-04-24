@@ -2,11 +2,12 @@ package collectioncache
 
 import (
 	"container/list"
-	"github.com/fzf-labs/fpkg/sync/singleflight"
 	"log"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/fzf-labs/fpkg/sync/singleflight"
 )
 
 const (

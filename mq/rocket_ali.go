@@ -1,12 +1,13 @@
 package mq
 
 import (
-	mq_http_sdk "github.com/aliyunmq/mq-http-go-sdk"
-	"github.com/gogap/errors"
 	"log"
 	"strings"
 	"sync"
 	"time"
+
+	mq_http_sdk "github.com/aliyunmq/mq-http-go-sdk"
+	"github.com/gogap/errors"
 )
 
 func NewRocketAli(cfg *RocketMqAliConfig) *RocketAli {

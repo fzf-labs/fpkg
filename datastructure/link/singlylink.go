@@ -2,8 +2,9 @@ package datastructure
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"reflect"
+
+	"github.com/pkg/errors"
 )
 
 // SinglyLink 单向链表

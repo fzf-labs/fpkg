@@ -3,12 +3,13 @@ package ratelimit
 import (
 	"context"
 	"fmt"
-	"github.com/go-redis/redis/v8"
-	xRate "golang.org/x/time/rate"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/go-redis/redis/v8"
+	xRate "golang.org/x/time/rate"
 )
 
 // redis 实现的令牌桶

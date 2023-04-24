@@ -3,11 +3,12 @@ package shard
 import (
 	"database/sql"
 	"fmt"
+	"testing"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
-	"testing"
 )
 
 func TestNewMonthShardingPlugin(t *testing.T) {

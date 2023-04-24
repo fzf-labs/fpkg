@@ -5,9 +5,10 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"github.com/imroc/req/v3"
 	"strconv"
 	"time"
+
+	"github.com/imroc/req/v3"
 )
 
 type FeiShuConfig struct {

@@ -3,6 +3,7 @@ package apple
 import (
 	"context"
 	"fmt"
+
 	"github.com/Timothylock/go-signin-with-apple/apple"
 	"github.com/fzf-labs/fpkg/util/strutil"
 	"github.com/pyihe/apple_validator"

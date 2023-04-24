@@ -2,12 +2,13 @@ package jwt
 
 import (
 	"context"
+	"strconv"
+	"time"
+
 	"github.com/fzf-labs/fpkg/conv"
 	"github.com/go-redis/redis/v8"
 	jwts "github.com/golang-jwt/jwt"
 	"github.com/pkg/errors"
-	"strconv"
-	"time"
 )
 
 var (

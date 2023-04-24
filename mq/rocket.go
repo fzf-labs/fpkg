@@ -2,14 +2,15 @@ package mq
 
 import (
 	"context"
+	"log"
+	"sync"
+	"time"
+
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/utils"
 	"github.com/apache/rocketmq-client-go/v2"
 	"github.com/apache/rocketmq-client-go/v2/consumer"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
 	"github.com/apache/rocketmq-client-go/v2/producer"
-	"log"
-	"sync"
-	"time"
 )
 
 // DelayTime 1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h

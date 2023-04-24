@@ -2,6 +2,7 @@ package datastructure
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 )
 
