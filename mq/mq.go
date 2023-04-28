@@ -1,8 +1,19 @@
 package mq
 
 import (
+	"context"
 	"time"
 )
+
+type Server interface {
+	Start()
+	Stop()
+}
+
+type ServerCtx interface {
+	Start(context.Context) error
+	Stop(context.Context) error
+}
 
 // Handle 消费者业务方法
 type Handle func(string) error

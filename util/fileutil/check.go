@@ -2,11 +2,12 @@ package fileutil
 
 import (
 	"bytes"
-	"github.com/gabriel-vasile/mimetype"
 	"io"
 	"net/http"
 	"os"
 	"path"
+
+	"github.com/gabriel-vasile/mimetype"
 )
 
 // PathExists 检查文件或目录是否存在。

@@ -3,7 +3,6 @@ package strutil
 import (
 	"bytes"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"regexp"
 	"strconv"
@@ -11,6 +10,8 @@ import (
 	"unicode"
 	"unicode/utf8"
 	"unsafe"
+
+	"github.com/pkg/errors"
 )
 
 // StrToLower 转换成小写字母

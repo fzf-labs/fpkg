@@ -8,8 +8,6 @@ import (
 	"encoding/csv"
 	"encoding/hex"
 	"fmt"
-	"golang.org/x/text/encoding/simplifiedchinese"
-	"golang.org/x/text/transform"
 	"io"
 	"io/fs"
 	"net/http"
@@ -18,6 +16,9 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 )
 
 // ************************************************************

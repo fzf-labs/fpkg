@@ -2,9 +2,10 @@ package recursivemutex
 
 import (
 	"fmt"
-	"github.com/petermattis/goid"
 	"sync"
 	"sync/atomic"
+
+	"github.com/petermattis/goid"
 )
 
 // RecursiveMutex 包装一个Mutex,实现可重入

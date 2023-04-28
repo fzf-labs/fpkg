@@ -1,12 +1,13 @@
 package wechat
 
 import (
+	"sync"
+
 	"github.com/silenceper/wechat/v2"
 	"github.com/silenceper/wechat/v2/miniprogram"
 	miniConfig "github.com/silenceper/wechat/v2/miniprogram/config"
 	"github.com/silenceper/wechat/v2/miniprogram/urllink"
 	"github.com/silenceper/wechat/v2/miniprogram/urlscheme"
-	"sync"
 )
 
 var (

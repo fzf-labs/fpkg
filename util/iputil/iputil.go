@@ -2,7 +2,6 @@ package iputil
 
 import (
 	"encoding/json"
-	"github.com/pkg/errors"
 	"io"
 	"math"
 	"net"
@@ -10,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/pkg/errors"
 )
 
 // IntranetIP 内网IP

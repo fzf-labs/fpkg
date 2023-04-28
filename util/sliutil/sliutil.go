@@ -3,7 +3,6 @@ package sliutil
 import (
 	"bytes"
 	"fmt"
-	"golang.org/x/exp/constraints"
 	"math"
 	"math/rand"
 	"reflect"
@@ -11,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"golang.org/x/exp/constraints"
 )
 
 // Contain 检查值是否在切片中
@@ -814,8 +815,6 @@ func Sort[T constraints.Ordered](ss []T) []T {
 
 // SortUsing SortUsing的工作原理类似于sort.Slice。然而，不像sort。切片返回的切片将被重新分配，以不修改输入切片。
 func SortUsing[T any](ss []T, less func(a, b T) bool) []T {
-	// Avoid the allocation. If there is one element or less it is already
-	// sorted.
 	if len(ss) < 2 {
 		return ss
 	}

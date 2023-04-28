@@ -1,10 +1,11 @@
 package ratelimit
 
 import (
-	rl "go.uber.org/ratelimit"
 	"math"
 	"sync"
 	"time"
+
+	rl "go.uber.org/ratelimit"
 )
 
 // LeakyBucket 单机版漏桶算法

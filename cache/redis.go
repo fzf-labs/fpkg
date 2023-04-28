@@ -3,10 +3,11 @@ package cache
 import (
 	"bufio"
 	"context"
-	"github.com/go-redis/redis/extra/redisotel/v8"
-	"github.com/go-redis/redis/v8"
 	"strings"
 	"time"
+
+	"github.com/go-redis/redis/extra/redisotel/v8"
+	"github.com/go-redis/redis/v8"
 )
 
 type GoRedisConfig struct {

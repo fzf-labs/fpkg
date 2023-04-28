@@ -1,13 +1,14 @@
 package bbr
 
 import (
-	"github.com/fzf-labs/fpkg/ratelimit/bbr/cpu"
-	"github.com/fzf-labs/fpkg/ratelimit/bbr/window"
-	"github.com/pkg/errors"
 	"math"
 	"runtime"
 	"sync/atomic"
 	"time"
+
+	"github.com/fzf-labs/fpkg/ratelimit/bbr/cpu"
+	"github.com/fzf-labs/fpkg/ratelimit/bbr/window"
+	"github.com/pkg/errors"
 )
 
 var (

@@ -1,9 +1,10 @@
 package oss
 
 import (
-	"github.com/segmentio/ksuid"
 	"strings"
 	"time"
+
+	"github.com/segmentio/ksuid"
 )
 
 func BuildNewNameAndPath(ext string, category ...string) (newFileName string, filePath string) {

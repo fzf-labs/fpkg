@@ -2,6 +2,11 @@ package osutil
 
 import (
 	"fmt"
+	"os"
+	"runtime"
+	"strconv"
+	"time"
+
 	"github.com/fzf-labs/fpkg/conv"
 	"github.com/fzf-labs/fpkg/util/cmdutil"
 	"github.com/fzf-labs/fpkg/util/iputil"
@@ -10,10 +15,6 @@ import (
 	"github.com/shirou/gopsutil/v3/host"
 	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/shirou/gopsutil/v3/process"
-	"os"
-	"runtime"
-	"strconv"
-	"time"
 )
 
 func GetFmtSize(data uint64) string {

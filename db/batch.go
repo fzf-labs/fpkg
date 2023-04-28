@@ -3,11 +3,12 @@ package db
 import (
 	"bytes"
 	"fmt"
-	"github.com/pkg/errors"
 	"math"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // MysqlBatchUpdateToSqlArray 批量更新

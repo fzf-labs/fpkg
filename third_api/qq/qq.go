@@ -3,11 +3,12 @@ package qq
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/fzf-labs/fpkg/util/uuidutil"
 	"github.com/imroc/req/v3"
 	"github.com/tidwall/gjson"
-	"strconv"
-	"strings"
 )
 
 type UserInfo struct {

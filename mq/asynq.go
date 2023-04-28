@@ -3,10 +3,11 @@ package mq
 import (
 	"context"
 	"fmt"
-	"github.com/hibiken/asynq"
 	"log"
 	"sync"
 	"time"
+
+	"github.com/hibiken/asynq"
 )
 
 type AsynqConfig struct {

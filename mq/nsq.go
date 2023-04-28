@@ -2,8 +2,6 @@ package mq
 
 import (
 	"encoding/json"
-	"github.com/nsqio/go-nsq"
-	"github.com/pkg/errors"
 	"io"
 	"log"
 	"math/rand"
@@ -11,6 +9,9 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/nsqio/go-nsq"
+	"github.com/pkg/errors"
 )
 
 type NSQ struct {

@@ -12,7 +12,8 @@
 
 基于 HTTP Header 中的两个参数 Authorization、Authorization-Date 存储签名信息。
 
-1. Authorization 存储签名信息，格式：调用方 KEY + 空格分隔符 + 摘要(加密串)，例如： Authorization:blog MjJjMDE1MWFkZjMwOWFmYjFlNzViNDFjYjYwMWFlMmM=
+1. Authorization 存储签名信息，格式：调用方 KEY + 空格分隔符 + 摘要(加密串)，例如： Authorization:blog
+   MjJjMDE1MWFkZjMwOWFmYjFlNzViNDFjYjYwMWFlMmM=
 2. Authorization-Date 存储时间信息，格式：0000-00-00 00:00:00，使用 Asia/Shanghai 时区，例如；
 
 Authorization-Date:2021-04-03 21:12:36

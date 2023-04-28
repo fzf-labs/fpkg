@@ -2,11 +2,12 @@ package timeutil
 
 import (
 	"fmt"
-	"github.com/golang-module/carbon/v2"
-	"github.com/pkg/errors"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/golang-module/carbon/v2"
+	"github.com/pkg/errors"
 )
 
 // TimeLayout 常用日期格式化模板

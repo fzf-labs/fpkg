@@ -3,13 +3,14 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"time"
+
 	"github.com/pkg/errors"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 	"gorm.io/plugin/opentelemetry/tracing"
-	"time"
 )
 
 // GormPostgresClientConfig 配置

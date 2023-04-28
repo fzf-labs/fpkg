@@ -2,8 +2,9 @@ package osutil
 
 import (
 	"fmt"
-	"github.com/shirou/gopsutil/v3/cpu"
 	"testing"
+
+	"github.com/shirou/gopsutil/v3/cpu"
 )
 
 func TestIsWindows(t *testing.T) {

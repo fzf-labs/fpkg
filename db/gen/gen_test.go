@@ -1,8 +1,9 @@
 package gen
 
 import (
-	"github.com/fzf-labs/fpkg/db"
 	"testing"
+
+	"github.com/fzf-labs/fpkg/db"
 )
 
 func TestGenerationPostgres(t *testing.T) {

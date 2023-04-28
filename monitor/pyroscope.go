@@ -2,6 +2,7 @@ package monitor
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/pyroscope-io/client/pyroscope"
 )

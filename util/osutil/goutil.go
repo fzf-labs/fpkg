@@ -1,11 +1,12 @@
 package osutil
 
 import (
-	"github.com/fzf-labs/fpkg/util/cmdutil"
-	"github.com/pkg/errors"
 	"regexp"
 	"runtime"
 	"strings"
+
+	"github.com/fzf-labs/fpkg/util/cmdutil"
+	"github.com/pkg/errors"
 )
 
 // GoVersion 获取go版本。例如：“1.18.2”

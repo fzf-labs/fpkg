@@ -2,11 +2,12 @@ package ziputil
 
 import (
 	azip "archive/zip"
-	"github.com/klauspost/compress/zip"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/klauspost/compress/zip"
 )
 
 func ZipFiles(filename string, files []string, oldForm, newForm string) error {

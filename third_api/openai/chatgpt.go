@@ -2,8 +2,9 @@ package openai
 
 import (
 	"fmt"
-	"github.com/imroc/req/v3"
 	"log"
+
+	"github.com/imroc/req/v3"
 )
 
 type ChatGPT struct {

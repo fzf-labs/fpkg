@@ -2,11 +2,12 @@ package jsonutil
 
 import (
 	"bytes"
-	"github.com/bytedance/sonic"
-	"github.com/bytedance/sonic/encoder"
 	"regexp"
 	"strings"
 	"text/scanner"
+
+	"github.com/bytedance/sonic"
+	"github.com/bytedance/sonic/encoder"
 )
 
 // EncodeSortMapKeys 编码,map排序

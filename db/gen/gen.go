@@ -2,14 +2,15 @@ package gen
 
 import (
 	"fmt"
+	"strings"
+	"unicode"
+
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gen"
 	"gorm.io/gorm"
-	"strings"
-	"unicode"
 )
 
 func Generation(db *gorm.DB, dataMap map[string]func(detailType string) (dataType string), outPath string, modelPkgPath string) {

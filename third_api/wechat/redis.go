@@ -2,8 +2,9 @@ package wechat
 
 import (
 	"context"
-	goRedis "github.com/go-redis/redis/v8"
 	"time"
+
+	goRedis "github.com/go-redis/redis/v8"
 )
 
 type RedisCache struct {

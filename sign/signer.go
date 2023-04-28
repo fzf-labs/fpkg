@@ -2,11 +2,12 @@ package sign
 
 import (
 	"fmt"
-	"github.com/fzf-labs/fpkg/util/strutil"
 	"net/url"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/fzf-labs/fpkg/util/strutil"
 )
 
 // CryptoFunc 签名加密函数
