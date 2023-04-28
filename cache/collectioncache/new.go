@@ -2,8 +2,6 @@ package collectioncache
 
 import (
 	"time"
-
-	"github.com/fzf-labs/fpkg/cache/collectioncache"
 )
 
 // NewDefaultCollectionCache 默认进程内缓存
