@@ -19,9 +19,9 @@ fmt:
 vet:
 	@go vet ./...
 
-.PHONY: ci-lint
-# make ci-lint  golang使用最多的第三方静态程序分析工具
-ci-lint:
+.PHONY: lint
+# make lint  golang使用最多的第三方静态程序分析工具
+lint:
 	@golangci-lint run ./...
 
 .PHONY: git-clean
