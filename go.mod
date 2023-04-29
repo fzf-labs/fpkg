@@ -8,7 +8,7 @@ require (
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.4+incompatible
 	github.com/aliyunmq/mq-http-go-sdk v1.0.3
 	github.com/apache/rocketmq-client-go/v2 v2.1.1
-	github.com/bytedance/sonic v1.8.7
+	github.com/bytedance/sonic v1.8.8
 	github.com/casbin/casbin/v2 v2.51.2
 	github.com/dtm-labs/rockscache v0.1.0
 	github.com/gabriel-vasile/mimetype v1.4.1
