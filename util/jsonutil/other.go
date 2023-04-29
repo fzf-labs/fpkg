@@ -5,33 +5,7 @@ import (
 	"regexp"
 	"strings"
 	"text/scanner"
-
-	"github.com/bytedance/sonic"
-	"github.com/bytedance/sonic/encoder"
 )
-
-// EncodeSortMapKeys 编码,map排序
-func EncodeSortMapKeys(v interface{}) ([]byte, error) {
-	return encoder.Encode(v, encoder.SortMapKeys)
-}
-
-// SortMapKeys 编码,json key 排序
-func SortMapKeys(v []byte) ([]byte, error) {
-	root, err := sonic.Get(v)
-	if err != nil {
-		return nil, err
-	}
-	err = root.SortKeys(false)
-	if err != nil {
-		return nil, err
-	}
-	return root.MarshalJSON()
-}
-
-// EncodeEscapeHTML 编码,去除html转义
-func EncodeEscapeHTML(v interface{}) ([]byte, error) {
-	return encoder.Encode(v, encoder.EscapeHTML)
-}
 
 // `(?s:` enable match multi line
 var jsonMLComments = regexp.MustCompile(`(?s:/\*.*?\*/\s*)`)
