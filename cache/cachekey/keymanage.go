@@ -2,27 +2,26 @@ package cachekey
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
-
-	"github.com/fzf-labs/fpkg/conv"
 )
 
-type KeyPrefixes struct {
+type KeyManage struct {
 	ServerName string
 	List       map[string]KeyPrefix
 }
 
 // NewKeyPrefixes 实例化缓存key前缀集合
-func NewKeyPrefixes(serverName string) *KeyPrefixes {
-	return &KeyPrefixes{
+func NewKeyPrefixes(serverName string) *KeyManage {
+	return &KeyManage{
 		ServerName: serverName,
 		List:       make(map[string]KeyPrefix),
 	}
 }
 
-// AddKeyPrefix 添加一个缓存prefix
-func (p *KeyPrefixes) AddKeyPrefix(prefix string, expirationTime time.Duration, remark string) *KeyPrefix {
+// AddKey 添加一个缓存key prefix
+func (p *KeyManage) AddKey(prefix string, expirationTime time.Duration, remark string) *KeyPrefix {
 	if _, ok := p.List[prefix]; ok {
 		panic(fmt.Sprintf("cache key %s is exsit, please change one", prefix))
 	}
@@ -37,12 +36,12 @@ func (p *KeyPrefixes) AddKeyPrefix(prefix string, expirationTime time.Duration, 
 }
 
 // Document 导出MD文档
-func (p *KeyPrefixes) Document() string {
+func (p *KeyManage) Document() string {
 	str := `|ServerName|PrefixName|TTL(s)|Remark` + "\n" + `|--|--|--|--|` + "\n"
 
 	if len(p.List) > 0 {
 		for _, m := range p.List {
-			str += `|` + p.ServerName + `|` + m.PrefixName + `|` + conv.String(m.ExpirationTime.Seconds()) + `|` + m.Remark + `|` + "\n"
+			str += `|` + p.ServerName + `|` + m.PrefixName + `|` + strconv.FormatFloat(m.ExpirationTime.Seconds(), 'f', -1, 64) + `|` + m.Remark + `|` + "\n"
 		}
 	}
 	return str
