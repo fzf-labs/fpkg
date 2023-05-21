@@ -62,7 +62,7 @@ func (p *KeyPrefix) BuildCacheKey(keys ...string) *Key {
 		keyPrefix: p,
 	}
 	if len(keys) == 0 {
-		cacheKey.buildKey = strings.Join(append([]string{p.ServerName, p.PrefixName}), ":")
+		cacheKey.buildKey = strings.Join([]string{p.ServerName, p.PrefixName}, ":")
 	} else {
 		cacheKey.buildKey = strings.Join(append([]string{p.ServerName, p.PrefixName}, keys...), ":")
 	}
