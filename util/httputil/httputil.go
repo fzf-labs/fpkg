@@ -26,15 +26,3 @@ func (c *Client) SetDebug(enable bool) *Client {
 	}
 	return c
 }
-
-// SetPrometheus 设置Prometheus
-func (c *Client) SetPrometheus() *Client {
-	c.OnAfterResponse(Prometheus())
-	return c
-}
-
-// SetTracer 设置Prometheus
-func (c *Client) SetTracer() *Client {
-	jaegerTraceProvider()
-	return c
-}

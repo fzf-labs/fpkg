@@ -49,3 +49,9 @@ func Prometheus() func(c *req.Client, resp *req.Response) error {
 		return nil
 	}
 }
+
+// SetPrometheus 设置Prometheus
+func (c *Client) SetPrometheus() *Client {
+	c.OnAfterResponse(Prometheus())
+	return c
+}

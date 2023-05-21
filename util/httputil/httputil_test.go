@@ -1,22 +1,29 @@
 package httputil
 
 import (
+	"context"
+	"fmt"
 	"testing"
+	"time"
+
+	"github.com/fzf-labs/fpkg/tracing"
 )
 
 func TestNewClient(t *testing.T) {
-	//ctx := context.Background()
-	//traceProvider, err := jaegerTraceProvider("github-query", "test", "http://127.0.0.1:14268/api/traces")
-	//if err != nil {
-	//	return
-	//}
-	//defer traceProvider.Shutdown(ctx)
-	//otel.SetTracerProvider(traceProvider)
-	//client := NewClient()
-	//client.SetR(client, otel.Tracer("github"))
-	//response, err := client.R().SetContext(ctx).Get("https://www.baidu.com/")
-	//if err != nil {
-	//	return
-	//}
-	//fmt.Println(response)
+	ctx := context.Background()
+	client := NewClient()
+	tracerProvider := tracing.NewTracerProvider(&tracing.Config{
+		ServiceName:  "http",
+		ExporterName: "jaeger",
+		Endpoint:     "http://127.0.0.1:14268/api/traces",
+		Sampler:      1.0,
+		Version:      "123",
+		InstanceId:   "123456",
+		Env:          "dev",
+	})
+	client.SetTracer(tracerProvider.Tracer("baidu"))
+	response, err := client.R().SetContext(ctx).Post("http://www.baidu.com")
+	fmt.Println(response.Status)
+	fmt.Println(err)
+	time.Sleep(time.Second * 10)
 }
