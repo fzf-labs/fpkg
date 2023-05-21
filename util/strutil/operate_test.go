@@ -25,3 +25,15 @@ func TestUpperEnglishWord(t *testing.T) {
 func TestSnakeCase(t *testing.T) {
 	assert.Equal(t, SnakeCase("rangePrice"), "range_price")
 }
+
+func TestSubstrReturnLeft(t *testing.T) {
+	left, b := SubstrReturnLeft("AppRangePrice", "Range")
+	assert.Equal(t, left, "App")
+	assert.Equal(t, b, true)
+}
+
+func TestSubstrReturnRight(t *testing.T) {
+	left, b := SubstrReturnRight("AppRangePrice", "Range")
+	assert.Equal(t, left, "Price")
+	assert.Equal(t, b, true)
+}

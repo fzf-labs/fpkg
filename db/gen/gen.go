@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func Generation(db *gorm.DB, dataMap map[string]func(detailType string) (dataType string), outPath string, modelPkgPath string) {
+func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType) (dataType string), outPath string, modelPkgPath string) {
 	// 初始化
 	g := gen.NewGenerator(gen.Config{
 		OutPath:      outPath,
@@ -35,15 +35,36 @@ func Generation(db *gorm.DB, dataMap map[string]func(detailType string) (dataTyp
 }
 
 // DefaultMySqlDataMap 默认mysql字段类型映射
-var DefaultMySqlDataMap = map[string]func(detailType string) (dataType string){
-	"int":     func(detailType string) (dataType string) { return "int64" },
-	"tinyint": func(detailType string) (dataType string) { return "int32" },
-	"json":    func(string) string { return "datatypes.JSON" },
+var DefaultMySqlDataMap = map[string]func(columnType gorm.ColumnType) (dataType string){
+	"int":     func(columnType gorm.ColumnType) (dataType string) { return "int64" },
+	"tinyint": func(columnType gorm.ColumnType) (dataType string) { return "int32" },
+	"json":    func(columnType gorm.ColumnType) string { return "datatypes.JSON" },
+	"timestamp": func(columnType gorm.ColumnType) string {
+		nullable, _ := columnType.Nullable()
+		if nullable {
+			return "sql.NullTime"
+		}
+		return "time.Time"
+	},
+	"datetime": func(columnType gorm.ColumnType) string {
+		nullable, _ := columnType.Nullable()
+		if nullable {
+			return "sql.NullTime"
+		}
+		return "time.Time"
+	},
 }
 
 // DefaultPostgresDataMap 默认Postgres字段类型映射
-var DefaultPostgresDataMap = map[string]func(detailType string) (dataType string){
-	"json": func(string) string { return "datatypes.JSON" },
+var DefaultPostgresDataMap = map[string]func(columnType gorm.ColumnType) (dataType string){
+	"json": func(columnType gorm.ColumnType) string { return "datatypes.JSON" },
+	"timestamptz": func(columnType gorm.ColumnType) string {
+		nullable, _ := columnType.Nullable()
+		if nullable {
+			return "sql.NullTime"
+		}
+		return "time.Time"
+	},
 }
 
 // ConnectDB 数据库连接

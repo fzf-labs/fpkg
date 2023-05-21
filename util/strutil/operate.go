@@ -10,8 +10,6 @@ import (
 	"unicode"
 	"unicode/utf8"
 	"unsafe"
-
-	"github.com/pkg/errors"
 )
 
 // StrToLower 转换成小写字母
@@ -101,27 +99,22 @@ func SubStr(str string, start, end int64) (int64, string, error) {
 	return n, buf.String(), err
 }
 
-// SubstrTarget 在字符串中查找指定子串，并返回left或right部分
-func SubstrTarget(str string, target string, turn string, hasPos bool) (string, error) {
+// SubstrReturnLeft 截取并返回left部分
+func SubstrReturnLeft(str string, target string) (string, bool) {
 	pos := strings.Index(str, target)
-
 	if pos == -1 {
-		return "", nil
+		return "", false
 	}
+	return str[:pos], true
+}
 
-	if turn == "left" {
-		if hasPos {
-			pos = pos + 1
-		}
-		return str[:pos], nil
-	} else if turn == "right" {
-		if !hasPos {
-			pos = pos + 1
-		}
-		return str[pos:], nil
-	} else {
-		return "", errors.New("params 3 error")
+// SubstrReturnRight 截取并返回right部分
+func SubstrReturnRight(str string, target string) (string, bool) {
+	pos := strings.Index(str, target)
+	if pos == -1 {
+		return "", false
 	}
+	return str[pos+len(target):], true
 }
 
 // GetStringUtf8Len 获得字符串按照uft8编码的长度

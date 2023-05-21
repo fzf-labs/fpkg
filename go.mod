@@ -12,6 +12,7 @@ require (
 	github.com/dtm-labs/rockscache v0.1.0
 	github.com/gabriel-vasile/mimetype v1.4.1
 	github.com/go-mail/mail v2.3.1+incompatible
+	github.com/go-playground/form/v4 v4.2.0
 	github.com/go-playground/locales v0.14.0
 	github.com/go-playground/universal-translator v0.18.0
 	github.com/go-playground/validator/v10 v10.11.1
@@ -21,6 +22,7 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang-module/carbon/v2 v2.1.9
 	github.com/google/uuid v1.3.0
+	github.com/gorilla/websocket v1.5.0
 	github.com/hibiken/asynq v0.23.0
 	github.com/imroc/req/v3 v3.33.1
 	github.com/klauspost/compress v1.15.15
@@ -46,13 +48,15 @@ require (
 	go.uber.org/ratelimit v0.2.0
 	golang.org/x/crypto v0.6.0
 	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53
-	golang.org/x/net v0.7.0
-	golang.org/x/text v0.7.0
+	golang.org/x/net v0.10.0
+	golang.org/x/text v0.9.0
 	golang.org/x/time v0.3.0
-	gorm.io/driver/mysql v1.4.7
-	gorm.io/driver/postgres v1.4.8
-	gorm.io/gen v0.3.21
-	gorm.io/gorm v1.24.6
+	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8
+	gopkg.in/yaml.v3 v3.0.1
+	gorm.io/driver/mysql v1.5.0
+	gorm.io/driver/postgres v1.5.0
+	gorm.io/gen v0.3.22
+	gorm.io/gorm v1.25.1
 	gorm.io/plugin/opentelemetry v0.1.1
 	gorm.io/sharding v0.5.3
 )
@@ -75,7 +79,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-redis/redis/extra/rediscmd/v8 v8.11.5 // indirect
-	github.com/go-sql-driver/mysql v1.7.0 // indirect
+	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/gogap/stack v0.0.0-20150131034635-fef68dddd4f8 // indirect
 	github.com/golang/mock v1.6.0 // indirect
@@ -93,14 +97,14 @@ require (
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lithammer/shortuuid v3.0.0+incompatible // indirect
 	github.com/longbridgeapp/sqlparser v0.3.1 // indirect
-	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
+	github.com/lufia/plan9stats v0.0.0-20230110061619-bbe2e5e100de // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/onsi/ginkgo/v2 v2.2.0 // indirect
 	github.com/openzipkin/zipkin-go v0.4.1 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
+	github.com/power-devops/perfstat v0.0.0-20221212215047-62379fc7944b // indirect
 	github.com/quic-go/qpack v0.4.0 // indirect
 	github.com/quic-go/qtls-go1-18 v0.2.0 // indirect
 	github.com/quic-go/qtls-go1-19 v0.2.0 // indirect
@@ -123,16 +127,14 @@ require (
 	go.opentelemetry.io/otel/metric v0.36.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/goleak v1.2.1 // indirect
-	golang.org/x/mod v0.6.0 // indirect
-	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
-	golang.org/x/tools v0.2.0 // indirect
-	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8 // indirect
+	golang.org/x/mod v0.10.0 // indirect
+	golang.org/x/sync v0.2.0 // indirect
+	golang.org/x/sys v0.8.0 // indirect
+	golang.org/x/tools v0.9.1 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/mail.v2 v2.3.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/datatypes v1.0.7 // indirect
-	gorm.io/hints v1.1.1 // indirect
+	gorm.io/datatypes v1.2.0 // indirect
+	gorm.io/hints v1.1.2 // indirect
 	gorm.io/plugin/dbresolver v1.4.1 // indirect
 )
