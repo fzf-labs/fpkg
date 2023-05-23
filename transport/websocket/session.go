@@ -70,19 +70,19 @@ func (c *Session) closeConnect() {
 	}
 }
 
-func (c *Session) sendPingMessage(message string) error {
+func (c *Session) SendPingMessage(message string) error {
 	return c.conn.WriteMessage(ws.PingMessage, []byte(message))
 }
 
-func (c *Session) sendPongMessage(message string) error {
+func (c *Session) SendPongMessage(message string) error {
 	return c.conn.WriteMessage(ws.PongMessage, []byte(message))
 }
 
-func (c *Session) sendTextMessage(message string) error {
+func (c *Session) SendTextMessage(message string) error {
 	return c.conn.WriteMessage(ws.TextMessage, []byte(message))
 }
 
-func (c *Session) sendBinaryMessage(message []byte) error {
+func (c *Session) SendBinaryMessage(message []byte) error {
 	return c.conn.WriteMessage(ws.BinaryMessage, message)
 }
 
@@ -92,7 +92,7 @@ func (c *Session) writePump() {
 	for {
 		select {
 		case msg := <-c.send:
-			if err := c.sendBinaryMessage(msg); err != nil {
+			if err := c.SendBinaryMessage(msg); err != nil {
 				slog.Error("[websocket] write message error: ", err)
 				return
 			}
@@ -119,7 +119,7 @@ func (c *Session) readPump() {
 			_ = c.server.messageHandler(c.SessionID(), data)
 			break
 		case ws.PingMessage:
-			if err := c.sendPongMessage(""); err != nil {
+			if err := c.SendPongMessage(""); err != nil {
 				slog.Error("[websocket] write pong message error: ", err)
 				return
 			}

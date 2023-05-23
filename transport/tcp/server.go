@@ -115,7 +115,7 @@ func (s *Server) SendRawData(sessionId SessionID, message []byte) error {
 	session, ok := s.sessions[sessionId]
 	if !ok {
 		slog.Error("[tcp] session not found:", sessionId)
-		return errors.New(fmt.Sprintf("[tcp] session not found: %s", sessionId))
+		return fmt.Errorf("[tcp] session not found: %s", sessionId)
 	}
 
 	session.SendMessage(message)
@@ -133,7 +133,7 @@ func (s *Server) SendMessage(sessionId SessionID, messageType MessageType, messa
 	buf, err := s.marshalMessage(messageType, message)
 	if err != nil {
 		slog.Error("[tcp] marshal message exception:", err)
-		return errors.New(fmt.Sprintf("[tcp] marshal message exception: %s", err.Error()))
+		return fmt.Errorf("[tcp] marshal message exception: %s", err.Error())
 	}
 
 	return s.SendRawData(sessionId, buf)

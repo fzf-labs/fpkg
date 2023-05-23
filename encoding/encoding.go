@@ -3,6 +3,7 @@ package encoding
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -80,6 +81,7 @@ func Unmarshal(codec Codec, inputData []byte, outValue interface{}) error {
 		}
 	} else if outValue == nil {
 		outValue = inputData
+		fmt.Println(outValue)
 	}
 	return nil
 }

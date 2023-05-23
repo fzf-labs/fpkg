@@ -101,26 +101,26 @@ func (c *Client) SendMessage(messageType int, message interface{}) error {
 		return err
 	}
 
-	if err := c.sendBinaryMessage(buff); err != nil {
+	if err := c.SendBinaryMessage(buff); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (c *Client) sendPingMessage(message string) error {
+func (c *Client) SendPingMessage(message string) error {
 	return c.conn.WriteMessage(ws.PingMessage, []byte(message))
 }
 
-func (c *Client) sendPongMessage(message string) error {
+func (c *Client) SendPongMessage(message string) error {
 	return c.conn.WriteMessage(ws.PongMessage, []byte(message))
 }
 
-func (c *Client) sendTextMessage(message string) error {
+func (c *Client) SendTextMessage(message string) error {
 	return c.conn.WriteMessage(ws.TextMessage, []byte(message))
 }
 
-func (c *Client) sendBinaryMessage(message []byte) error {
+func (c *Client) SendBinaryMessage(message []byte) error {
 	return c.conn.WriteMessage(ws.BinaryMessage, message)
 }
 
@@ -148,7 +148,7 @@ func (c *Client) run() {
 			break
 
 		case ws.PingMessage:
-			if err := c.sendPongMessage(""); err != nil {
+			if err := c.SendPongMessage(""); err != nil {
 				slog.Error("[websocket] write pong message error: ", err)
 				return
 			}
