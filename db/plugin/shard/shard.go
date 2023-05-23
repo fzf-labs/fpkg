@@ -3,6 +3,8 @@ package shard
 import (
 	"time"
 
+	"github.com/fzf-labs/fpkg/conv"
+	"github.com/golang-module/carbon/v2"
 	"gorm.io/sharding"
 )
 
@@ -16,13 +18,24 @@ func NewShardingPlugin(table string, shardingKey string, num uint) *sharding.Sha
 }
 
 // NewMonthShardingPlugin 按月份分表
+// 查询时必须传分表的主键,且只能取等判断
 func NewMonthShardingPlugin(table string, shardingKey string) *sharding.Sharding {
 	return sharding.Register(sharding.Config{
 		ShardingKey:         shardingKey,
 		PrimaryKeyGenerator: sharding.PKCustom,
 		ShardingAlgorithm: func(columnValue interface{}) (suffix string, err error) {
-			t := time.Unix(columnValue.(int64), 00)
-			return "_" + t.Format("2006") + t.Format("01"), nil
+			var t time.Time
+			//columnValue要是time类型
+			switch value := columnValue.(type) {
+			case time.Time:
+				t = value
+			case *time.Time:
+				t = *value
+			default:
+				//时间转换
+				t = carbon.Parse(conv.String(columnValue)).Carbon2Time()
+			}
+			return "_" + t.Format("200601"), nil
 		},
 		PrimaryKeyGeneratorFn: func(tableIdx int64) int64 {
 			return tableIdx

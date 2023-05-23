@@ -55,6 +55,11 @@ func TimeToShortString(ts time.Time) string {
 	return time.Unix(ts.Unix(), 00).Format("2006.01.02")
 }
 
+// TimeToYearMonthString 时间转日期
+func TimeToYearMonthString(ts time.Time) string {
+	return time.Unix(ts.Unix(), 00).Format("200601")
+}
+
 func ToDateTimeStringByTime(ts time.Time) string {
 	return carbon.Time2Carbon(ts).ToDateTimeString()
 }
