@@ -6,11 +6,9 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"strconv"
 	"strings"
 	"time"
-
-	"github.com/fzf-labs/fpkg/conv"
-	"github.com/fzf-labs/fpkg/util/timeutil"
 
 	"github.com/pkg/errors"
 )
@@ -31,12 +29,14 @@ func (s *signature) Verify(path string, method string, params json.RawMessage, s
 		err = errors.New("请求方法错误")
 		return
 	}
-	seconds := timeutil.NowCarbon().DiffAbsInSeconds(timeutil.Carbon().CreateFromTimestamp(conv.Int64(timeStamp)))
-	if seconds > int64(s.ttl/time.Second) {
+	t, err := strconv.ParseInt(timeStamp, 10, 63)
+	if err != nil {
+		return err
+	}
+	if time.Since(time.Unix(t, 0)) > s.ttl {
 		err = errors.Errorf("接口超时,限时:%v", s.ttl)
 		return
 	}
-
 	buffer := bytes.NewBuffer(nil)
 	buffer.WriteString(path)
 	buffer.WriteString(delimiter)

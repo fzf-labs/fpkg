@@ -30,12 +30,12 @@ func (p *Key) TTLSecond() int {
 }
 
 // RocksCache  rocks缓存生成
-func (p *Key) RocksCache(rc *rockscache.Client, ctx context.Context, fn func() (string, error)) (string, error) {
+func (p *Key) RocksCache(ctx context.Context, rc *rockscache.Client, fn func() (string, error)) (string, error) {
 	return rc.Fetch2(ctx, p.Key(), p.TTL(), fn)
 }
 
 // RocksCacheDel rocks缓存缓存删除
-func (p *Key) RocksCacheDel(rc *rockscache.Client, ctx context.Context) error {
+func (p *Key) RocksCacheDel(ctx context.Context, rc *rockscache.Client) error {
 	return rc.TagAsDeleted2(ctx, p.Key())
 }
 
@@ -57,9 +57,9 @@ func (p *Key) CollectionCacheDel(cc *collectioncache.Cache) error {
 }
 
 // CollectionRocksCache 进程内缓存生成(该方法设计不完善,仅用于不更新的数据)
-// 1.查询进程内的缓存,有则返回,无则去获取rockscache.
+// 1.查询进程内的缓存,有则返回,无则去获取RocksCache
 // 2.进程内缓存的过期时间请务必设置远小于redis.例小20倍
-// 3.进程内缓存在数据发生更新时,未做删除处理,所以请务必谨慎.(一般需要去做订阅redis的pub/sub)
+// 3.Redis缓存在数据发生更新时,未做删除处理,所以请务必谨慎.(一般需要去做订阅redis的pub/sub)
 func (p *Key) CollectionRocksCache(cc *collectioncache.Cache, rc *rockscache.Client, fn func() (string, error)) (string, error) {
 	ccRes, err := cc.TakeWithExpire(p.Key(), p.TTL()/20, func() (interface{}, error) {
 		rcRes, err := rc.Fetch(p.Key(), p.TTL(), fn)
