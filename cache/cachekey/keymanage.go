@@ -55,15 +55,24 @@ type KeyPrefix struct {
 	ExpirationTime time.Duration
 }
 
-// BuildCacheKey 构建一个带有前缀的缓存key 使用 ":" 分隔
-func (p *KeyPrefix) BuildCacheKey(keys ...string) *Key {
-	cacheKey := Key{
+// BuildSingleKey 构建一个带有前缀的缓存key 使用 ":" 分隔
+func (p *KeyPrefix) BuildSingleKey(keys ...string) *SingleKey {
+	cacheKey := SingleKey{
 		keyPrefix: p,
 	}
 	if len(keys) == 0 {
 		cacheKey.buildKey = strings.Join([]string{p.ServerName, p.PrefixName}, ":")
 	} else {
 		cacheKey.buildKey = strings.Join(append([]string{p.ServerName, p.PrefixName}, keys...), ":")
+	}
+	return &cacheKey
+}
+
+// BuildBatchKey 构建一个带有前缀的缓存key 使用 ":" 分隔
+func (p *KeyPrefix) BuildBatchKey(keys ...string) *BatchKey {
+	cacheKey := BatchKey{
+		keyPrefix: p,
+		keys:      keys,
 	}
 	return &cacheKey
 }
