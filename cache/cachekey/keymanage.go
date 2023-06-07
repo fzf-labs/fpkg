@@ -76,3 +76,12 @@ func (p *KeyPrefix) BuildBatchKey(keys ...string) *BatchKey {
 	}
 	return &cacheKey
 }
+
+// BuildHashKey 构建一个类似redis hash的key
+func (p *KeyPrefix) BuildHashKey(key string) *HashKey {
+	cacheKey := HashKey{
+		keyPrefix: p,
+		key:       key,
+	}
+	return &cacheKey
+}

@@ -14,8 +14,8 @@ type BatchKey struct {
 	keys      []string
 }
 
-// BuildKeys 获取构建好的key
-func (p *BatchKey) BuildKeys() []string {
+// Keys 获取构建好的key
+func (p *BatchKey) Keys() []string {
 	result := make([]string, 0)
 	if len(p.keys) > 0 {
 		for _, key := range p.keys {
@@ -38,7 +38,7 @@ func (p *BatchKey) TTLSecond() int {
 // RocksCacheBatch  rocks缓存生成
 func (p *BatchKey) RocksCacheBatch(ctx context.Context, rc *rockscache.Client, fn func() (map[string]string, error)) (map[string]string, error) {
 	resp := make(map[string]string)
-	fetchBatch, err := rc.FetchBatch2(ctx, p.BuildKeys(), p.TTL(), func(ids []int) (map[int]string, error) {
+	fetchBatch, err := rc.FetchBatch2(ctx, p.Keys(), p.TTL(), func(ids []int) (map[int]string, error) {
 		values := make(map[int]string)
 		m, err := fn()
 		if err != nil {
@@ -60,5 +60,5 @@ func (p *BatchKey) RocksCacheBatch(ctx context.Context, rc *rockscache.Client, f
 
 // RocksCacheBatchDel rocks缓存缓存删除
 func (p *BatchKey) RocksCacheBatchDel(ctx context.Context, rc *rockscache.Client) error {
-	return rc.TagAsDeletedBatch2(ctx, p.BuildKeys())
+	return rc.TagAsDeletedBatch2(ctx, p.Keys())
 }
