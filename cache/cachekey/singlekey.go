@@ -24,7 +24,7 @@ func (p *SingleKey) TTL() time.Duration {
 	return p.keyPrefix.ExpirationTime
 }
 
-// TTLSecond 获取缓存key的过去时间 Second
+// TTLSecond 获取缓存key的过期时间 Second
 func (p *SingleKey) TTLSecond() int {
 	return int(p.keyPrefix.ExpirationTime / time.Second)
 }
