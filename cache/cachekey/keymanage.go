@@ -85,3 +85,16 @@ func (p *KeyPrefix) BuildHashKey(key string) *HashKey {
 	}
 	return &cacheKey
 }
+
+// BuildLockKey 构建一个带有前缀的缓存key 使用 ":" 分隔
+func (p *KeyPrefix) BuildLockKey(keys ...string) *LockKey {
+	cacheKey := LockKey{
+		keyPrefix: p,
+	}
+	if len(keys) == 0 {
+		cacheKey.buildKey = strings.Join([]string{p.ServerName, p.PrefixName}, ":")
+	} else {
+		cacheKey.buildKey = strings.Join(append([]string{p.ServerName, p.PrefixName}, keys...), ":")
+	}
+	return &cacheKey
+}
