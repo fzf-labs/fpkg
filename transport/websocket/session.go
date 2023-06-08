@@ -45,9 +45,7 @@ func (c *Session) SessionID() SessionID {
 }
 
 func (c *Session) SendMessage(message []byte) {
-	select {
-	case c.send <- message:
-	}
+	c.send <- message
 }
 
 func (c *Session) Close() {
@@ -88,14 +86,10 @@ func (c *Session) SendBinaryMessage(message []byte) error {
 
 func (c *Session) writePump() {
 	defer c.Close()
-
-	for {
-		select {
-		case msg := <-c.send:
-			if err := c.SendBinaryMessage(msg); err != nil {
-				slog.Error("[websocket] write message error: ", err)
-				return
-			}
+	for msg := range c.send {
+		if err := c.SendBinaryMessage(msg); err != nil {
+			slog.Error("[websocket] write message error: ", err)
+			return
 		}
 	}
 }
@@ -117,18 +111,18 @@ func (c *Session) readPump() {
 			return
 		case ws.BinaryMessage:
 			_ = c.server.messageHandler(c.SessionID(), data)
-			break
+			return
 		case ws.PingMessage:
 			if err := c.SendPongMessage(""); err != nil {
 				slog.Error("[websocket] write pong message error: ", err)
 				return
 			}
-			break
+			return
 		case ws.PongMessage:
-			break
+			return
 		case ws.TextMessage:
 			slog.Error("[websocket] not support text message")
-			break
+			return
 		}
 
 	}

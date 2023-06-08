@@ -47,9 +47,7 @@ func (c *Session) SessionID() SessionID {
 }
 
 func (c *Session) SendMessage(message []byte) {
-	select {
-	case c.send <- message:
-	}
+	c.send <- message
 }
 
 func (c *Session) Close() {
@@ -74,16 +72,12 @@ func (c *Session) closeConnect() {
 
 func (c *Session) writePump() {
 	defer c.Close()
-
-	for {
-		select {
-		case msg := <-c.send:
-			//var len int
-			var err error
-			if _, err = c.conn.Write(msg); err != nil {
-				slog.Error("[tcp] write message error: ", err)
-				return
-			}
+	for msg := range c.send {
+		//var len int
+		var err error
+		if _, err = c.conn.Write(msg); err != nil {
+			slog.Error("[tcp] write message error: ", err)
+			return
 		}
 	}
 }

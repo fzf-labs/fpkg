@@ -35,7 +35,9 @@ func TestClient(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer lock.Release(ctx)
+	defer func(lock *Lock, ctx context.Context) {
+		_ = lock.Release(ctx)
+	}(lock, ctx)
 
 	if exp, got := 22, len(lock.Token()); exp != got {
 		t.Fatalf("expected %v, got %v", exp, got)
@@ -60,7 +62,9 @@ func TestClient(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer lock.Release(ctx)
+	defer func(lock *Lock, ctx context.Context) {
+		_ = lock.Release(ctx)
+	}(lock, ctx)
 }
 
 func TestObtain(t *testing.T) {
@@ -84,7 +88,9 @@ func TestObtain_metadata(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer lock.Release(ctx)
+	defer func(lock *Lock, ctx context.Context) {
+		_ = lock.Release(ctx)
+	}(lock, ctx)
 
 	if exp, got := meta, lock.Metadata(); exp != got {
 		t.Fatalf("expected %v, got %v", exp, got)
@@ -100,7 +106,9 @@ func TestObtain_custom_token(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer lock.Release(ctx)
+	defer func(lock *Lock, ctx context.Context) {
+		_ = lock.Release(ctx)
+	}(lock, ctx)
 
 	if exp, got := "foo", lock.Token(); exp != got {
 		t.Fatalf("expected %v, got %v", exp, got)
@@ -117,7 +125,9 @@ func TestObtain_retry_success(t *testing.T) {
 
 	// obtain for 20ms
 	lock1 := quickObtain(t, rc, 20*time.Millisecond)
-	defer lock1.Release(ctx)
+	defer func(lock1 *Lock, ctx context.Context) {
+		_ = lock1.Release(ctx)
+	}(lock1, ctx)
 
 	// lock again with linar retry - 3x for 20ms
 	lock2, err := Obtain(ctx, rc, lockKey, time.Hour, &Options{
@@ -127,7 +137,9 @@ func TestObtain_retry_success(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Println("do some thing")
-	defer lock2.Release(ctx)
+	defer func(lock2 *Lock, ctx context.Context) {
+		_ = lock2.Release(ctx)
+	}(lock2, ctx)
 }
 
 func TestObtain_retry_failure(t *testing.T) {
@@ -137,7 +149,9 @@ func TestObtain_retry_failure(t *testing.T) {
 
 	// obtain for 50ms
 	lock1 := quickObtain(t, rc, 50*time.Millisecond)
-	defer lock1.Release(ctx)
+	defer func(lock1 *Lock, ctx context.Context) {
+		_ = lock1.Release(ctx)
+	}(lock1, ctx)
 
 	// lock again with linar retry - 2x for 5ms
 	_, err := Obtain(ctx, rc, lockKey, time.Hour, &Options{
@@ -193,7 +207,9 @@ func TestLock_Refresh(t *testing.T) {
 	defer teardown(t, rc)
 
 	lock := quickObtain(t, rc, time.Hour)
-	defer lock.Release(ctx)
+	defer func(lock *Lock, ctx context.Context) {
+		_ = lock.Release(ctx)
+	}(lock, ctx)
 
 	// check TTL
 	assertTTL(t, lock, time.Hour)
@@ -213,7 +229,9 @@ func TestLock_Refresh_expired(t *testing.T) {
 	defer teardown(t, rc)
 
 	lock := quickObtain(t, rc, 5*time.Millisecond)
-	defer lock.Release(ctx)
+	defer func(lock *Lock, ctx context.Context) {
+		_ = lock.Release(ctx)
+	}(lock, ctx)
 
 	// try releasing
 	time.Sleep(10 * time.Millisecond)
@@ -228,7 +246,9 @@ func TestLock_Release_expired(t *testing.T) {
 	defer teardown(t, rc)
 
 	lock := quickObtain(t, rc, 5*time.Millisecond)
-	defer lock.Release(ctx)
+	defer func(lock *Lock, ctx context.Context) {
+		_ = lock.Release(ctx)
+	}(lock, ctx)
 
 	// try releasing
 	time.Sleep(10 * time.Millisecond)
@@ -243,7 +263,9 @@ func TestLock_Release_not_own(t *testing.T) {
 	defer teardown(t, rc)
 
 	lock := quickObtain(t, rc, time.Hour)
-	defer lock.Release(ctx)
+	defer func(lock *Lock, ctx context.Context) {
+		_ = lock.Release(ctx)
+	}(lock, ctx)
 
 	// manually transfer ownership
 	if err := rc.Set(ctx, lockKey, "ABCD", 0).Err(); err != nil {
@@ -262,7 +284,9 @@ func TestLock_Release_not_held(t *testing.T) {
 	defer teardown(t, rc)
 
 	lock1 := quickObtain(t, rc, time.Hour)
-	defer lock1.Release(ctx)
+	defer func(lock1 *Lock, ctx context.Context) {
+		_ = lock1.Release(ctx)
+	}(lock1, ctx)
 
 	lock2, err := Obtain(context.Background(), rc, lockKey, time.Minute, nil)
 	if exp, got := ErrNotObtained, err; !errors.Is(got, exp) {

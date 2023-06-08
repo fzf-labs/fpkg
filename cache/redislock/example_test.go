@@ -32,7 +32,9 @@ func Example() {
 	}
 
 	// Don't forget to defer Release.
-	defer lock.Release(ctx)
+	defer func(lock *redislock.Lock, ctx context.Context) {
+		_ = lock.Release(ctx)
+	}(lock, ctx)
 	fmt.Println("I have a lock!")
 
 	// Sleep and check the remaining TTL.
@@ -82,7 +84,9 @@ func ExampleClient_Obtain_retry() {
 	} else if err != nil {
 		log.Fatalln(err)
 	}
-	defer lock.Release(ctx)
+	defer func(lock *redislock.Lock, ctx context.Context) {
+		_ = lock.Release(ctx)
+	}(lock, ctx)
 
 	fmt.Println("I have a lock!")
 }
@@ -107,7 +111,9 @@ func ExampleClient_Obtain_customDeadline() {
 	} else if err != nil {
 		log.Fatalln(err)
 	}
-	defer lock.Release(context.Background())
+	defer func(lock *redislock.Lock, ctx context.Context) {
+		_ = lock.Release(ctx)
+	}(lock, context.Background())
 
 	fmt.Println("I have a lock!")
 }

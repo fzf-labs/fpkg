@@ -135,28 +135,24 @@ func (c *Client) run() {
 			}
 			return
 		}
-
 		switch messageType {
 		case ws.CloseMessage:
 			return
 		case ws.BinaryMessage:
 			_ = c.messageHandler(data)
-			break
-
+			return
 		case ws.TextMessage:
 			slog.Error("[websocket] not support text message")
-			break
-
+			return
 		case ws.PingMessage:
 			if err := c.SendPongMessage(""); err != nil {
 				slog.Error("[websocket] write pong message error: ", err)
 				return
 			}
-			break
+			return
 		case ws.PongMessage:
-			break
+			return
 		}
-
 	}
 }
 
