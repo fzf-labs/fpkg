@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/fzf-labs/fpkg/cache/redis"
-	"github.com/fzf-labs/fpkg/cache/rockscache"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHashKey_RocksCache(t *testing.T) {
@@ -24,16 +24,15 @@ func TestHashKey_RocksCache(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	newRocksCache := rockscache.NewRocksCache(newGoRedis)
-	buildBatchKey := key.BuildHashKey("demo")
+	hashKey := key.NewHashKey(newGoRedis)
 	for i := 0; i < 100; i++ {
-		batch, err := buildBatchKey.RocksCache(context.Background(), newGoRedis, newRocksCache, strconv.Itoa(i), func() (string, error) {
+		cache, err := hashKey.HashCache(context.Background(), "k", strconv.Itoa(i), func() (string, error) {
 			return strconv.Itoa(rand.Int()), nil
 		})
 		if err != nil {
 			return
 		}
-		fmt.Println(batch)
+		fmt.Println(cache)
 	}
 }
 
@@ -49,10 +48,10 @@ func TestHashKey_RocksCacheDel(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	newRocksCache := rockscache.NewRocksCache(newGoRedis)
-	buildBatchKey := key.BuildHashKey("demo")
-	err = buildBatchKey.RocksCacheDel(context.Background(), newGoRedis, newRocksCache)
+	hashKey := key.NewHashKey(newGoRedis)
+	err = hashKey.HashCacheDel(context.Background(), "k")
 	if err != nil {
 		return
 	}
+	assert.Equal(t, err, nil)
 }

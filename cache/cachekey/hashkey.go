@@ -6,24 +6,36 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dtm-labs/rockscache"
+	"github.com/fzf-labs/fpkg/cache/rockscache"
 	"github.com/go-redis/redis/v8"
 )
+
+func (p *KeyPrefix) NewHashKey(rd *redis.Client) *HashKey {
+	return &HashKey{
+		keyPrefix: p,
+		rd:        rd,
+	}
+}
 
 // HashKey 实际key参数
 type HashKey struct {
 	keyPrefix *KeyPrefix
-	key       string
+	rd        *redis.Client
 }
 
-// Key 获取构建好的key
-func (p *HashKey) Key(field string) string {
-	return strings.Join([]string{p.keyPrefix.ServerName, p.keyPrefix.PrefixName, p.key, field}, ":")
+// BuildKey  获取key
+func (p *HashKey) BuildKey(keys ...string) string {
+	return strings.Join(keys, ":")
 }
 
-// CollectKey 收集的key
-func (p *HashKey) CollectKey() string {
-	return strings.Join([]string{p.keyPrefix.ServerName, p.keyPrefix.PrefixName, "collect", p.key}, ":")
+// FinalKey 获取实际key
+func (p *HashKey) FinalKey(key string, field string) string {
+	return strings.Join([]string{p.keyPrefix.ServerName, p.keyPrefix.PrefixName, key, field}, ":")
+}
+
+// DelKey 收集的key
+func (p *HashKey) DelKey(key string) string {
+	return strings.Join([]string{p.keyPrefix.ServerName, p.keyPrefix.PrefixName, "DEL", key}, ":")
 }
 
 // TTL 获取缓存key的过期时间time.Duration
@@ -41,23 +53,23 @@ func (p *HashKey) TTLUnix() int64 {
 	return time.Now().Add(p.keyPrefix.ExpirationTime).Unix()
 }
 
-// RocksCache  rocks缓存生成
-func (p *HashKey) RocksCache(ctx context.Context, rd *redis.Client, rc *rockscache.Client, field string, fn func() (string, error)) (string, error) {
-	cacheKey := p.Key(field)
-	return rc.Fetch2(ctx, cacheKey, p.TTL(), func() (string, error) {
+// HashCache  缓存生成
+func (p *HashKey) HashCache(ctx context.Context, key string, field string, fn func() (string, error)) (string, error) {
+
+	return rockscache.NewWeakRocksCacheClient(p.rd).Fetch2(ctx, p.FinalKey(key, field), p.TTL(), func() (string, error) {
 		result, err := fn()
 		if err != nil {
 			return "", err
 		}
-		_ = rd.HSet(ctx, p.CollectKey(), cacheKey, p.TTLUnix()).Err()
-		_ = rd.Expire(ctx, p.CollectKey(), p.TTL()).Err()
+		_ = p.rd.HSet(ctx, p.DelKey(key), p.FinalKey(key, field), p.TTLUnix()).Err()
+		_ = p.rd.Expire(ctx, p.DelKey(key), p.TTL()).Err()
 		return result, nil
 	})
 }
 
-// RocksCacheDel rocks缓存缓存删除
-func (p *HashKey) RocksCacheDel(ctx context.Context, rd *redis.Client, rc *rockscache.Client) error {
-	cacheKeys, err := rd.HGetAll(ctx, p.CollectKey()).Result()
+// HashCacheDel 缓存删除
+func (p *HashKey) HashCacheDel(ctx context.Context, key string) error {
+	cacheKeys, err := p.rd.HGetAll(ctx, p.DelKey(key)).Result()
 	if err != nil {
 		return err
 	}
@@ -72,12 +84,12 @@ func (p *HashKey) RocksCacheDel(ctx context.Context, rd *redis.Client, rc *rocks
 		}
 	}
 	if len(delKeys) > 0 {
-		err = rc.TagAsDeletedBatch2(ctx, delKeys)
+		err = rockscache.NewWeakRocksCacheClient(p.rd).TagAsDeletedBatch2(ctx, delKeys)
 		if err != nil {
 			return err
 		}
 	}
-	err = rd.Del(ctx, p.CollectKey()).Err()
+	err = p.rd.Del(ctx, p.DelKey(key)).Err()
 	if err != nil {
 		return err
 	}

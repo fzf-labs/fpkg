@@ -2,21 +2,34 @@ package cachekey
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/fzf-labs/fpkg/cache/redislock"
 	"github.com/go-redis/redis/v8"
 )
 
+func (p *KeyPrefix) NewLockKey(rd *redis.Client) *LockKey {
+	return &LockKey{
+		keyPrefix: p,
+		rd:        rd,
+	}
+}
+
 // LockKey 实际key参数
 type LockKey struct {
 	keyPrefix *KeyPrefix
-	buildKey  string
+	rd        *redis.Client
 }
 
-// Key 获取构建好的key
-func (p *LockKey) Key() string {
-	return p.buildKey
+// BuildKey  获取key
+func (p *LockKey) BuildKey(keys ...string) string {
+	return strings.Join(keys, ":")
+}
+
+// FinalKey 获取实际key
+func (p *LockKey) FinalKey(key string) string {
+	return strings.Join([]string{p.keyPrefix.ServerName, p.keyPrefix.PrefixName, "LOCK", key}, ":")
 }
 
 // TTL 获取缓存key的过期时间time.Duration
@@ -34,8 +47,8 @@ func (p *LockKey) TTLUnix() int64 {
 	return time.Now().Add(p.keyPrefix.ExpirationTime).Unix()
 }
 
-func (p *LockKey) AutoLock(ctx context.Context, rd *redis.Client, fn func() error) error {
-	locker, err := redislock.Obtain(ctx, rd, p.Key(), p.TTL(), nil)
+func (p *LockKey) AutoLock(ctx context.Context, key string, fn func() error) error {
+	locker, err := redislock.Obtain(ctx, p.rd, p.FinalKey(key), p.TTL(), nil)
 	if err != nil {
 		return err
 	}
@@ -45,8 +58,8 @@ func (p *LockKey) AutoLock(ctx context.Context, rd *redis.Client, fn func() erro
 	return fn()
 }
 
-func (p *LockKey) AutoLockRetry(ctx context.Context, rd *redis.Client, fn func() error) error {
-	locker, err := redislock.Obtain(ctx, rd, p.Key(), p.TTL(), &redislock.Options{
+func (p *LockKey) AutoLockRetry(ctx context.Context, key string, fn func() error) error {
+	locker, err := redislock.Obtain(ctx, p.rd, p.FinalKey(key), p.TTL(), &redislock.Options{
 		RetryStrategy: redislock.LimitRetry(redislock.LinearBackoff(200*time.Millisecond), 5),
 	})
 	if err != nil {

@@ -3,7 +3,6 @@ package cachekey
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -53,48 +52,4 @@ type KeyPrefix struct {
 	PrefixName     string
 	Remark         string
 	ExpirationTime time.Duration
-}
-
-// BuildSingleKey 构建一个带有前缀的缓存key 使用 ":" 分隔
-func (p *KeyPrefix) BuildSingleKey(keys ...string) *SingleKey {
-	cacheKey := SingleKey{
-		keyPrefix: p,
-	}
-	if len(keys) == 0 {
-		cacheKey.buildKey = strings.Join([]string{p.ServerName, p.PrefixName}, ":")
-	} else {
-		cacheKey.buildKey = strings.Join(append([]string{p.ServerName, p.PrefixName}, keys...), ":")
-	}
-	return &cacheKey
-}
-
-// BuildBatchKey 构建一个带有前缀的缓存key 使用 ":" 分隔
-func (p *KeyPrefix) BuildBatchKey(keys ...string) *BatchKey {
-	cacheKey := BatchKey{
-		keyPrefix: p,
-		keys:      keys,
-	}
-	return &cacheKey
-}
-
-// BuildHashKey 构建一个类似redis hash的key
-func (p *KeyPrefix) BuildHashKey(key string) *HashKey {
-	cacheKey := HashKey{
-		keyPrefix: p,
-		key:       key,
-	}
-	return &cacheKey
-}
-
-// BuildLockKey 构建一个带有前缀的缓存key 使用 ":" 分隔
-func (p *KeyPrefix) BuildLockKey(keys ...string) *LockKey {
-	cacheKey := LockKey{
-		keyPrefix: p,
-	}
-	if len(keys) == 0 {
-		cacheKey.buildKey = strings.Join([]string{p.ServerName, p.PrefixName}, ":")
-	} else {
-		cacheKey.buildKey = strings.Join(append([]string{p.ServerName, p.PrefixName}, keys...), ":")
-	}
-	return &cacheKey
 }

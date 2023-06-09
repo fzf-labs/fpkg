@@ -5,20 +5,28 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dtm-labs/rockscache"
+	"github.com/fzf-labs/fpkg/cache/rockscache"
+	"github.com/go-redis/redis/v8"
 )
+
+func (p *KeyPrefix) NewBatchKey(rd *redis.Client) *BatchKey {
+	return &BatchKey{
+		keyPrefix: p,
+		rd:        rd,
+	}
+}
 
 // BatchKey 实际key参数
 type BatchKey struct {
 	keyPrefix *KeyPrefix
-	keys      []string
+	rd        *redis.Client
 }
 
-// Keys 获取构建好的key
-func (p *BatchKey) Keys() []string {
+// FinalKey 获取实际key
+func (p *BatchKey) FinalKey(keys []string) []string {
 	result := make([]string, 0)
-	if len(p.keys) > 0 {
-		for _, key := range p.keys {
+	if len(keys) > 0 {
+		for _, key := range keys {
 			result = append(result, strings.Join([]string{p.keyPrefix.ServerName, p.keyPrefix.PrefixName, key}, ":"))
 		}
 	}
@@ -35,17 +43,18 @@ func (p *BatchKey) TTLSecond() int {
 	return int(p.keyPrefix.ExpirationTime / time.Second)
 }
 
-// RocksCacheBatch  rocks缓存生成
-func (p *BatchKey) RocksCacheBatch(ctx context.Context, rc *rockscache.Client, fn func() (map[string]string, error)) (map[string]string, error) {
+// BatchKeyCache 缓存生成
+func (p *BatchKey) BatchKeyCache(ctx context.Context, keys []string, fn func() (map[string]string, error)) (map[string]string, error) {
 	resp := make(map[string]string)
-	fetchBatch, err := rc.FetchBatch2(ctx, p.Keys(), p.TTL(), func(ids []int) (map[int]string, error) {
+	finalKeys := p.FinalKey(keys)
+	fetchBatch, err := rockscache.NewWeakRocksCacheClient(p.rd).FetchBatch2(ctx, finalKeys, p.TTL(), func(ids []int) (map[int]string, error) {
 		values := make(map[int]string)
 		m, err := fn()
 		if err != nil {
 			return values, err
 		}
 		for _, i := range ids {
-			values[i] = m[p.keys[i]]
+			values[i] = m[keys[i]]
 		}
 		return values, nil
 	})
@@ -53,12 +62,12 @@ func (p *BatchKey) RocksCacheBatch(ctx context.Context, rc *rockscache.Client, f
 		return resp, err
 	}
 	for k, v := range fetchBatch {
-		resp[p.keys[k]] = v
+		resp[finalKeys[k]] = v
 	}
 	return resp, nil
 }
 
-// RocksCacheBatchDel rocks缓存缓存删除
-func (p *BatchKey) RocksCacheBatchDel(ctx context.Context, rc *rockscache.Client) error {
-	return rc.TagAsDeletedBatch2(ctx, p.Keys())
+// BatchKeyCacheDel 缓存删除
+func (p *BatchKey) BatchKeyCacheDel(ctx context.Context, keys []string) error {
+	return rockscache.NewWeakRocksCacheClient(p.rd).TagAsDeletedBatch2(ctx, p.FinalKey(keys))
 }

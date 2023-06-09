@@ -21,8 +21,8 @@ func TestLockKey_AutoLock(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	buildBatchKey := key.BuildLockKey("user_123456")
-	err = buildBatchKey.AutoLock(context.Background(), newGoRedis, func() error {
+	buildBatchKey := key.NewLockKey(newGoRedis)
+	err = buildBatchKey.AutoLock(context.Background(), "AutoLock", func() error {
 		fmt.Println(1111111)
 		return nil
 	})
@@ -44,8 +44,8 @@ func TestLockKey_AutoLockRetry(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	buildBatchKey := key.BuildLockKey("user_123456")
-	err = buildBatchKey.AutoLockRetry(context.Background(), newGoRedis, func() error {
+	buildBatchKey := key.NewLockKey(newGoRedis)
+	err = buildBatchKey.AutoLockRetry(context.Background(), "AutoLockRetry", func() error {
 		fmt.Println(1111111)
 		return nil
 	})
