@@ -25,14 +25,16 @@ func TestHashKey_RocksCache(t *testing.T) {
 		return
 	}
 	newRocksCache := rockscache.NewRocksCache(newGoRedis)
-	buildBatchKey := key.BuildHashKey("user123456")
-	batch, err := buildBatchKey.RocksCache(context.Background(), newGoRedis, newRocksCache, "field", func() (string, error) {
-		return strconv.Itoa(rand.Int()), nil
-	})
-	if err != nil {
-		return
+	buildBatchKey := key.BuildHashKey("demo")
+	for i := 0; i < 100; i++ {
+		batch, err := buildBatchKey.RocksCache(context.Background(), newGoRedis, newRocksCache, strconv.Itoa(i), func() (string, error) {
+			return strconv.Itoa(rand.Int()), nil
+		})
+		if err != nil {
+			return
+		}
+		fmt.Println(batch)
 	}
-	fmt.Println(batch)
 }
 
 func TestHashKey_RocksCacheDel(t *testing.T) {
@@ -48,7 +50,7 @@ func TestHashKey_RocksCacheDel(t *testing.T) {
 		return
 	}
 	newRocksCache := rockscache.NewRocksCache(newGoRedis)
-	buildBatchKey := key.BuildHashKey("user123456")
+	buildBatchKey := key.BuildHashKey("demo")
 	err = buildBatchKey.RocksCacheDel(context.Background(), newGoRedis, newRocksCache)
 	if err != nil {
 		return
