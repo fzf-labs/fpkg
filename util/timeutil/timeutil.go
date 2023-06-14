@@ -201,9 +201,17 @@ func TimeToHuman(ts int) string {
 	return res
 }
 
+// ToSqlNullTime 将time.Time转换为sql.NullTime
 func ToSqlNullTime(tt time.Time) sql.NullTime {
 	return sql.NullTime{
 		Time:  tt,
+		Valid: true,
+	}
+}
+
+func NowSqlNullTime() sql.NullTime {
+	return sql.NullTime{
+		Time:  time.Now(),
 		Valid: true,
 	}
 }
