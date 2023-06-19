@@ -10,6 +10,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gen"
+	"gorm.io/gen/field"
 	"gorm.io/gorm"
 )
 
@@ -27,6 +28,13 @@ func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType)
 	g.WithJSONTagNameStrategy(func(c string) string {
 		return LowerCamelCase(c)
 	})
+	// 针对PG空字符串特殊处理
+	g.WithOpts(gen.FieldGORMTagReg(".*?", func(tag field.GormTag) field.GormTag {
+		if strings.Contains(tag.Build(), "default:''::character varying") {
+			tag.Set("default", "")
+		}
+		return tag
+	}))
 	// 从数据库中生成所有表
 	g.ApplyBasic(g.GenerateAllTable()...)
 	// 在结构或表模型上应用diy接口

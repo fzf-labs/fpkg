@@ -47,17 +47,19 @@ require (
 	go.opentelemetry.io/otel/sdk v1.15.1
 	go.opentelemetry.io/otel/trace v1.15.1
 	go.uber.org/ratelimit v0.2.0
-	golang.org/x/crypto v0.6.0
+	golang.org/x/crypto v0.10.0
 	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53
-	golang.org/x/net v0.10.0
-	golang.org/x/text v0.9.0
+	golang.org/x/net v0.11.0
+	golang.org/x/text v0.10.0
 	golang.org/x/time v0.3.0
 	google.golang.org/protobuf v1.30.0
 	gopkg.in/yaml.v3 v3.0.1
-	gorm.io/driver/mysql v1.5.0
+	gorm.io/datatypes v1.2.0
+	gorm.io/driver/mysql v1.5.1
 	gorm.io/driver/postgres v1.5.0
-	gorm.io/gen v0.3.22
+	gorm.io/gen v0.3.23-0.20230607102635-21d0628d5f07
 	gorm.io/gorm v1.25.1
+	gorm.io/plugin/dbresolver v1.4.1
 	gorm.io/plugin/opentelemetry v0.1.1
 	gorm.io/sharding v0.5.3
 )
@@ -133,14 +135,12 @@ require (
 	go.opentelemetry.io/otel/metric v0.36.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/goleak v1.2.1 // indirect
-	golang.org/x/mod v0.10.0 // indirect
-	golang.org/x/sync v0.2.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
-	golang.org/x/tools v0.9.1 // indirect
+	golang.org/x/mod v0.11.0 // indirect
+	golang.org/x/sync v0.3.0 // indirect
+	golang.org/x/sys v0.9.0 // indirect
+	golang.org/x/tools v0.10.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/mail.v2 v2.3.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
-	gorm.io/datatypes v1.2.0 // indirect
 	gorm.io/hints v1.1.2 // indirect
-	gorm.io/plugin/dbresolver v1.4.1 // indirect
 )

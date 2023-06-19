@@ -1,0 +1,1 @@
+package {{.lowerDbName}}_repo

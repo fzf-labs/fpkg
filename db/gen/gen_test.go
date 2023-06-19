@@ -8,7 +8,7 @@ import (
 
 func TestGenerationPostgres(t *testing.T) {
 	client, err := db.NewGormPostgresClient(&db.GormPostgresClientConfig{
-		DataSourceName:  "",
+		DataSourceName:  "host=0.0.0.0 port=5432 user=postgres password=123456 dbname=user sslmode=disable TimeZone=Asia/Shanghai",
 		MaxIdleConn:     0,
 		MaxOpenConn:     0,
 		ConnMaxLifeTime: 0,
@@ -18,7 +18,7 @@ func TestGenerationPostgres(t *testing.T) {
 	if err != nil {
 		return
 	}
-	Generation(client, DefaultMySqlDataMap, "./", "./")
+	Generation(client, DefaultMySqlDataMap, "./example/postgres/user_dao", "./example/postgres/user_model")
 }
 
 func TestGenerationMysql(t *testing.T) {
@@ -33,5 +33,5 @@ func TestGenerationMysql(t *testing.T) {
 	if err != nil {
 		return
 	}
-	Generation(client, DefaultPostgresDataMap, "./", "./")
+	Generation(client, DefaultPostgresDataMap, "./example/mysql/dao", "./example/mysql/model")
 }
