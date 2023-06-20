@@ -1,9 +1,9 @@
-func (u *userRepo) FindOneById(ctx context.Context, id string) (*user_model.User, error) {
-	resp := new(user_model.User)
-	cache := CacheById.NewSingleKey(u.redis)
-	cacheValue, err := cache.SingleCache(ctx, id, func() (string, error) {
-		userDao := user_dao.Use(u.db).User
-		result, err := userDao.WithContext(ctx).Where(userDao.ID.Eq(id)).First()
+func (u *{{.lowerTableName}}Repo) FindOneBy{{.upperField}}(ctx context.Context, {{.lowerField}} {{.dataType}}) (*{{.lowerTableName}}_model.{{.upperTableName}}, error) {
+	resp := new({{.lowerTableName}}_model.{{.upperTableName}})
+	cache := CacheBy{{.upperField}}.NewSingleKey(u.redis)
+	cacheValue, err := cache.SingleCache(ctx, {{.lowerField}} , func() (string, error) {
+		{{.lowerTableName}}Dao := {{.lowerTableName}}_dao.Use(u.db).{{.upperTableName}}
+		result, err := {{.lowerTableName}}Dao.WithContext(ctx).Where({{.lowerTableName}}Dao.ID.Eq({{.lowerField}})).First()
 		if err != nil && err != gorm.ErrRecordNotFound {
 			return "", err
 		}

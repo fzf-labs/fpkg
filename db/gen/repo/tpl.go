@@ -36,3 +36,11 @@ type FuncRepo struct {
 	upperField string
 	in         string
 }
+
+type FieldRepo struct {
+	lowerField  string //字段小写
+	upperField  string //大写字段
+	lowerFields string //字段小写s
+	upperFields string //字段大写s
+	dataType    string //字段类型
+}
