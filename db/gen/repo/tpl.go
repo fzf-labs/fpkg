@@ -16,12 +16,6 @@ var Vars string
 //go:embed tpl/types.tpl
 var Types string
 
-//go:embed tpl/find-one-by-field.tpl
-var FindOneByField string
-
-//go:embed tpl/interface-find-one-by-field.tpl
-var FindOneByFieldMethod string
-
 type Repo struct {
 	lowerDbName    string
 	upperDbName    string
@@ -38,9 +32,9 @@ type FuncRepo struct {
 }
 
 type FieldRepo struct {
-	lowerField  string //字段小写
-	upperField  string //大写字段
-	lowerFields string //字段小写s
-	upperFields string //字段大写s
-	dataType    string //字段类型
+	lowerField        string //字段小写
+	upperField        string //大写字段
+	lowerFieldComplex string //字段小写复数
+	upperFieldComplex string //字段大写复数
+	dataType          string //字段类型
 }
