@@ -16,9 +16,12 @@ var Vars string
 //go:embed tpl/types.tpl
 var Types string
 
-type Repo struct {
+// TableRepo 表结构
+type TableRepo struct {
+	dbName         string
 	lowerDbName    string
 	upperDbName    string
+	tableName      string
 	lowerTableName string
 	upperTableName string
 	cacheKeys      []string
