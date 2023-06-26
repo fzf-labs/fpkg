@@ -5,6 +5,7 @@ import (
 	"crypto/hmac"
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -15,6 +16,17 @@ func Md5String(s string) string {
 	h := md5.New()
 	h.Write([]byte(s))
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+// Md5 MD5加密
+func Md5(s any) (string, error) {
+	marshal, err := json.Marshal(s)
+	if err != nil {
+		return "", err
+	}
+	h := md5.New()
+	h.Write([]byte(marshal))
+	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
 // Md5File 返回文件的 md5 值
