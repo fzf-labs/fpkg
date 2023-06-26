@@ -8,7 +8,7 @@ import (
 var Pkg string
 
 //go:embed tpl/import.tpl
-var Imports string
+var Import string
 
 //go:embed tpl/var.tpl
 var Vars string

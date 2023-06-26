@@ -1,14 +1,25 @@
 package repo
 
 import (
+	"fmt"
 	"sync"
 
 	"gorm.io/gorm"
 )
 
-func GenerationRepo(gorm *gorm.DB) error {
-	postgresqlModel := NewPostgresqlModel(gorm)
-	tables, err := postgresqlModel.FindAllTables()
+type Repo struct {
+	gorm         *gorm.DB
+	mod          string
+	relativePath string
+}
+
+func NewRepo(gorm *gorm.DB, mod string, relativePath string) *Repo {
+	return &Repo{gorm: gorm, mod: mod, relativePath: relativePath}
+}
+
+func (r *Repo) GenerationRepo() error {
+	//获取表
+	tables, err := r.gorm.Migrator().GetTables()
 	if err != nil {
 		return err
 	}
@@ -16,7 +27,7 @@ func GenerationRepo(gorm *gorm.DB) error {
 	for _, table := range tables {
 		wg.Add(1)
 		go func(table string) {
-			_ = GenerationTable(gorm, table)
+			_ = r.GenerationTable(table)
 			wg.Done()
 		}(table)
 	}
@@ -24,16 +35,34 @@ func GenerationRepo(gorm *gorm.DB) error {
 	return nil
 }
 
-func GenerationTable(gorm *gorm.DB, table string) error {
-	//postgresqlModel := NewPostgresqlModel(gorm)
-	//dbName = gorm.Migrator().CurrentDatabase()
-	//dbColumns, err := postgresqlModel.FindColumns(table)
-	//if err != nil {
-	//	return err
-	//}
-	//dbIndices, err := postgresqlModel.FindIndex(table)
-	//if err != nil {
-	//	return err
-	//}
+func (r *Repo) GenerationTable(table string) error {
+	dbName := r.gorm.Migrator().CurrentDatabase()
+	fmt.Println(dbName)
+	indexes, err := r.gorm.Migrator().GetIndexes(table)
+	if err != nil {
+		return err
+	}
+	fmt.Println(indexes)
+	columnTypes, err := r.gorm.Migrator().ColumnTypes(table)
+	if err != nil {
+		return err
+	}
+	fmt.Println(columnTypes)
+	pkgTpl, err := NewTemplate("pkg").Parse(Pkg).Execute(map[string]any{
+		"lowerDbName": dbName,
+	})
+	if err != nil {
+		return err
+	}
+	fmt.Println(pkgTpl)
+	importTpl, err := NewTemplate("import").Parse(Import).Execute(map[string]any{
+		"mod":          r.mod,
+		"relativePath": r.relativePath,
+		"lowerDbName":  dbName,
+	})
+	if err != nil {
+		return err
+	}
+	fmt.Println(importTpl)
 	return nil
 }
