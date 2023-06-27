@@ -11,7 +11,7 @@ var Pkg string
 var Import string
 
 //go:embed tpl/var.tpl
-var Vars string
+var Var string
 
 //go:embed tpl/types.tpl
 var Types string

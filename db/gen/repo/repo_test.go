@@ -15,7 +15,7 @@ func TestGenerationTable(t *testing.T) {
 		ShowLog:         false,
 		Tracing:         false,
 	})
-	newRepo := NewRepo(client, "github.com/fzf-labs/fpkg", "db/gen/example/postgres/user_repo")
+	newRepo := NewRepo(client, "github.com/fzf-labs/fpkg", "db/gen/example/postgres")
 	err := newRepo.GenerationTable("system_users")
 	if err != nil {
 		return
