@@ -3,6 +3,9 @@ package repo
 import (
 	"os"
 	"strings"
+	"unicode"
+
+	"gorm.io/gorm/schema"
 )
 
 // SafeString converts the input string into a safe naming style in golang
@@ -46,4 +49,23 @@ func MkdirIfNotExist(dir string) error {
 	}
 
 	return nil
+}
+
+func UpperName(s string) string {
+	var ns = schema.NamingStrategy{}
+	return ns.SchemaName(s)
+}
+func LowerName(s string) string {
+	s = UpperName(s)
+	if len(s) == 0 {
+		return s
+	}
+
+	rs := []rune(s)
+	f := rs[0]
+
+	if 'A' <= f && f <= 'Z' {
+		return string(unicode.ToLower(f)) + string(rs[1:])
+	}
+	return s
 }

@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"gorm.io/gorm"
-	"gorm.io/gorm/schema"
 )
 
 type Repo struct {
@@ -37,7 +36,6 @@ func (r *Repo) GenerationRepo() error {
 }
 
 func (r *Repo) GenerationTable(table string) error {
-	var ns = schema.NamingStrategy{}
 	dbName := r.gorm.Migrator().CurrentDatabase()
 	fmt.Println(dbName)
 	indexes, err := r.gorm.Migrator().GetIndexes(table)
@@ -66,10 +64,11 @@ func (r *Repo) GenerationTable(table string) error {
 		return err
 	}
 	fmt.Println(importTpl)
-	upperTableName := ns.SchemaName(table)
+	upperTableName := UpperName(table)
+	lowerTableName := LowerName(table)
 	varTpl, err := NewTemplate("var").Parse(Var).Execute(map[string]any{
 		"upperTableName": upperTableName,
-		"lowerTableName": table,
+		"lowerTableName": lowerTableName,
 	})
 	if err != nil {
 		return err
