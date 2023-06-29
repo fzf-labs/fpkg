@@ -13,8 +13,38 @@ var Import string
 //go:embed tpl/var.tpl
 var Var string
 
+//go:embed tpl/var-cache.tpl
+var VarCache string
+
 //go:embed tpl/types.tpl
 var Types string
+
+//go:embed tpl/interface-create-one.tpl
+var InterfaceCreateOne string
+
+//go:embed tpl/interface-delete-multi-by-field-complex.tpl
+var InterfaceDeleteMultiByFieldComplex string
+
+//go:embed tpl/interface-delete-one-by-field.tpl.tpl
+var InterfaceDeleteOneByField string
+
+//go:embed tpl/interface-find-multi-by-field-complex.tpl
+var InterfaceFindMultiByFieldComplex string
+
+//go:embed tpl/interface-find-multi-by-fields.tpl
+var InterfaceFindMultiByFields string
+
+//go:embed tpl/interface-find-multi-cache-by-field-complex.tpl
+var InterfaceFindMultiCacheByFieldComplex string
+
+//go:embed tpl/interface-find-one-cache-by-field.tpl
+var InterfaceFindOneCacheByField string
+
+//go:embed tpl/interface-find-one-cache-by-fields.tpl
+var InterfaceFindOneCacheByFields string
+
+//go:embed tpl/interface-update-one.tpl
+var InterfaceUpdateOne string
 
 // TableRepo 表结构
 type TableRepo struct {

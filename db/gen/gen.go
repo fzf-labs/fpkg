@@ -5,6 +5,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/fzf-labs/fpkg/util/jsonutil"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"gorm.io/driver/mysql"
@@ -35,11 +36,13 @@ func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType)
 		}
 		return tag
 	}))
+	tableModels := g.GenerateAllTable()
+	jsonutil.Dump(tableModels)
 	// 从数据库中生成所有表
-	g.ApplyBasic(g.GenerateAllTable()...)
+	//g.ApplyBasic(tableModels...)
 	// 在结构或表模型上应用diy接口
 	//g.ApplyInterface(func(model.Method) {}, g.GenerateModel("user"))
-	g.Execute()
+	//g.Execute()
 }
 
 // DefaultMySqlDataMap 默认mysql字段类型映射

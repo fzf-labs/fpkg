@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/fzf-labs/fpkg/util/jsonutil"
 	"gorm.io/gorm"
 )
 
@@ -37,25 +38,25 @@ func (r *Repo) GenerationRepo() error {
 
 func (r *Repo) GenerationTable(table string) error {
 	dbName := r.gorm.Migrator().CurrentDatabase()
-	fmt.Println(dbName)
+	jsonutil.Dump(dbName)
 	indexes, err := r.gorm.Migrator().GetIndexes(table)
 	if err != nil {
 		return err
 	}
-	fmt.Println(indexes)
+	jsonutil.Dump(indexes)
 	columnTypes, err := r.gorm.Migrator().ColumnTypes(table)
 	if err != nil {
 		return err
 	}
-	fmt.Println(columnTypes)
-	pkgTpl, err := NewTemplate("pkg").Parse(Pkg).Execute(map[string]any{
+	jsonutil.Dump(columnTypes)
+	pkgTpl, err := NewTemplate("Pkg").Parse(Pkg).Execute(map[string]any{
 		"lowerDbName": dbName,
 	})
 	if err != nil {
 		return err
 	}
 	fmt.Println(pkgTpl)
-	importTpl, err := NewTemplate("import").Parse(Import).Execute(map[string]any{
+	importTpl, err := NewTemplate("Import").Parse(Import).Execute(map[string]any{
 		"mod":          r.mod,
 		"relativePath": r.relativePath,
 		"lowerDbName":  dbName,
@@ -66,13 +67,91 @@ func (r *Repo) GenerationTable(table string) error {
 	fmt.Println(importTpl)
 	upperTableName := UpperName(table)
 	lowerTableName := LowerName(table)
-	varTpl, err := NewTemplate("var").Parse(Var).Execute(map[string]any{
+	var cacheKeys string
+	var methods string
+	interfaceCreateOneTpl, err := NewTemplate("InterfaceCreateOne").Parse(InterfaceCreateOne).Execute(map[string]any{
 		"upperTableName": upperTableName,
 		"lowerTableName": lowerTableName,
 	})
 	if err != nil {
 		return err
 	}
+	interfaceUpdateOneTpl, err := NewTemplate("InterfaceUpdateOne").Parse(InterfaceUpdateOne).Execute(map[string]any{
+		"upperTableName": upperTableName,
+		"lowerTableName": lowerTableName,
+	})
+
+	methods += interfaceCreateOneTpl.String()
+	methods += interfaceUpdateOneTpl.String()
+	for _, index := range indexes {
+		//唯一性索引
+		unique, _ := index.Unique()
+		if unique {
+			var cacheField string
+			for _, column := range index.Columns() {
+				cacheField += UpperName(column)
+			}
+			varCacheTpl, err := NewTemplate("VarCache").Parse(VarCache).Execute(map[string]any{
+				"cacheField": cacheField,
+			})
+			if err != nil {
+				return err
+			}
+			cacheKeys += varCacheTpl.String()
+
+			if len(index.Columns()) > 1 {
+				interfaceDeleteMultiByFieldComplex, err := NewTemplate("InterfaceDeleteMultiByFieldComplex").Parse(InterfaceDeleteMultiByFieldComplex).Execute(map[string]any{
+					"upperTableName": upperTableName,
+					"lowerTableName": lowerTableName,
+				})
+				if err != nil {
+					return err
+				}
+				fmt.Println(interfaceDeleteMultiByFieldComplex)
+			} else {
+				interfaceFindOneCacheByField, err := NewTemplate("InterfaceFindOneCacheByField").Parse(InterfaceFindOneCacheByField).Execute(map[string]any{
+					"upperTableName": upperTableName,
+					"lowerTableName": lowerTableName,
+					"upperField":     UpperName(index.Columns()[0]),
+					"lowerField":     LowerName(index.Columns()[0]),
+					"dataType":       lowerTableName,
+				})
+				fmt.Println(interfaceFindOneCacheByField)
+
+				if err != nil {
+					return err
+				}
+				interfaceFindMultiCacheByFieldComplex, err := NewTemplate("InterfaceFindMultiCacheByFieldComplex").Parse(InterfaceFindMultiCacheByFieldComplex).Execute(map[string]any{
+					"upperTableName": upperTableName,
+					"lowerTableName": lowerTableName,
+				})
+				if err != nil {
+					return err
+				}
+				fmt.Println(interfaceFindMultiCacheByFieldComplex)
+			}
+
+		} else {
+
+		}
+	}
+	varTpl, err := NewTemplate("Var").Parse(Var).Execute(map[string]any{
+		"upperTableName": upperTableName,
+		"lowerTableName": lowerTableName,
+		"cacheKeys":      cacheKeys,
+	})
+	if err != nil {
+		return err
+	}
 	fmt.Println(varTpl)
+	typesTpl, err := NewTemplate("Types").Parse(Types).Execute(map[string]any{
+		"upperTableName": upperTableName,
+		"lowerTableName": lowerTableName,
+		"methods":        methods,
+	})
+	if err != nil {
+		return err
+	}
+	fmt.Println(typesTpl)
 	return nil
 }
