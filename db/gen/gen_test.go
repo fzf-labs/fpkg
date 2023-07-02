@@ -18,7 +18,7 @@ func TestGenerationPostgres(t *testing.T) {
 	if err != nil {
 		return
 	}
-	Generation(client, DefaultMySqlDataMap, "", "./example/postgres/user_dao", "./example/postgres/user_model", "./example/postgres/user_repo")
+	Generation(client, DefaultMySqlDataMap, "github.com/fzf-labs/fpkg", "./example/postgres/user_dao", "./example/postgres/user_model", "./example/postgres/user_repo")
 }
 
 func TestGenerationMysql(t *testing.T) {

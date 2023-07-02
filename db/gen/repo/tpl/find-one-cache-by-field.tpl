@@ -1,8 +1,9 @@
-func (u *{{.lowerTableName}}Repo) FindOneBy{{.upperField}}(ctx context.Context, {{.lowerField}} {{.dataType}}) (*{{.lowerTableName}}_model.{{.upperTableName}}, error) {
+// FindOneBy{{.upperField}} 根据{{.lowerField}}查询一条数据并设置缓存
+func (r *{{.lowerTableName}}Repo) FindOneBy{{.upperField}}(ctx context.Context, {{.lowerField}} {{.dataType}}) (*{{.lowerTableName}}_model.{{.upperTableName}}, error) {
 	resp := new({{.lowerTableName}}_model.{{.upperTableName}})
-	cache := CacheBy{{.upperField}}.NewSingleKey(u.redis)
+	cache := CacheBy{{.upperField}}.NewSingleKey(r.redis)
 	cacheValue, err := cache.SingleCache(ctx, {{.lowerField}} , func() (string, error) {
-		dao := {{.lowerTableName}}_dao.Use(u.db).{{.upperTableName}}
+		dao := {{.lowerTableName}}_dao.Use(r.db).{{.upperTableName}}
 		result, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.Eq({{.lowerField}})).First()
 		if err != nil && err != gorm.ErrRecordNotFound {
 			return "", err

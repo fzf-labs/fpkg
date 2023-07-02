@@ -16,6 +16,12 @@ var Var string
 //go:embed tpl/var-cache.tpl
 var VarCache string
 
+//go:embed tpl/var-single-cache.tpl
+var VarSingleCache string
+
+//go:embed tpl/var-single-cache-del.tpl
+var VarSingleCacheDel string
+
 //go:embed tpl/types.tpl
 var Types string
 
@@ -28,17 +34,23 @@ var InterfaceCreateOne string
 //go:embed tpl/create-one.tpl
 var CreateOne string
 
-//go:embed tpl/interface-delete-multi-by-field-plural.tpl
-var InterfaceDeleteMultiByFieldPlural string
+//go:embed tpl/interface-delete-multi-cache-by-field-plural.tpl
+var InterfaceDeleteMultiCacheByFieldPlural string
 
-//go:embed tpl/delete-multi-by-field-plural.tpl
-var DeleteMultiByFieldPlural string
+//go:embed tpl/delete-multi-cache-by-field-plural.tpl
+var DeleteMultiCacheByFieldPlural string
 
-//go:embed tpl/interface-delete-one-by-field.tpl
-var InterfaceDeleteOneByField string
+//go:embed tpl/interface-delete-one-cache-by-field.tpl
+var InterfaceDeleteOneCacheByField string
 
-//go:embed tpl/delete-one-by-field.tpl
-var DeleteOneByField string
+//go:embed tpl/delete-one-cache-by-field.tpl
+var DeleteOneCacheByField string
+
+//go:embed tpl/interface-delete-one-cache-by-fields.tpl
+var InterfaceDeleteOneCacheByFields string
+
+//go:embed tpl/delete-one-cache-by-fields.tpl
+var DeleteOneCacheByFields string
 
 //go:embed tpl/interface-find-multi-by-field-plural.tpl
 var InterfaceFindMultiByFieldPlural string
@@ -76,28 +88,8 @@ var InterfaceUpdateOne string
 //go:embed tpl/update-one.tpl
 var UpdateOne string
 
-// TableRepo 表结构
-type TableRepo struct {
-	dbName         string
-	lowerDbName    string
-	upperDbName    string
-	tableName      string
-	lowerTableName string
-	upperTableName string
-	cacheKeys      []string
-	methods        []string
-}
+//go:embed tpl/interface-delete-unique-index-cache.tpl
+var InterfaceDeleteUniqueIndexCache string
 
-type FuncRepo struct {
-	lowerField string
-	upperField string
-	in         string
-}
-
-type FieldRepo struct {
-	lowerField       string //字段小写
-	upperField       string //大写字段
-	lowerFieldPlural string //字段小写复数
-	upperFieldPlural string //字段大写复数
-	dataType         string //字段类型
-}
+//go:embed tpl/delete-unique-index-cache.tpl
+var DeleteUniqueIndexCache string

@@ -1,0 +1,1 @@
+	cacheBy{{.cacheField}}    := CacheBy{{.cacheField}}.NewSingleKey(r.redis)

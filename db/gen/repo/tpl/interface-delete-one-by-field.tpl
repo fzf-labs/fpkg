@@ -1,1 +1,0 @@
-DeleteOneBy{{.upperField}}(ctx context.Context, {{.lowerField}} {{.dataType}}) error

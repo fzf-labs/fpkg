@@ -45,15 +45,17 @@ func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType)
 	if err != nil {
 		return
 	}
-	generationRepo := repo.NewGenerationRepo(db, mod, repoPath)
+	generationRepo := repo.NewGenerationRepo(db, daoPath, modelPath, repoPath)
 	for _, tableName := range tables {
 		columnNameToDataType := make(map[string]string)
 		queryStructMeta := g.GenerateModel(tableName)
 		for _, v := range queryStructMeta.Fields {
 			columnNameToDataType[v.ColumnName] = v.Type
 		}
-		generationRepo.GenerationTable(tableName, columnNameToDataType)
-
+		err = generationRepo.GenerationTable(tableName, columnNameToDataType)
+		if err != nil {
+			return
+		}
 	}
 }
 
