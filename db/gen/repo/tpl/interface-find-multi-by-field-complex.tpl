@@ -1,1 +1,0 @@
-FindMultiBy{{.lowerFieldComplex}}(ctx context.Context, {{.lowerFields}} []{{.dataType}}) ([]*{{.lowerTableName}}_model.{{.upperTableName}}, error)

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/fzf-labs/fpkg/cache/collectioncache"
+	"github.com/fzf-labs/fpkg/conv"
 )
 
 // NewCollectionKey 构建一个带有前缀的缓存key 使用 ":" 分隔
@@ -22,8 +23,12 @@ type CollectionKey struct {
 }
 
 // BuildKey  获取key
-func (p *CollectionKey) BuildKey(keys ...string) string {
-	return strings.Join(keys, ":")
+func (p *CollectionKey) BuildKey(keys ...any) string {
+	keyStr := make([]string, 0)
+	for _, v := range keys {
+		keyStr = append(keyStr, conv.String(v))
+	}
+	return strings.Join(keyStr, ":")
 }
 
 // FinalKey 获取实际key

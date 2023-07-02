@@ -1,9 +1,9 @@
-func (u *{{.lowerTableName}}Repo) FindOneCacheBy{{.upperFields}}(ctx context.Context, {{.fieldsIn}}) (*{{.lowerTableName}}_model.{{.upperTableName}}, error) {
+func (u *{{.lowerTableName}}Repo) FindOneCacheBy{{.upperFields}}(ctx context.Context, {{.fieldAndDataTypes}}) (*{{.lowerTableName}}_model.{{.upperTableName}}, error) {
 	resp := new({{.lowerTableName}}_model.{{.upperTableName}})
 	cache := CacheBy{{.upperFields}}.NewSingleKey(u.redis)
-	cacheValue, err := cache.SingleCache(ctx, {{.cacheKeyIn}}, func() (string, error) {
-		{{.lowerTableName}}Dao := {{.lowerTableName}}_dao.Use(u.db).{{.upperTableName}}
-		result, err := {{.lowerTableName}}Dao.WithContext(ctx).Where({{.whereIn}}).First()
+	cacheValue, err := cache.SingleCache(ctx, cache.BuildKey( {{.fieldsJoin}}), func() (string, error) {
+		dao := {{.lowerTableName}}_dao.Use(u.db).{{.upperTableName}}
+		result, err := dao.WithContext(ctx).Where({{.whereFields}}).First()
 		if err != nil && err != gorm.ErrRecordNotFound {
 			return "", err
 		}

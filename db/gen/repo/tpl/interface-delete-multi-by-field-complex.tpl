@@ -1,1 +1,0 @@
-DeleteMultiBy{{.upperFields}}(ctx context.Context, {{.lowerFields}} []{{.dataType}}) error

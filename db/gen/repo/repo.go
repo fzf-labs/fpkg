@@ -2,9 +2,12 @@ package repo
 
 import (
 	"fmt"
-	"sync"
+	"os"
+	"strconv"
+	"strings"
 
-	"github.com/fzf-labs/fpkg/util/jsonutil"
+	"github.com/jinzhu/inflection"
+	"golang.org/x/tools/imports"
 	"gorm.io/gorm"
 )
 
@@ -14,48 +17,33 @@ type Repo struct {
 	relativePath string
 }
 
-func NewRepo(gorm *gorm.DB, mod string, relativePath string) *Repo {
+func NewGenerationRepo(gorm *gorm.DB, mod string, relativePath string) *Repo {
 	return &Repo{gorm: gorm, mod: mod, relativePath: relativePath}
 }
+func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]string) error {
+	var file string
 
-func (r *Repo) GenerationRepo() error {
-	//获取表
-	tables, err := r.gorm.Migrator().GetTables()
-	if err != nil {
-		return err
-	}
-	var wg sync.WaitGroup
-	for _, table := range tables {
-		wg.Add(1)
-		go func(table string) {
-			_ = r.GenerationTable(table)
-			wg.Done()
-		}(table)
-	}
-	wg.Wait()
-	return nil
-}
+	var createMethods string
+	var updateMethods string
+	var findMethods string
+	var delMethods string
 
-func (r *Repo) GenerationTable(table string) error {
+	var createFunc string
+	var updateFunc string
+	var findFunc string
+	var delFunc string
+
 	dbName := r.gorm.Migrator().CurrentDatabase()
-	jsonutil.Dump(dbName)
 	indexes, err := r.gorm.Migrator().GetIndexes(table)
 	if err != nil {
 		return err
 	}
-	jsonutil.Dump(indexes)
-	columnTypes, err := r.gorm.Migrator().ColumnTypes(table)
-	if err != nil {
-		return err
-	}
-	jsonutil.Dump(columnTypes)
 	pkgTpl, err := NewTemplate("Pkg").Parse(Pkg).Execute(map[string]any{
 		"lowerDbName": dbName,
 	})
 	if err != nil {
 		return err
 	}
-	fmt.Println(pkgTpl)
 	importTpl, err := NewTemplate("Import").Parse(Import).Execute(map[string]any{
 		"mod":          r.mod,
 		"relativePath": r.relativePath,
@@ -64,12 +52,16 @@ func (r *Repo) GenerationTable(table string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(importTpl)
 	upperTableName := UpperName(table)
 	lowerTableName := LowerName(table)
-	var cacheKeys string
-	var methods string
 	interfaceCreateOneTpl, err := NewTemplate("InterfaceCreateOne").Parse(InterfaceCreateOne).Execute(map[string]any{
+		"upperTableName": upperTableName,
+		"lowerTableName": lowerTableName,
+	})
+	if err != nil {
+		return err
+	}
+	createOneTpl, err := NewTemplate("CreateOne").Parse(CreateOne).Execute(map[string]any{
 		"upperTableName": upperTableName,
 		"lowerTableName": lowerTableName,
 	})
@@ -80,9 +72,21 @@ func (r *Repo) GenerationTable(table string) error {
 		"upperTableName": upperTableName,
 		"lowerTableName": lowerTableName,
 	})
-
-	methods += interfaceCreateOneTpl.String()
-	methods += interfaceUpdateOneTpl.String()
+	if err != nil {
+		return err
+	}
+	updateOneTpl, err := NewTemplate("UpdateOne").Parse(UpdateOne).Execute(map[string]any{
+		"upperTableName": upperTableName,
+		"lowerTableName": lowerTableName,
+	})
+	if err != nil {
+		return err
+	}
+	createMethods += fmt.Sprintln(interfaceCreateOneTpl.String())
+	updateMethods += fmt.Sprintln(interfaceUpdateOneTpl.String())
+	createFunc += fmt.Sprintln(createOneTpl.String())
+	updateFunc += fmt.Sprintln(updateOneTpl.String())
+	var cacheKeys string
 	for _, index := range indexes {
 		//唯一性索引
 		unique, _ := index.Unique()
@@ -98,41 +102,179 @@ func (r *Repo) GenerationTable(table string) error {
 				return err
 			}
 			cacheKeys += varCacheTpl.String()
+		}
 
-			if len(index.Columns()) > 1 {
-				interfaceDeleteMultiByFieldComplex, err := NewTemplate("InterfaceDeleteMultiByFieldComplex").Parse(InterfaceDeleteMultiByFieldComplex).Execute(map[string]any{
-					"upperTableName": upperTableName,
-					"lowerTableName": lowerTableName,
+		if len(index.Columns()) > 1 {
+			var upperFields string
+			var fieldAndDataTypes string
+			fieldsJoin := strings.Join(index.Columns(), ",")
+			var whereFields string
+			for _, v := range index.Columns() {
+				upperFields += UpperName(v)
+				fieldAndDataTypes += fmt.Sprintf("%s %s,", LowerName(v), columnNameToDataType[v])
+				whereFields += fmt.Sprintf("dao.%s.Eq(%s),", UpperName(v), LowerName(v))
+			}
+			if unique {
+				interfaceFindOneCacheByFields, err := NewTemplate("InterfaceFindOneCacheByFields").Parse(InterfaceFindOneCacheByFields).Execute(map[string]any{
+					"upperTableName":    upperTableName,
+					"lowerTableName":    lowerTableName,
+					"upperFields":       upperFields,
+					"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
 				})
 				if err != nil {
 					return err
 				}
-				fmt.Println(interfaceDeleteMultiByFieldComplex)
+				findMethods += fmt.Sprintln(interfaceFindOneCacheByFields.String())
+				findOneCacheByFields, err := NewTemplate("FindOneCacheByFields").Parse(FindOneCacheByFields).Execute(map[string]any{
+					"upperTableName": upperTableName,
+					"lowerTableName": lowerTableName,
+					"upperFields":    upperFields,
+					"fieldsJoin":     fieldsJoin,
+					"whereFields":    strings.Trim(whereFields, ","),
+				})
+				if err != nil {
+					return err
+				}
+				findFunc += fmt.Sprintln(findOneCacheByFields.String())
 			} else {
+				interfaceFindMultiByFields, err := NewTemplate("InterfaceFindMultiByFields").Parse(InterfaceFindMultiByFields).Execute(map[string]any{
+					"upperTableName":    upperTableName,
+					"lowerTableName":    lowerTableName,
+					"upperFields":       upperFields,
+					"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
+				})
+				if err != nil {
+					return err
+				}
+				findMethods += fmt.Sprintln(interfaceFindMultiByFields.String())
+				findMultiByFields, err := NewTemplate("FindMultiByFields").Parse(FindMultiByFields).Execute(map[string]any{
+					"upperTableName":    upperTableName,
+					"lowerTableName":    lowerTableName,
+					"upperFields":       upperFields,
+					"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
+					"whereFields":       strings.Trim(whereFields, ","),
+				})
+				if err != nil {
+					return err
+				}
+				findFunc += fmt.Sprintln(findMultiByFields.String())
+			}
+
+		} else {
+			if unique {
 				interfaceFindOneCacheByField, err := NewTemplate("InterfaceFindOneCacheByField").Parse(InterfaceFindOneCacheByField).Execute(map[string]any{
 					"upperTableName": upperTableName,
 					"lowerTableName": lowerTableName,
 					"upperField":     UpperName(index.Columns()[0]),
 					"lowerField":     LowerName(index.Columns()[0]),
-					"dataType":       lowerTableName,
+					"dataType":       columnNameToDataType[index.Columns()[0]],
 				})
-				fmt.Println(interfaceFindOneCacheByField)
-
 				if err != nil {
 					return err
 				}
-				interfaceFindMultiCacheByFieldComplex, err := NewTemplate("InterfaceFindMultiCacheByFieldComplex").Parse(InterfaceFindMultiCacheByFieldComplex).Execute(map[string]any{
+				findOneCacheByField, err := NewTemplate("FindOneCacheByField").Parse(FindOneCacheByField).Execute(map[string]any{
 					"upperTableName": upperTableName,
 					"lowerTableName": lowerTableName,
+					"upperField":     UpperName(index.Columns()[0]),
+					"lowerField":     LowerName(index.Columns()[0]),
+					"dataType":       columnNameToDataType[index.Columns()[0]],
+				})
+				findMethods += fmt.Sprintln(interfaceFindOneCacheByField.String())
+				findFunc += fmt.Sprintln(findOneCacheByField.String())
+
+				interfaceFindMultiCacheByFieldPlural, err := NewTemplate("InterfaceFindMultiCacheByFieldPlural").Parse(InterfaceFindMultiCacheByFieldPlural).Execute(map[string]any{
+					"upperTableName":   upperTableName,
+					"lowerTableName":   lowerTableName,
+					"upperFieldPlural": inflection.Plural(UpperName(index.Columns()[0])),
+					"lowerFieldPlural": inflection.Plural(LowerName(index.Columns()[0])),
+					"dataType":         columnNameToDataType[index.Columns()[0]],
 				})
 				if err != nil {
 					return err
 				}
-				fmt.Println(interfaceFindMultiCacheByFieldComplex)
+				findMultiCacheByFieldPlural, err := NewTemplate("FindMultiCacheByFieldPlural").Parse(FindMultiCacheByFieldPlural).Execute(map[string]any{
+					"upperTableName":   upperTableName,
+					"lowerTableName":   lowerTableName,
+					"upperFieldPlural": inflection.Plural(UpperName(index.Columns()[0])),
+					"lowerFieldPlural": inflection.Plural(LowerName(index.Columns()[0])),
+					"dataType":         columnNameToDataType[index.Columns()[0]],
+				})
+				if err != nil {
+					return err
+				}
+				findMethods += fmt.Sprintln(interfaceFindMultiCacheByFieldPlural.String())
+				findFunc += fmt.Sprintln(findMultiCacheByFieldPlural.String())
+
+				interfaceDeleteOneByField, err := NewTemplate("InterfaceDeleteOneByField").Parse(InterfaceDeleteOneByField).Execute(map[string]any{
+					"upperTableName": upperTableName,
+					"lowerTableName": lowerTableName,
+					"upperField":     UpperName(index.Columns()[0]),
+					"lowerField":     LowerName(index.Columns()[0]),
+					"dataType":       columnNameToDataType[index.Columns()[0]],
+				})
+				if err != nil {
+					return err
+				}
+				deleteOneByField, err := NewTemplate("DeleteOneByField").Parse(DeleteOneByField).Execute(map[string]any{
+					"upperTableName": upperTableName,
+					"lowerTableName": lowerTableName,
+					"upperField":     UpperName(index.Columns()[0]),
+					"lowerField":     LowerName(index.Columns()[0]),
+					"dataType":       columnNameToDataType[index.Columns()[0]],
+				})
+				if err != nil {
+					return err
+				}
+				delMethods += fmt.Sprintln(interfaceDeleteOneByField.String())
+				delFunc += fmt.Sprintln(deleteOneByField.String())
+				interfaceDeleteMultiByFieldPlural, err := NewTemplate("InterfaceDeleteMultiByFieldPlural").Parse(InterfaceDeleteMultiByFieldPlural).Execute(map[string]any{
+					"upperTableName":   upperTableName,
+					"lowerTableName":   lowerTableName,
+					"upperFieldPlural": inflection.Plural(UpperName(index.Columns()[0])),
+					"lowerFieldPlural": inflection.Plural(LowerName(index.Columns()[0])),
+					"dataType":         columnNameToDataType[index.Columns()[0]],
+				})
+				if err != nil {
+					return err
+				}
+				deleteMultiByFieldPlural, err := NewTemplate("DeleteMultiByFieldPlural").Parse(DeleteMultiByFieldPlural).Execute(map[string]any{
+					"upperTableName":   upperTableName,
+					"lowerTableName":   lowerTableName,
+					"upperField":       UpperName(index.Columns()[0]),
+					"upperFieldPlural": inflection.Plural(UpperName(index.Columns()[0])),
+					"lowerFieldPlural": inflection.Plural(LowerName(index.Columns()[0])),
+					"dataType":         columnNameToDataType[index.Columns()[0]],
+				})
+				if err != nil {
+					return err
+				}
+				delMethods += fmt.Sprintln(interfaceDeleteMultiByFieldPlural.String())
+				delFunc += fmt.Sprintln(deleteMultiByFieldPlural.String())
+			} else {
+				interfaceFindMultiByFieldPlural, err := NewTemplate("InterfaceFindMultiByFieldPlural").Parse(InterfaceFindMultiByFieldPlural).Execute(map[string]any{
+					"upperTableName":   upperTableName,
+					"lowerTableName":   lowerTableName,
+					"upperFieldPlural": inflection.Plural(UpperName(index.Columns()[0])),
+					"lowerFieldPlural": inflection.Plural(LowerName(index.Columns()[0])),
+					"dataType":         columnNameToDataType[index.Columns()[0]],
+				})
+				if err != nil {
+					return err
+				}
+				findMultiByFieldPlural, err := NewTemplate("FindMultiByFieldPlural").Parse(FindMultiByFieldPlural).Execute(map[string]any{
+					"upperField":       UpperName(index.Columns()[0]),
+					"upperTableName":   upperTableName,
+					"lowerTableName":   lowerTableName,
+					"upperFieldPlural": inflection.Plural(UpperName(index.Columns()[0])),
+					"lowerFieldPlural": inflection.Plural(LowerName(index.Columns()[0])),
+					"dataType":         columnNameToDataType[index.Columns()[0]],
+				})
+				if err != nil {
+					return err
+				}
+				findMethods += fmt.Sprintln(interfaceFindMultiByFieldPlural.String())
+				findFunc += fmt.Sprintln(findMultiByFieldPlural.String())
 			}
-
-		} else {
-
 		}
 	}
 	varTpl, err := NewTemplate("Var").Parse(Var).Execute(map[string]any{
@@ -143,7 +285,18 @@ func (r *Repo) GenerationTable(table string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(varTpl)
+	newTpl, err := NewTemplate("New").Parse(New).Execute(map[string]any{
+		"upperTableName": upperTableName,
+		"lowerTableName": lowerTableName,
+	})
+	if err != nil {
+		return err
+	}
+	var methods string
+	methods += createMethods
+	methods += updateMethods
+	methods += delMethods
+	methods += findMethods
 	typesTpl, err := NewTemplate("Types").Parse(Types).Execute(map[string]any{
 		"upperTableName": upperTableName,
 		"lowerTableName": lowerTableName,
@@ -152,6 +305,40 @@ func (r *Repo) GenerationTable(table string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(typesTpl)
+	file += fmt.Sprintln(pkgTpl.String())
+	file += fmt.Sprintln(importTpl.String())
+	file += fmt.Sprintln(varTpl.String())
+	file += fmt.Sprintln(typesTpl.String())
+	file += fmt.Sprintln(newTpl.String())
+	file += fmt.Sprintln(createFunc)
+	file += fmt.Sprintln(updateFunc)
+	file += fmt.Sprintln(delFunc)
+	file += fmt.Sprintln(findFunc)
+	outputFile := r.relativePath + table + ".repo.go"
+	err = r.output(outputFile, []byte(file))
+	if err != nil {
+		return err
+	}
 	return nil
+}
+
+func (r *Repo) output(fileName string, content []byte) error {
+	result, err := imports.Process(fileName, content, nil)
+	if err != nil {
+		lines := strings.Split(string(content), "\n")
+		errLine, _ := strconv.Atoi(strings.Split(err.Error(), ":")[1])
+		startLine, endLine := errLine-5, errLine+5
+		fmt.Println("Format fail:", errLine, err)
+		if startLine < 0 {
+			startLine = 0
+		}
+		if endLine > len(lines)-1 {
+			endLine = len(lines) - 1
+		}
+		for i := startLine; i <= endLine; i++ {
+			fmt.Println(i, lines[i])
+		}
+		return fmt.Errorf("cannot format file: %w", err)
+	}
+	return os.WriteFile(fileName, result, 0640)
 }

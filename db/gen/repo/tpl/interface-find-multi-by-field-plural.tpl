@@ -1,0 +1,1 @@
+FindMultiBy{{.lowerFieldPlural}}(ctx context.Context, {{.lowerFieldPlural}} []{{.dataType}}) ([]*{{.lowerTableName}}_model.{{.upperTableName}}, error)

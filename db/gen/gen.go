@@ -5,7 +5,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/fzf-labs/fpkg/util/jsonutil"
+	"github.com/fzf-labs/fpkg/db/gen/repo"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"gorm.io/driver/mysql"
@@ -15,11 +15,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType) (dataType string), outPath string, modelPkgPath string) {
+func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType) (dataType string), mod string, daoPath string, modelPath string, repoPath string) {
 	// 初始化
 	g := gen.NewGenerator(gen.Config{
-		OutPath:      outPath,
-		ModelPkgPath: modelPkgPath,
+		OutPath:      daoPath,
+		ModelPkgPath: modelPath,
 	})
 	// 使用数据库
 	g.UseDB(db)
@@ -36,13 +36,25 @@ func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType)
 		}
 		return tag
 	}))
-	tableModels := g.GenerateAllTable()
-	jsonutil.Dump(tableModels)
 	// 从数据库中生成所有表
-	//g.ApplyBasic(tableModels...)
-	// 在结构或表模型上应用diy接口
-	//g.ApplyInterface(func(model.Method) {}, g.GenerateModel("user"))
-	//g.Execute()
+	g.ApplyBasic(g.GenerateAllTable()...)
+	g.Execute()
+
+	//生成repo
+	tables, err := db.Migrator().GetTables()
+	if err != nil {
+		return
+	}
+	generationRepo := repo.NewGenerationRepo(db, mod, repoPath)
+	for _, tableName := range tables {
+		columnNameToDataType := make(map[string]string)
+		queryStructMeta := g.GenerateModel(tableName)
+		for _, v := range queryStructMeta.Fields {
+			columnNameToDataType[v.ColumnName] = v.Type
+		}
+		generationRepo.GenerationTable(tableName, columnNameToDataType)
+
+	}
 }
 
 // DefaultMySqlDataMap 默认mysql字段类型映射

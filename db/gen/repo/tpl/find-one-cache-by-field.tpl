@@ -2,8 +2,8 @@ func (u *{{.lowerTableName}}Repo) FindOneBy{{.upperField}}(ctx context.Context, 
 	resp := new({{.lowerTableName}}_model.{{.upperTableName}})
 	cache := CacheBy{{.upperField}}.NewSingleKey(u.redis)
 	cacheValue, err := cache.SingleCache(ctx, {{.lowerField}} , func() (string, error) {
-		{{.lowerTableName}}Dao := {{.lowerTableName}}_dao.Use(u.db).{{.upperTableName}}
-		result, err := {{.lowerTableName}}Dao.WithContext(ctx).Where({{.lowerTableName}}Dao.{{.upperField}}.Eq({{.lowerField}})).First()
+		dao := {{.lowerTableName}}_dao.Use(u.db).{{.upperTableName}}
+		result, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.Eq({{.lowerField}})).First()
 		if err != nil && err != gorm.ErrRecordNotFound {
 			return "", err
 		}

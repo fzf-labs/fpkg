@@ -8,7 +8,7 @@ CreateOne
 ### 唯一索引
 ```
 DeleteOneByField
-DeleteMultiByFieldComplex
+DeleteMultiByFieldPlural
 ```
 ## 改:
 ```
@@ -19,7 +19,7 @@ UpdateOne
 #### 单个字段
 ```
 FindOneCacheByField   带缓存
-FindMultiCacheByFieldComplex 带缓存
+FindMultiCacheByFieldPlural 带缓存
 ```
 #### 多个字段
 ```
@@ -29,7 +29,7 @@ FindOneCacheByFields 带缓存
 
 #### 单个字段
 ```
-FindMultiByFieldComplex 不带缓存
+FindMultiByFieldPlural 不带缓存
 ```
 #### 多个字段
 ```

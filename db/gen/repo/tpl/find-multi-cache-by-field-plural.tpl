@@ -1,9 +1,9 @@
-func (u *{{.lowerTableName}}Repo) FindMultiBy{{.upperFields}}(ctx context.Context, {{.lowerFields}} []{{.dataType}}) ([]*{{.lowerTableName}}_model.{{.upperTableName}}, error) {
+func (u *{{.lowerTableName}}Repo) FindMultiBy{{.upperFieldPlural}}(ctx context.Context, {{.lowerFieldPlural}} []{{.dataType}}) ([]*{{.lowerTableName}}_model.{{.upperTableName}}, error) {
 	resp := make([]*{{.lowerTableName}}_model.{{.upperTableName}}, 0)
 	cacheKey := CacheBy{{.lowerField}}.NewBatchKey(u.redis)
-	cacheValue, err := cacheKey.BatchKeyCache(ctx, {{.lowerFields}}, func() (map[string]string, error) {
-		{{.lowerTableName}}Dao := {{.lowerTableName}}_dao.Use(u.db).{{.upperTableName}}
-		result, err := {{.lowerTableName}}Dao.WithContext(ctx).Where({{.lowerTableName}}Dao.{{.upperField}}.In({{.lowerFields}}...)).Find()
+	cacheValue, err := cacheKey.BatchKeyCache(ctx, {{.lowerFieldPlural}}, func() (map[string]string, error) {
+		dao := {{.lowerTableName}}_dao.Use(u.db).{{.upperTableName}}
+		result, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.In({{.lowerFieldPlural}}...)).Find()
 		if err != nil && err != gorm.ErrRecordNotFound {
 			return nil, err
 		}

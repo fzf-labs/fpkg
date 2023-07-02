@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/fzf-labs/fpkg/cache/rockscache"
+	"github.com/fzf-labs/fpkg/conv"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -24,8 +25,12 @@ type HashKey struct {
 }
 
 // BuildKey  获取key
-func (p *HashKey) BuildKey(keys ...string) string {
-	return strings.Join(keys, ":")
+func (p *HashKey) BuildKey(keys ...any) string {
+	keyStr := make([]string, 0)
+	for _, v := range keys {
+		keyStr = append(keyStr, conv.String(v))
+	}
+	return strings.Join(keyStr, ":")
 }
 
 // FinalKey 获取实际key

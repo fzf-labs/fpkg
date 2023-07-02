@@ -1,1 +1,1 @@
-FindMultiBy{{.upperFields}}(ctx context.Context, {{.fieldsIn}}) ([]*{{.lowerTableName}}_model.{{.upperTableName}}, error)
+FindMultiBy{{.upperFields}}(ctx context.Context, {{.fieldAndDataTypes}}) ([]*{{.lowerTableName}}_model.{{.upperTableName}}, error)

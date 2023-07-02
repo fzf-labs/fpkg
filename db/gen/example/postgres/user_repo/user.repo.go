@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/fzf-labs/fpkg/cache/cachekey"
-	"github.com/fzf-labs/fpkg/conv"
 	"github.com/fzf-labs/fpkg/db/gen/example/postgres/user_dao"
 	"github.com/fzf-labs/fpkg/db/gen/example/postgres/user_model"
 	"github.com/go-redis/redis/v8"
@@ -236,9 +235,9 @@ func (u *userRepo) FindMultiByEmailStatus(ctx context.Context, email string, sta
 func (u *userRepo) FindOneCacheByPhoneStatus(ctx context.Context, phone string, status int16) (*user_model.User, error) {
 	resp := new(user_model.User)
 	cache := CacheByPhoneStatus.NewSingleKey(u.redis)
-	cacheValue, err := cache.SingleCache(ctx, cache.BuildKey(conv.String(phone), conv.String(status)), func() (string, error) {
-		userDao := user_dao.Use(u.db).User
-		result, err := userDao.WithContext(ctx).Where(userDao.Phone.Eq(phone), userDao.Status.Eq(status)).First()
+	cacheValue, err := cache.SingleCache(ctx, cache.BuildKey(phone, status), func() (string, error) {
+		dao := user_dao.Use(u.db).User
+		result, err := dao.WithContext(ctx).Where(dao.Phone.Eq(phone), dao.Status.Eq(status)).First()
 		if err != nil && err != gorm.ErrRecordNotFound {
 			return "", err
 		}

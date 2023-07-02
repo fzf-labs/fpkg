@@ -1,1 +1,1 @@
-FindOneCacheBy{{.upperFields}}(ctx context.Context, {{.fieldsIn}}) (*{{.lowerTableName}}_model.{{.upperTableName}}, error)
+FindOneCacheBy{{.upperFields}}(ctx context.Context, {{.fieldAndDataTypes}}) (*{{.lowerTableName}}_model.{{.upperTableName}}, error)
