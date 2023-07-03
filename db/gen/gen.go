@@ -15,7 +15,13 @@ import (
 	"gorm.io/gorm"
 )
 
-func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType) (dataType string), mod string, daoPath string, modelPath string, repoPath string) {
+func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType) (dataType string), outPutPath string) {
+	// 路径处理
+	dbName := db.Migrator().CurrentDatabase()
+	outPutPath = strings.Trim(outPutPath, "/")
+	daoPath := fmt.Sprintf("%s/%s_dao", outPutPath, dbName)
+	modelPath := fmt.Sprintf("%s/%s_model", outPutPath, dbName)
+	repoPath := fmt.Sprintf("%s/%s_repo", outPutPath, dbName)
 	// 初始化
 	g := gen.NewGenerator(gen.Config{
 		OutPath:      daoPath,
