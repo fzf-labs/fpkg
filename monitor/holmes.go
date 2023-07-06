@@ -1,6 +1,7 @@
 package monitor
 
 import (
+	"os"
 	"time"
 
 	"mosn.io/holmes"
@@ -15,7 +16,7 @@ func Holmes() {
 		holmes.WithMemDump(30, 25, 80, time.Minute),
 		holmes.WithGCHeapDump(10, 20, 40, time.Minute),
 		holmes.WithGoroutineDump(500, 25, 20000, 0, time.Minute),
-		holmes.WithCGroup(true), // set cgroup to true
+		holmes.WithCGroup(isCGroup()), // set cgroup to true
 	)
 	h.EnableCPUDump().EnableGoroutineDump().EnableMemDump().EnableGCHeapDump().Start()
 }
@@ -29,4 +30,11 @@ func NewHolmesReporter() *HolmesReporter {
 func (r *HolmesReporter) Report(pType string, buf []byte, reason string, eventID string) error {
 
 	return nil
+}
+
+func isCGroup() bool {
+	if _, err := os.Stat("/proc/self/cgroup"); err == nil {
+		return true
+	}
+	return false
 }
