@@ -16,6 +16,8 @@ func TestDone(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
+	//kill -usr1 xxx
+	//kill -usr2 xxx
 	Monitor()
 	select {}
 }
