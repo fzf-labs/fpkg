@@ -16,5 +16,6 @@ func TestDone(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
+	Monitor()
 	select {}
 }

@@ -14,7 +14,7 @@ const timeFormat = "0102150405"
 
 var done = make(chan struct{})
 
-func init() {
+func Monitor() {
 	go func() {
 		var profiler Stopper
 
