@@ -21,7 +21,7 @@ const (
 func dumpGoroutines() {
 	command := path.Base(os.Args[0])
 	pid := syscall.Getpid()
-	dumpFile := path.Join("/pprof", fmt.Sprintf("%s-%d-goroutines-%s.dump",
+	dumpFile := path.Join(fmt.Sprintf("%s-%d-goroutines-%s.dump",
 		command, pid, time.Now().Format(timeFormat)))
 
 	slog.Info("Got dump goroutine signal, printing goroutine profile to %s", dumpFile)

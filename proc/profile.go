@@ -196,6 +196,6 @@ func StartProfile() Stopper {
 func createDumpFile(kind string) string {
 	command := path.Base(os.Args[0])
 	pid := syscall.Getpid()
-	return path.Join("/pprof", fmt.Sprintf("%s-%d-%s-%s.pprof",
+	return path.Join(fmt.Sprintf("%s-%d-%s-%s.pprof",
 		command, pid, kind, time.Now().Format(timeFormat)))
 }

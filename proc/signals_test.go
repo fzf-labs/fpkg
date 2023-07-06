@@ -14,3 +14,7 @@ func TestDone(t *testing.T) {
 	}
 	assert.NotNil(t, Done())
 }
+
+func TestRun(t *testing.T) {
+	select {}
+}
