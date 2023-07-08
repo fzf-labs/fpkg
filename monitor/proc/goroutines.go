@@ -29,7 +29,9 @@ func dumpGoroutines() {
 	if f, err := os.Create(dumpFile); err != nil {
 		slog.Error("Failed to dump goroutine profile, error: %v", err)
 	} else {
-		defer f.Close()
-		pprof.Lookup(goroutineProfile).WriteTo(f, debugLevel)
+		defer func(f *os.File) {
+			_ = f.Close()
+		}(f)
+		_ = pprof.Lookup(goroutineProfile).WriteTo(f, debugLevel)
 	}
 }

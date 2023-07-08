@@ -241,6 +241,9 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					"lowerField":     LowerName(index.Columns()[0]),
 					"dataType":       columnNameToDataType[index.Columns()[0]],
 				})
+				if err != nil {
+					return err
+				}
 				findMethods += fmt.Sprintln(interfaceFindOneCacheByField.String())
 				findFunc += fmt.Sprintln(findOneCacheByField.String())
 

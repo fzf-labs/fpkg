@@ -50,8 +50,8 @@ func (p *Profile) startBlockProfile() {
 	runtime.SetBlockProfileRate(1)
 	slog.Info("profile: block profiling enabled, %s", fn)
 	p.closers = append(p.closers, func() {
-		pprof.Lookup("block").WriteTo(f, 0)
-		f.Close()
+		_ = pprof.Lookup("block").WriteTo(f, 0)
+		_ = f.Close()
 		runtime.SetBlockProfileRate(0)
 		slog.Info("profile: block profiling disabled, %s", fn)
 	})
@@ -66,10 +66,10 @@ func (p *Profile) startCpuProfile() {
 	}
 
 	slog.Info("profile: cpu profiling enabled, %s", fn)
-	pprof.StartCPUProfile(f)
+	_ = pprof.StartCPUProfile(f)
 	p.closers = append(p.closers, func() {
 		pprof.StopCPUProfile()
-		f.Close()
+		_ = f.Close()
 		slog.Info("profile: cpu profiling disabled, %s", fn)
 	})
 }
@@ -86,8 +86,8 @@ func (p *Profile) startMemProfile() {
 	runtime.MemProfileRate = DefaultMemProfileRate
 	slog.Info("profile: memory profiling enabled (rate %d), %s", runtime.MemProfileRate, fn)
 	p.closers = append(p.closers, func() {
-		pprof.Lookup("heap").WriteTo(f, 0)
-		f.Close()
+		_ = pprof.Lookup("heap").WriteTo(f, 0)
+		_ = f.Close()
 		runtime.MemProfileRate = old
 		slog.Info("profile: memory profiling disabled, %s", fn)
 	})
@@ -105,9 +105,9 @@ func (p *Profile) startMutexProfile() {
 	slog.Info("profile: mutex profiling enabled, %s", fn)
 	p.closers = append(p.closers, func() {
 		if mp := pprof.Lookup("mutex"); mp != nil {
-			mp.WriteTo(f, 0)
+			_ = mp.WriteTo(f, 0)
 		}
-		f.Close()
+		_ = f.Close()
 		runtime.SetMutexProfileFraction(0)
 		slog.Info("profile: mutex profiling disabled, %s", fn)
 	})
@@ -124,9 +124,9 @@ func (p *Profile) startThreadCreateProfile() {
 	slog.Info("profile: threadcreate profiling enabled, %s", fn)
 	p.closers = append(p.closers, func() {
 		if mp := pprof.Lookup("threadcreate"); mp != nil {
-			mp.WriteTo(f, 0)
+			_ = mp.WriteTo(f, 0)
 		}
-		f.Close()
+		_ = f.Close()
 		slog.Info("profile: threadcreate profiling disabled, %s", fn)
 	})
 }
@@ -187,7 +187,7 @@ func StartProfile() Stopper {
 		prof.Stop()
 
 		signal.Reset()
-		syscall.Kill(os.Getpid(), syscall.SIGINT)
+		_ = syscall.Kill(os.Getpid(), syscall.SIGINT)
 	}()
 
 	return &prof
