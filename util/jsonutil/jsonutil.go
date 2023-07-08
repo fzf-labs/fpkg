@@ -3,16 +3,18 @@ package jsonutil
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/bytedance/sonic"
 )
 
 // Encode 编码
 func Encode(v interface{}) ([]byte, error) {
-	return json.Marshal(v)
+	return sonic.Marshal(v)
 }
 
 // EncodeToString 编码到字符串
 func EncodeToString(v interface{}) (string, error) {
-	marshal, err := json.Marshal(v)
+	marshal, err := sonic.Marshal(v)
 	if err != nil {
 		return "", err
 	}
@@ -21,12 +23,12 @@ func EncodeToString(v interface{}) (string, error) {
 
 // Decode 解码
 func Decode(bts []byte, ptr interface{}) error {
-	return json.Unmarshal(bts, ptr)
+	return sonic.Unmarshal(bts, ptr)
 }
 
 // DecodeString 解码字符串
 func DecodeString(str string, ptr interface{}) error {
-	return json.Unmarshal([]byte(str), ptr)
+	return sonic.Unmarshal([]byte(str), ptr)
 }
 
 // Dump 打印

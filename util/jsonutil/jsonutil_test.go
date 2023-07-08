@@ -4,6 +4,6 @@ import (
 	"testing"
 )
 
-func TestSonicEncode(t *testing.T) {
+func TestEncode(t *testing.T) {
 
 }
