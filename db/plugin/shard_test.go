@@ -1,4 +1,4 @@
-package shard
+package plugin
 
 import (
 	"database/sql"

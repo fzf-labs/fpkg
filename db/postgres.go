@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/fzf-labs/fpkg/db/plugin"
 	"github.com/pkg/errors"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -21,6 +22,7 @@ type GormPostgresClientConfig struct {
 	ConnMaxLifeTime time.Duration `json:"ConnMaxLifeTime"`
 	ShowLog         bool          `json:"ShowLog"`
 	Tracing         bool          `json:"Tracing"`
+	Caches          bool          `json:"Caches"`
 }
 
 // NewGormPostgresClient 初始化gorm Postgres 客户端
@@ -50,6 +52,11 @@ func NewGormPostgresClient(cfg *GormPostgresClientConfig) (*gorm.DB, error) {
 	if cfg.Tracing {
 		if err := db.Use(tracing.NewPlugin()); err != nil {
 			return nil, errors.New(fmt.Sprintf("db use tracing failed!  err: %+v", err))
+		}
+	}
+	if cfg.Caches {
+		if err := db.Use(plugin.NewCaches()); err != nil {
+			return nil, errors.New(fmt.Sprintf("db use Caches failed!  err: %+v", err))
 		}
 	}
 	return db, nil

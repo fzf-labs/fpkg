@@ -7,7 +7,7 @@ import (
 
 func TestNewGormPostgresClient(t *testing.T) {
 	config := GormPostgresClientConfig{
-		DataSourceName:  "",
+		DataSourceName:  "host=0.0.0.0 port=5432 user=postgres password=123456 dbname=user sslmode=disable TimeZone=Asia/Shanghai",
 		MaxIdleConn:     0,
 		MaxOpenConn:     0,
 		ConnMaxLifeTime: 0,
