@@ -2,6 +2,7 @@ package redis
 
 import (
 	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/rueidiscompat"
 	"github.com/redis/rueidis/rueidisotel"
 )
 
@@ -24,4 +25,9 @@ func NewRueidis(conf *RueidisConfig) (rueidis.Client, error) {
 	// 链路追踪
 	client = rueidisotel.WithClient(client)
 	return client, nil
+}
+
+func NewRueidisAdapter(client rueidis.Client) (rueidiscompat.Cmdable, error) {
+	compat := rueidiscompat.NewAdapter(client)
+	return compat, nil
 }
