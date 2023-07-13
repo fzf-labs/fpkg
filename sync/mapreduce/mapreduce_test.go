@@ -286,7 +286,7 @@ func TestMapReduceWithReduerWriteMoreThanOnce(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
 	assert.Panics(t, func() {
-		MapReduce(func(source chan<- int) {
+		_, _ = MapReduce(func(source chan<- int) {
 			for i := 0; i < 10; i++ {
 				source <- i
 			}
@@ -599,7 +599,7 @@ func BenchmarkMapReduce(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		MapReduce(func(input chan<- int64) {
+		_, _ = MapReduce(func(input chan<- int64) {
 			for j := 0; j < 2; j++ {
 				input <- int64(j)
 			}

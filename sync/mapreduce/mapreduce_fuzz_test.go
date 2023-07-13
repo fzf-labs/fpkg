@@ -13,8 +13,7 @@ import (
 )
 
 func FuzzMapReduce(f *testing.F) {
-	rand.Seed(time.Now().UnixNano())
-
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 	f.Add(int64(10), runtime.NumCPU())
 	f.Fuzz(func(t *testing.T, n int64, workers int) {
 		n = n%5000 + 5000
@@ -64,7 +63,7 @@ func FuzzMapReduce(f *testing.F) {
 			buf.WriteString(fmt.Sprintf(", genIdx: %d", genIdx))
 			buf.WriteString(fmt.Sprintf(", mapperIdx: %d", mapperIdx))
 			buf.WriteString(fmt.Sprintf(", reducerIdx: %d", reducerIdx))
-			assert.Panicsf(t, func() { fn() }, buf.String())
+			assert.Panicsf(t, func() { _, _ = fn() }, buf.String())
 		} else {
 			val, err := fn()
 			assert.Nil(t, err)

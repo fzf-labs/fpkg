@@ -115,7 +115,7 @@ func (c *Channel[T]) FanIn(ctx context.Context, channels ...<-chan T) <-chan T {
 	return out
 }
 
-// Tee 将一个香奈儿拆分为两个通道，直到取消上下文。
+// Tee 将一个channel拆分为两个通道，直到取消上下文。
 func (c *Channel[T]) Tee(ctx context.Context, in <-chan T) (<-chan T, <-chan T) {
 	out1 := make(chan T)
 	out2 := make(chan T)
