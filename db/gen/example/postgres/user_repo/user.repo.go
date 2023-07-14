@@ -20,11 +20,11 @@ var _ IUserRepo = (*userRepo)(nil)
 
 var (
 	// 缓存管理器
-	cacheKeyManage = cachekey.NewKeyManage("userRepo")
+	cacheKeyUserManage = cachekey.NewKeyManage("userRepo")
 	// 只针对唯一索引做缓存
-	CacheByUsername    = cacheKeyManage.AddKey("CacheByUsername", time.Hour*24, "CacheByUsername")
-	CacheByID          = cacheKeyManage.AddKey("CacheByID", time.Hour*24, "CacheByID")
-	CacheByPhoneStatus = cacheKeyManage.AddKey("CacheByPhoneStatus", time.Hour*24, "CacheByPhoneStatus")
+	CacheUserByUsername    = cacheKeyUserManage.AddKey("CacheUserByUsername", time.Hour*24, "CacheUserByUsername")
+	CacheUserByID          = cacheKeyUserManage.AddKey("CacheUserByID", time.Hour*24, "CacheUserByID")
+	CacheUserByPhoneStatus = cacheKeyUserManage.AddKey("CacheUserByPhoneStatus", time.Hour*24, "CacheUserByPhoneStatus")
 )
 
 type (
@@ -85,11 +85,6 @@ func (r *userRepo) CreateOne(ctx context.Context, data *user_model.User) error {
 func (r *userRepo) UpdateOne(ctx context.Context, data *user_model.User) error {
 	dao := user_dao.Use(r.db).User
 	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Updates(data)
-	if err != nil {
-		return err
-	}
-	cache := CacheByID.NewSingleKey(r.redis)
-	err = cache.SingleCacheDel(ctx, data.ID)
 	if err != nil {
 		return err
 	}
@@ -209,20 +204,20 @@ func (r *userRepo) DeleteOneCacheByPhoneStatus(ctx context.Context, phone string
 // DeleteUniqueIndexCache 删除唯一索引存在的缓存
 func (r *userRepo) DeleteUniqueIndexCache(ctx context.Context, data []*user_model.User) error {
 	var err error
-	cacheByUsername := CacheByUsername.NewSingleKey(r.redis)
-	cacheByID := CacheByID.NewSingleKey(r.redis)
-	cacheByPhoneStatus := CacheByPhoneStatus.NewSingleKey(r.redis)
+	cacheUserByUsername := CacheUserByUsername.NewSingleKey(r.redis)
+	cacheUserByID := CacheUserByID.NewSingleKey(r.redis)
+	cacheUserByPhoneStatus := CacheUserByPhoneStatus.NewSingleKey(r.redis)
 
 	for _, v := range data {
-		err = cacheByUsername.SingleCacheDel(ctx, cacheByUsername.BuildKey(v.Username))
+		err = cacheUserByUsername.SingleCacheDel(ctx, cacheUserByUsername.BuildKey(v.Username))
 		if err != nil {
 			return err
 		}
-		err = cacheByID.SingleCacheDel(ctx, cacheByID.BuildKey(v.ID))
+		err = cacheUserByID.SingleCacheDel(ctx, cacheUserByID.BuildKey(v.ID))
 		if err != nil {
 			return err
 		}
-		err = cacheByPhoneStatus.SingleCacheDel(ctx, cacheByPhoneStatus.BuildKey(v.Phone, v.Status))
+		err = cacheUserByPhoneStatus.SingleCacheDel(ctx, cacheUserByPhoneStatus.BuildKey(v.Phone, v.Status))
 		if err != nil {
 			return err
 		}
@@ -234,7 +229,7 @@ func (r *userRepo) DeleteUniqueIndexCache(ctx context.Context, data []*user_mode
 // FindOneByUsername 根据username查询一条数据并设置缓存
 func (r *userRepo) FindOneByUsername(ctx context.Context, username string) (*user_model.User, error) {
 	resp := new(user_model.User)
-	cache := CacheByUsername.NewSingleKey(r.redis)
+	cache := CacheUserByUsername.NewSingleKey(r.redis)
 	cacheValue, err := cache.SingleCache(ctx, username, func() (string, error) {
 		dao := user_dao.Use(r.db).User
 		result, err := dao.WithContext(ctx).Where(dao.Username.Eq(username)).First()
@@ -260,7 +255,7 @@ func (r *userRepo) FindOneByUsername(ctx context.Context, username string) (*use
 // FindMultiByUsernames 根据usernames查询多条数据并设置缓存
 func (r *userRepo) FindMultiByUsernames(ctx context.Context, usernames []string) ([]*user_model.User, error) {
 	resp := make([]*user_model.User, 0)
-	cacheKey := CacheByUsername.NewBatchKey(r.redis)
+	cacheKey := CacheUserByUsername.NewBatchKey(r.redis)
 	cacheValue, err := cacheKey.BatchKeyCache(ctx, usernames, func() (map[string]string, error) {
 		dao := user_dao.Use(r.db).User
 		result, err := dao.WithContext(ctx).Where(dao.Username.In(usernames...)).Find()
@@ -304,7 +299,7 @@ func (r *userRepo) FindMultiByStatuses(ctx context.Context, statuses []int16) ([
 // FindOneByID 根据ID查询一条数据并设置缓存
 func (r *userRepo) FindOneByID(ctx context.Context, ID string) (*user_model.User, error) {
 	resp := new(user_model.User)
-	cache := CacheByID.NewSingleKey(r.redis)
+	cache := CacheUserByID.NewSingleKey(r.redis)
 	cacheValue, err := cache.SingleCache(ctx, ID, func() (string, error) {
 		dao := user_dao.Use(r.db).User
 		result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
@@ -330,7 +325,7 @@ func (r *userRepo) FindOneByID(ctx context.Context, ID string) (*user_model.User
 // FindMultiByIDS 根据IDS查询多条数据并设置缓存
 func (r *userRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([]*user_model.User, error) {
 	resp := make([]*user_model.User, 0)
-	cacheKey := CacheByID.NewBatchKey(r.redis)
+	cacheKey := CacheUserByID.NewBatchKey(r.redis)
 	cacheValue, err := cacheKey.BatchKeyCache(ctx, IDS, func() (map[string]string, error) {
 		dao := user_dao.Use(r.db).User
 		result, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
@@ -364,7 +359,7 @@ func (r *userRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([]*user_mo
 // FindOneCacheByPhoneStatus 根据PhoneStatus查询一条数据并设置缓存
 func (r *userRepo) FindOneCacheByPhoneStatus(ctx context.Context, phone string, status int16) (*user_model.User, error) {
 	resp := new(user_model.User)
-	cache := CacheByPhoneStatus.NewSingleKey(r.redis)
+	cache := CacheUserByPhoneStatus.NewSingleKey(r.redis)
 	cacheValue, err := cache.SingleCache(ctx, cache.BuildKey(phone, status), func() (string, error) {
 		dao := user_dao.Use(r.db).User
 		result, err := dao.WithContext(ctx).Where(dao.Phone.Eq(phone), dao.Status.Eq(status)).First()

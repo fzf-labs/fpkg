@@ -6,6 +6,7 @@ import (
 	"unicode"
 
 	"github.com/fzf-labs/fpkg/db/gen/repo"
+	"golang.org/x/exp/slog"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"gorm.io/driver/mysql"
@@ -52,6 +53,11 @@ func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType)
 		return
 	}
 	generationRepo := repo.NewGenerationRepo(db, daoPath, modelPath, repoPath)
+	err = generationRepo.MkdirPath()
+	if err != nil {
+		slog.Error("repo MkdirPath err:", err)
+		return
+	}
 	for _, tableName := range tables {
 		columnNameToDataType := make(map[string]string)
 		queryStructMeta := g.GenerateModel(tableName)
@@ -60,6 +66,7 @@ func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType)
 		}
 		err = generationRepo.GenerationTable(tableName, columnNameToDataType)
 		if err != nil {
+			slog.Error("repo GenerationTable err:", err)
 			return
 		}
 	}

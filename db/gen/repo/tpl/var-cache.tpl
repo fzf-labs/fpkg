@@ -1,1 +1,1 @@
-	CacheBy{{.cacheField}}          = cacheKeyManage.AddKey("CacheBy{{.cacheField}}", time.Hour * 24, "CacheBy{{.cacheField}}")
+	Cache{{.upperTableName}}By{{.cacheField}}          = cacheKey{{.upperTableName}}Manage.AddKey("Cache{{.upperTableName}}By{{.cacheField}}", time.Hour * 24, "Cache{{.upperTableName}}By{{.cacheField}}")

@@ -1,2 +1,2 @@
 // CreateOne 创建一条数据
-CreateOne(ctx context.Context, data *{{.lowerTableName}}_model.{{.upperTableName}}) error
+CreateOne(ctx context.Context, data *{{.lowerDbName}}_model.{{.upperTableName}}) error
