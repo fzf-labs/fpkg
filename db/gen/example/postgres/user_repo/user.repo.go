@@ -67,7 +67,7 @@ type (
 	}
 )
 
-func NewUserRepo(db *gorm.DB, redis *redis.Client) IUserRepo {
+func NewUserRepo(db *gorm.DB, redis *redis.Client) *UserRepo {
 	return &UserRepo{db: db, redis: redis}
 }
 
