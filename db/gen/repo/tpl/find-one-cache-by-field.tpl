@@ -1,5 +1,5 @@
 // FindOneBy{{.upperField}} 根据{{.lowerField}}查询一条数据并设置缓存
-func (r *{{.lowerTableName}}Repo) FindOneBy{{.upperField}}(ctx context.Context, {{.lowerField}} {{.dataType}}) (*{{.lowerDbName}}_model.{{.upperTableName}}, error) {
+func (r *{{.upperTableName}}Repo) FindOneBy{{.upperField}}(ctx context.Context, {{.lowerField}} {{.dataType}}) (*{{.lowerDbName}}_model.{{.upperTableName}}, error) {
 	resp := new({{.lowerDbName}}_model.{{.upperTableName}})
 	cache := Cache{{.upperTableName}}By{{.upperField}}.NewSingleKey(r.redis)
 	cacheValue, err := cache.SingleCache(ctx, {{.lowerField}} , func() (string, error) {

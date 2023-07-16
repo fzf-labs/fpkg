@@ -1,5 +1,5 @@
 // FindMultiBy{{.upperFieldPlural}} 根据{{.lowerFieldPlural}}查询多条数据并设置缓存
-func (r *{{.lowerTableName}}Repo) FindMultiBy{{.upperFieldPlural}}(ctx context.Context, {{.lowerFieldPlural}} []{{.dataType}}) ([]*{{.lowerDbName}}_model.{{.upperTableName}}, error) {
+func (r *{{.upperTableName}}Repo) FindMultiBy{{.upperFieldPlural}}(ctx context.Context, {{.lowerFieldPlural}} []{{.dataType}}) ([]*{{.lowerDbName}}_model.{{.upperTableName}}, error) {
 	resp := make([]*{{.lowerDbName}}_model.{{.upperTableName}}, 0)
 	cacheKey := Cache{{.upperTableName}}By{{.upperField}}.NewBatchKey(r.redis)
 	cacheValue, err := cacheKey.BatchKeyCache(ctx, {{.lowerFieldPlural}}, func() (map[string]string, error) {

@@ -3,7 +3,7 @@ type (
 		{{.methods}}
 	}
 
-	{{.lowerTableName}}Repo struct {
+	{{.upperTableName}}Repo struct {
 		db    *gorm.DB
 		redis *redis.Client
 	}
