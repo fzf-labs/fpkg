@@ -82,17 +82,17 @@ func DumpSql(db *gorm.DB, dsn string, outPath string) {
 	dsnParse := DsnParse(dsn)
 	for _, v := range tables {
 		cmdArgs := []string{
-			"-h", dsnParse.host,
-			"-p", strconv.Itoa(dsnParse.port),
-			"-U", dsnParse.user,
-			"-s", dsnParse.dbname,
+			"-h", dsnParse.Host,
+			"-p", strconv.Itoa(dsnParse.Port),
+			"-U", dsnParse.User,
+			"-s", dsnParse.Dbname,
 			"-t", v,
 			"-f", filepath.Join(outPath, fmt.Sprintf("%s.sql", v)),
 		}
 		// 创建一个 Cmd 对象来表示将要执行的命令
 		cmd := exec.Command("pg_dump", cmdArgs...)
 		// 添加一个环境变量到命令中
-		cmd.Env = append(cmd.Env, fmt.Sprintf("PGPASSWORD=%s", dsnParse.password))
+		cmd.Env = append(cmd.Env, fmt.Sprintf("PGPASSWORD=%s", dsnParse.Password))
 		// 执行命令，并捕获输出和错误信息
 		err := cmd.Run()
 		if err != nil {
@@ -103,11 +103,11 @@ func DumpSql(db *gorm.DB, dsn string, outPath string) {
 }
 
 type Dsn struct {
-	host     string
-	port     int
-	user     string
-	password string
-	dbname   string
+	Host     string
+	Port     int
+	User     string
+	Password string
+	Dbname   string
 }
 
 func DsnParse(dsn string) *Dsn {
@@ -125,17 +125,17 @@ func DsnParse(dsn string) *Dsn {
 		value := keyValue[1]
 		switch key {
 		case "host":
-			result.host = value
+			result.Host = value
 		case "port":
 			if p, err := strconv.Atoi(value); err == nil {
-				result.port = p
+				result.Port = p
 			}
 		case "user":
-			result.user = value
+			result.User = value
 		case "password":
-			result.password = value
+			result.Password = value
 		case "dbname":
-			result.dbname = value
+			result.Dbname = value
 		}
 	}
 	return result
