@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -78,8 +79,13 @@ func DumpSql(db *gorm.DB, dsn string, outPath string) {
 	if err != nil {
 		return
 	}
-	outPath = strings.Trim(outPath, "/")
 	dsnParse := DsnParse(dsn)
+	outPath = filepath.Join(strings.Trim(outPath, "/"), dsnParse.Dbname)
+	err = os.MkdirAll(outPath, os.ModePerm)
+	if err != nil {
+		fmt.Println("DumpSql create path err:", err)
+		return
+	}
 	for _, v := range tables {
 		cmdArgs := []string{
 			"-h", dsnParse.Host,
