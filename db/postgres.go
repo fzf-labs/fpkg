@@ -3,6 +3,9 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"os/exec"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/fzf-labs/fpkg/db/plugin"
@@ -60,4 +63,79 @@ func NewGormPostgresClient(cfg *GormPostgresClientConfig) (*gorm.DB, error) {
 		}
 	}
 	return db, nil
+}
+
+// DumpSql 导出创建语句
+func DumpSql(db *gorm.DB, dsn string, outPath string) {
+	// 查找命令的可执行文件
+	_, err := exec.LookPath("pg_dump")
+	if err != nil {
+		fmt.Printf("Command %s not found\n", "pg_dump")
+		return
+	}
+	tables, err := db.Migrator().GetTables()
+	if err != nil {
+		return
+	}
+	outPath = strings.Trim(outPath, "/")
+	dsnParse := DsnParse(dsn)
+	for _, v := range tables {
+		cmdArgs := []string{
+			"-h", dsnParse.host,
+			"-p", strconv.Itoa(dsnParse.port),
+			"-U", dsnParse.user,
+			"-s", dsnParse.dbname,
+			"-t", v,
+			"-f", fmt.Sprintf("%s/%s.sql", outPath, v),
+		}
+		// 创建一个 Cmd 对象来表示将要执行的命令
+		cmd := exec.Command("pg_dump", cmdArgs...)
+		// 添加一个环境变量到命令中
+		cmd.Env = append(cmd.Env, fmt.Sprintf("PGPASSWORD=%s", dsnParse.password))
+		// 执行命令，并捕获输出和错误信息
+		err := cmd.Run()
+		if err != nil {
+			fmt.Println("DumpSql err:", err)
+			return
+		}
+	}
+}
+
+type Dsn struct {
+	host     string
+	port     int
+	user     string
+	password string
+	dbname   string
+}
+
+func DsnParse(dsn string) *Dsn {
+	result := new(Dsn)
+	// 分割连接字符串
+	params := strings.Split(dsn, " ")
+
+	// 解析参数
+	for _, param := range params {
+		keyValue := strings.Split(param, "=")
+		if len(keyValue) != 2 {
+			continue
+		}
+		key := keyValue[0]
+		value := keyValue[1]
+		switch key {
+		case "host":
+			result.host = value
+		case "port":
+			if p, err := strconv.Atoi(value); err == nil {
+				result.port = p
+			}
+		case "user":
+			result.user = value
+		case "password":
+			result.password = value
+		case "dbname":
+			result.dbname = value
+		}
+	}
+	return result
 }
