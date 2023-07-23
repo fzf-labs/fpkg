@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -86,7 +87,7 @@ func DumpSql(db *gorm.DB, dsn string, outPath string) {
 			"-U", dsnParse.user,
 			"-s", dsnParse.dbname,
 			"-t", v,
-			"-f", fmt.Sprintf("%s/%s.sql", outPath, v),
+			"-f", filepath.Join(outPath, fmt.Sprintf("%s.sql", v)),
 		}
 		// 创建一个 Cmd 对象来表示将要执行的命令
 		cmd := exec.Command("pg_dump", cmdArgs...)

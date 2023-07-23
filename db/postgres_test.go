@@ -40,5 +40,5 @@ func TestDumpSql(t *testing.T) {
 	if err != nil {
 		return
 	}
-	DumpSql(db, config.DataSourceName, ".")
+	DumpSql(db, config.DataSourceName, "")
 }
