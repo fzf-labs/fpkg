@@ -67,8 +67,8 @@ func NewGormPostgresClient(cfg *GormPostgresClientConfig) (*gorm.DB, error) {
 	return db, nil
 }
 
-// DumpSql 导出创建语句
-func DumpSql(db *gorm.DB, dsn string, outPath string) {
+// DumpPostgres 导出创建语句
+func DumpPostgres(db *gorm.DB, dsn string, outPath string) {
 	// 查找命令的可执行文件
 	_, err := exec.LookPath("pg_dump")
 	if err != nil {
@@ -79,11 +79,11 @@ func DumpSql(db *gorm.DB, dsn string, outPath string) {
 	if err != nil {
 		return
 	}
-	dsnParse := DsnParse(dsn)
+	dsnParse := PostgresDsnParse(dsn)
 	outPath = filepath.Join(strings.Trim(outPath, "/"), dsnParse.Dbname)
 	err = os.MkdirAll(outPath, os.ModePerm)
 	if err != nil {
-		fmt.Println("DumpSql create path err:", err)
+		fmt.Println("DumpPostgres create path err:", err)
 		return
 	}
 	for _, v := range tables {
@@ -102,13 +102,13 @@ func DumpSql(db *gorm.DB, dsn string, outPath string) {
 		// 执行命令，并捕获输出和错误信息
 		err := cmd.Run()
 		if err != nil {
-			fmt.Println("DumpSql err:", err)
+			fmt.Println("DumpPostgres err:", err)
 			return
 		}
 	}
 }
 
-type Dsn struct {
+type PostgresDsn struct {
 	Host     string
 	Port     int
 	User     string
@@ -116,8 +116,9 @@ type Dsn struct {
 	Dbname   string
 }
 
-func DsnParse(dsn string) *Dsn {
-	result := new(Dsn)
+// PostgresDsnParse  数据库解析
+func PostgresDsnParse(dsn string) *PostgresDsn {
+	result := new(PostgresDsn)
 	// 分割连接字符串
 	params := strings.Split(dsn, " ")
 

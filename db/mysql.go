@@ -3,6 +3,9 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/fzf-labs/fpkg/db/plugin"
@@ -60,4 +63,31 @@ func NewGormMysqlClient(cfg *GormMysqlClientConfig) (*gorm.DB, error) {
 		}
 	}
 	return db, nil
+}
+
+// DumpMySql 导出创建语句
+func DumpMySql(db *gorm.DB, dsn string, outPath string) {
+	tables, err := db.Migrator().GetTables()
+	if err != nil {
+		return
+	}
+	dsnParse := PostgresDsnParse(dsn)
+	outPath = filepath.Join(strings.Trim(outPath, "/"), dsnParse.Dbname)
+	err = os.MkdirAll(outPath, os.ModePerm)
+	if err != nil {
+		fmt.Println("DumpPostgres create path err:", err)
+		return
+	}
+	type Result struct {
+		Table       string
+		CreateTable string
+	}
+	for _, v := range tables {
+		result := new(Result)
+		err := db.Raw(fmt.Sprintf("SHOW CREATE TABLE `%s`.`%s`", dsnParse.Dbname, v)).Scan(result).Error
+		if err != nil {
+			return
+		}
+
+	}
 }
