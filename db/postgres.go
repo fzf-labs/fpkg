@@ -12,6 +12,7 @@ import (
 
 	"github.com/fzf-labs/fpkg/db/plugin"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slog"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -72,7 +73,7 @@ func DumpPostgres(db *gorm.DB, dsn string, outPath string) {
 	// 查找命令的可执行文件
 	_, err := exec.LookPath("pg_dump")
 	if err != nil {
-		fmt.Printf("Command %s not found\n", "pg_dump")
+		slog.Error("Command %s not found\n", "pg_dump")
 		return
 	}
 	tables, err := db.Migrator().GetTables()
@@ -83,7 +84,7 @@ func DumpPostgres(db *gorm.DB, dsn string, outPath string) {
 	outPath = filepath.Join(strings.Trim(outPath, "/"), dsnParse.Dbname)
 	err = os.MkdirAll(outPath, os.ModePerm)
 	if err != nil {
-		fmt.Println("DumpPostgres create path err:", err)
+		slog.Error("DumpPostgres create path err:", err)
 		return
 	}
 	for _, v := range tables {
@@ -102,7 +103,7 @@ func DumpPostgres(db *gorm.DB, dsn string, outPath string) {
 		// 执行命令，并捕获输出和错误信息
 		err := cmd.Run()
 		if err != nil {
-			fmt.Println("DumpPostgres err:", err)
+			slog.Error("DumpPostgres err:", err)
 			return
 		}
 	}

@@ -8,8 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fzf-labs/fpkg/conv"
 	"github.com/fzf-labs/fpkg/db/plugin"
+	"github.com/fzf-labs/fpkg/util/fileutil"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slog"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -66,28 +69,31 @@ func NewGormMysqlClient(cfg *GormMysqlClientConfig) (*gorm.DB, error) {
 }
 
 // DumpMySql 导出创建语句
-func DumpMySql(db *gorm.DB, dsn string, outPath string) {
+func DumpMySql(db *gorm.DB, outPath string) {
 	tables, err := db.Migrator().GetTables()
 	if err != nil {
 		return
 	}
-	dsnParse := PostgresDsnParse(dsn)
-	outPath = filepath.Join(strings.Trim(outPath, "/"), dsnParse.Dbname)
+	outPath = filepath.Join(strings.Trim(outPath, "/"), db.Migrator().CurrentDatabase())
 	err = os.MkdirAll(outPath, os.ModePerm)
 	if err != nil {
-		fmt.Println("DumpPostgres create path err:", err)
+		slog.Error("DumpMySql create path err:", err)
 		return
 	}
-	type Result struct {
-		Table       string
-		CreateTable string
-	}
 	for _, v := range tables {
-		result := new(Result)
-		err := db.Raw(fmt.Sprintf("SHOW CREATE TABLE `%s`.`%s`", dsnParse.Dbname, v)).Scan(result).Error
+		result := make(map[string]interface{})
+		err := db.Raw(fmt.Sprintf("SHOW CREATE TABLE `%s`.`%s`", db.Migrator().CurrentDatabase(), v)).Scan(result).Error
 		if err != nil {
+			slog.Error("DumpMySql sql err:", err)
 			return
 		}
-
+		tableContent := conv.String(result["Create Table"])
+		if tableContent != "" {
+			err := fileutil.WriteContentCover(filepath.Join(outPath, fmt.Sprintf("%s.sql", v)), tableContent)
+			if err != nil {
+				slog.Error("DumpMySql file write err:", err)
+				return
+			}
+		}
 	}
 }

@@ -274,7 +274,6 @@ func readDeepFile(path string, deepNow int, deep int, files map[string]DeepFileI
 // OpenFile 打开文件，但会自动创建目录。
 func OpenFile(fp string, flag int, perm os.FileMode) (*os.File, error) {
 	fileDir := filepath.Dir(fp)
-	// if err := os.Mkdir(dir, 0775); err != nil {
 	if err := os.MkdirAll(fileDir, DefaultDirPerm); err != nil {
 		return nil, err
 	}
@@ -357,7 +356,11 @@ func ReadFileByUrlToByte(url string) ([]byte, error) {
 
 // WriteContentCover 数据写入，不存在则创建
 func WriteContentCover(filePath, content string) error {
-	dstFile, err := OpenFile(filePath, CoverFileFlags, DefaultFilePerm)
+	fileDir := filepath.Dir(filePath)
+	if err := os.MkdirAll(fileDir, DefaultDirPerm); err != nil {
+		return err
+	}
+	dstFile, err := os.OpenFile(filePath, CoverFileFlags, DefaultFilePerm)
 	if err != nil {
 		return err
 	}
@@ -371,7 +374,11 @@ func WriteContentCover(filePath, content string) error {
 
 // WriteContentAppend 数据写入，不存在则创建
 func WriteContentAppend(filePath, content string) error {
-	dstFile, err := OpenFile(filePath, DefaultFileFlags, DefaultFilePerm)
+	fileDir := filepath.Dir(filePath)
+	if err := os.MkdirAll(fileDir, DefaultDirPerm); err != nil {
+		return err
+	}
+	dstFile, err := os.OpenFile(filePath, DefaultFileFlags, DefaultFilePerm)
 	if err != nil {
 		return err
 	}
@@ -385,7 +392,11 @@ func WriteContentAppend(filePath, content string) error {
 
 // WriteCsvCover 数据覆盖写入，不存在则创建
 func WriteCsvCover(filePath string, content []string) error {
-	f, err := OpenFile(filePath, CoverFileFlags, DefaultFilePerm)
+	fileDir := filepath.Dir(filePath)
+	if err := os.MkdirAll(fileDir, DefaultDirPerm); err != nil {
+		return err
+	}
+	f, err := os.OpenFile(filePath, CoverFileFlags, DefaultFilePerm)
 	if err != nil {
 		return err
 	}
@@ -412,7 +423,11 @@ func WriteCsvCover(filePath string, content []string) error {
 
 // WriteCsvDoubleSliCover 数据覆盖写入，不存在则创建
 func WriteCsvDoubleSliCover(filePath string, content [][]string) error {
-	f, err := OpenFile(filePath, CoverFileFlags, DefaultFilePerm)
+	fileDir := filepath.Dir(filePath)
+	if err := os.MkdirAll(fileDir, DefaultDirPerm); err != nil {
+		return err
+	}
+	f, err := os.OpenFile(filePath, CoverFileFlags, DefaultFilePerm)
 	if err != nil {
 		return err
 	}
