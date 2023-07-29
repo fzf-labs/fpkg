@@ -11,8 +11,7 @@ import (
 
 // GenUUID 生成随机字符串，eg: 76d27e8c-a80e-48c8-ad20-e5562e0f67e4
 func GenUUID() string {
-	u, _ := uuid.NewRandom()
-	return u.String()
+	return uuid.NewString()
 }
 
 // GenShortID 生成一个id
