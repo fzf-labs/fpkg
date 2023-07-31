@@ -11,7 +11,6 @@ import (
 	"github.com/klauspost/compress/zlib"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/exp/slog"
-	"golang.org/x/sync/singleflight"
 )
 
 var defaultPubSubKey = "RedisLocalCachePubSubKeyDel"
@@ -27,8 +26,6 @@ type rediser interface {
 type CacheOption func(cache *Cache)
 
 type Cache struct {
-	group singleflight.Group
-
 	Name       string
 	Redis      rediser
 	LocalCache LocalCache
