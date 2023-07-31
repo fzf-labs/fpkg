@@ -1,4 +1,4 @@
-package cache
+package redislocalcache
 
 import (
 	"math/rand"

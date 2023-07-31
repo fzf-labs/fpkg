@@ -1,475 +1,161 @@
-package cache
+package redislocalcache
 
 import (
+	"bytes"
 	"context"
-	"errors"
 	"fmt"
-	"log"
+	"io"
 	"strings"
-	"sync/atomic"
 	"time"
 
-	"github.com/go-redis/redis/v8"
-	"github.com/google/uuid"
-	"github.com/klauspost/compress/s2"
-	"github.com/vmihailenco/msgpack/v5"
+	"github.com/klauspost/compress/zlib"
+	"github.com/redis/go-redis/v9"
+	"golang.org/x/exp/slog"
 	"golang.org/x/sync/singleflight"
-)
-
-const (
-	compressionThreshold = 64
-	timeLen              = 4
-)
-
-const (
-	noCompression = 0x0
-	s2Compression = 0x1
-)
-
-var (
-	ErrCacheMiss          = errors.New("cache: key is missing")
-	errRedisLocalCacheNil = errors.New("cache: both Redis and LocalCache are nil")
 )
 
 var defaultPubSubKey = "RedisLocalCachePubSubKeyDel"
 
 type rediser interface {
 	Set(ctx context.Context, key string, value interface{}, ttl time.Duration) *redis.StatusCmd
-	SetXX(ctx context.Context, key string, value interface{}, ttl time.Duration) *redis.BoolCmd
-	SetNX(ctx context.Context, key string, value interface{}, ttl time.Duration) *redis.BoolCmd
-
 	Get(ctx context.Context, key string) *redis.StringCmd
 	Del(ctx context.Context, keys ...string) *redis.IntCmd
 
 	Publish(ctx context.Context, channel string, message interface{}) *redis.IntCmd
 	Subscribe(ctx context.Context, channels ...string) *redis.PubSub
 }
-
-type Item struct {
-	Ctx context.Context
-
-	Key   string
-	Value interface{}
-
-	//TTL为缓存过期时间。
-	//默认TTL为1小时。
-	TTL time.Duration
-
-	// Do返回要缓存的值。
-	Do func(*Item) (interface{}, error)
-
-	// SetXX只在键已经存在时设置键。
-	SetXX bool
-
-	// SetNX只在键不存在的情况下设置键。
-	SetNX bool
-
-	// SkipLocalCache跳过本地缓存，就像没有设置一样。
-	SkipLocalCache bool
-}
-
-func (item *Item) Context() context.Context {
-	if item.Ctx == nil {
-		return context.Background()
-	}
-	return item.Ctx
-}
-
-func (item *Item) value() (interface{}, error) {
-	if item.Do != nil {
-		return item.Do(item)
-	}
-	if item.Value != nil {
-		return item.Value, nil
-	}
-	return nil, nil
-}
-
-func (item *Item) ttl() time.Duration {
-	const defaultTTL = time.Hour
-
-	if item.TTL < 0 {
-		return 0
-	}
-
-	if item.TTL != 0 {
-		if item.TTL < time.Second {
-			log.Printf("too short TTL for key=%q: %s", item.Key, item.TTL)
-			return defaultTTL
-		}
-		return item.TTL
-	}
-
-	return defaultTTL
-}
-
-// ------------------------------------------------------------------------------
-type (
-	MarshalFunc   func(interface{}) ([]byte, error)
-	UnmarshalFunc func([]byte, interface{}) error
-)
-
-type Options struct {
-	Name         string
-	Redis        rediser
-	LocalCache   LocalCache
-	StatsEnabled bool
-	Marshal      MarshalFunc
-	Unmarshal    UnmarshalFunc
-}
+type CacheOption func(cache *Cache)
 
 type Cache struct {
-	opt *Options
-
 	group singleflight.Group
 
-	marshal   MarshalFunc
-	unmarshal UnmarshalFunc
-
-	hits   uint64
-	misses uint64
+	Name       string
+	Redis      rediser
+	LocalCache LocalCache
 }
 
-func New(opt *Options) *Cache {
-	cacher := &Cache{
-		opt: opt,
+func New(name string, redis rediser, localCache LocalCache, opts ...CacheOption) *Cache {
+	cache := &Cache{
+		Name:       name,
+		Redis:      redis,
+		LocalCache: localCache,
 	}
-	if opt.Name == "" {
-		opt.Name = uuid.NewString()
-	}
-
-	if opt.Marshal == nil {
-		cacher.marshal = cacher._marshal
-	} else {
-		cacher.marshal = opt.Marshal
-	}
-
-	if opt.Unmarshal == nil {
-		cacher.unmarshal = cacher._unmarshal
-	} else {
-		cacher.unmarshal = opt.Unmarshal
-	}
-	if opt.Redis != nil {
-		go func() {
-			err := cacher.Subscribe(cacher.GetChannel())
-			if err != nil {
-				return
-			}
-		}()
-	}
-	return cacher
-}
-
-// Set caches the item.
-func (cd *Cache) Set(item *Item) error {
-	_, _, err := cd.set(item)
-	return err
-}
-
-func (cd *Cache) set(item *Item) ([]byte, bool, error) {
-	value, err := item.value()
-	if err != nil {
-		return nil, false, err
-	}
-
-	b, err := cd.Marshal(value)
-	if err != nil {
-		return nil, false, err
-	}
-
-	if cd.opt.LocalCache != nil && !item.SkipLocalCache {
-		cd.opt.LocalCache.Set(item.Key, b)
-	}
-
-	if cd.opt.Redis == nil {
-		if cd.opt.LocalCache == nil {
-			return b, true, errRedisLocalCacheNil
+	if len(opts) > 0 {
+		for _, v := range opts {
+			v(cache)
 		}
-		return b, true, nil
 	}
+	go func() {
+		err := cache.subscribe(cache.getChannel())
+		if err != nil {
+			return
+		}
+	}()
+	return cache
+}
 
-	ttl := item.ttl()
+func (cd *Cache) Set(ctx context.Context, key string, value []byte, ttl time.Duration) error {
+	cd.LocalCache.Set(key, value)
 	if ttl == 0 {
-		return b, true, nil
+		ttl = time.Hour
 	}
-
-	if item.SetXX {
-		err = cd.opt.Redis.SetXX(item.Context(), item.Key, b, ttl).Err()
-		_ = cd.Publish(item.Context(), cd.GetChannel(), item.Key)
-		return b, true, err
-	}
-	if item.SetNX {
-		err = cd.opt.Redis.SetNX(item.Context(), item.Key, b, ttl).Err()
-		_ = cd.Publish(item.Context(), cd.GetChannel(), item.Key)
-		return b, true, err
-	}
-	err = cd.opt.Redis.Set(item.Context(), item.Key, b, ttl).Err()
-	_ = cd.Publish(item.Context(), cd.GetChannel(), item.Key)
-	return b, true, err
+	err := cd.Redis.Set(ctx, key, value, ttl).Err()
+	_ = cd.publish(ctx, cd.getChannel(), key)
+	return err
 }
 
 // Exists reports whether value for the given key exists.
 func (cd *Cache) Exists(ctx context.Context, key string) bool {
-	_, err := cd.getBytes(ctx, key, false)
+	_, err := cd.getBytes(ctx, key)
 	return err == nil
 }
 
 // Get gets the value for the given key.
-func (cd *Cache) Get(ctx context.Context, key string, value interface{}) error {
-	return cd.get(ctx, key, value, false)
+func (cd *Cache) Get(ctx context.Context, key string) ([]byte, error) {
+	return cd.getBytes(ctx, key)
 }
 
-// GetSkippingLocalCache Get gets the value for the given key skipping local cache.
-func (cd *Cache) GetSkippingLocalCache(
-	ctx context.Context, key string, value interface{},
-) error {
-	return cd.get(ctx, key, value, true)
-}
-
-func (cd *Cache) get(
-	ctx context.Context,
-	key string,
-	value interface{},
-	skipLocalCache bool,
-) error {
-	b, err := cd.getBytes(ctx, key, skipLocalCache)
-	if err != nil {
-		return err
+func (cd *Cache) getBytes(ctx context.Context, key string) ([]byte, error) {
+	b, ok := cd.LocalCache.Get(key)
+	if ok {
+		return b, nil
 	}
-	return cd.unmarshal(b, value)
-}
-
-func (cd *Cache) getBytes(ctx context.Context, key string, skipLocalCache bool) ([]byte, error) {
-	if !skipLocalCache && cd.opt.LocalCache != nil {
-		b, ok := cd.opt.LocalCache.Get(key)
-		if ok {
-			return b, nil
-		}
-	}
-
-	if cd.opt.Redis == nil {
-		if cd.opt.LocalCache == nil {
-			return nil, errRedisLocalCacheNil
-		}
-		return nil, ErrCacheMiss
-	}
-
-	b, err := cd.opt.Redis.Get(ctx, key).Bytes()
-	if err != nil {
-		if cd.opt.StatsEnabled {
-			atomic.AddUint64(&cd.misses, 1)
-		}
-		if err == redis.Nil {
-			return nil, ErrCacheMiss
-		}
+	b, err := cd.Redis.Get(ctx, key).Bytes()
+	if err != nil && err != redis.Nil {
 		return nil, err
 	}
-
-	if cd.opt.StatsEnabled {
-		atomic.AddUint64(&cd.hits, 1)
-	}
-
-	if !skipLocalCache && cd.opt.LocalCache != nil {
-		cd.opt.LocalCache.Set(key, b)
-	}
+	cd.LocalCache.Set(key, b)
 	return b, nil
 }
 
-// Once gets the item.Value for the given item.Key from the cache or
-// executes, caches, and returns the results of the given item.Func,
-// making sure that only one execution is in-flight for a given item.Key
-// at a time. If a duplicate comes in, the duplicate caller waits for the
-// original to complete and receives the same results.
-func (cd *Cache) Once(item *Item) error {
-	b, cached, err := cd.getSetItemBytesOnce(item)
-	if err != nil {
-		return err
-	}
-
-	if item.Value == nil || len(b) == 0 {
-		return nil
-	}
-
-	if err := cd.unmarshal(b, item.Value); err != nil {
-		if cached {
-			_ = cd.Delete(item.Context(), item.Key)
-			return cd.Once(item)
-		}
-		return err
-	}
-
-	return nil
-}
-
-func (cd *Cache) getSetItemBytesOnce(item *Item) (b []byte, cached bool, err error) {
-	if cd.opt.LocalCache != nil {
-		b, ok := cd.opt.LocalCache.Get(item.Key)
-		if ok {
-			return b, true, nil
-		}
-	}
-
-	v, err, _ := cd.group.Do(item.Key, func() (interface{}, error) {
-		b, err := cd.getBytes(item.Context(), item.Key, item.SkipLocalCache)
-		if err == nil {
-			cached = true
-			return b, nil
-		}
-
-		b, ok, err := cd.set(item)
-		if ok {
-			return b, nil
-		}
-		return nil, err
-	})
-	if err != nil {
-		return nil, false, err
-	}
-	return v.([]byte), cached, nil
-}
-
 func (cd *Cache) Delete(ctx context.Context, key string) error {
-	if cd.opt.LocalCache != nil {
-		cd.opt.LocalCache.Del(key)
-	}
-
-	if cd.opt.Redis == nil {
-		if cd.opt.LocalCache == nil {
-			return errRedisLocalCacheNil
-		}
-		return nil
-	}
-
-	_, err := cd.opt.Redis.Del(ctx, key).Result()
-	_ = cd.Publish(ctx, cd.GetChannel(), key)
+	cd.LocalCache.Del(key)
+	_, err := cd.Redis.Del(ctx, key).Result()
+	_ = cd.publish(ctx, cd.getChannel(), key)
 	return err
 }
 
 func (cd *Cache) DeleteFromLocalCache(key string) {
-	if cd.opt.LocalCache != nil {
-		cd.opt.LocalCache.Del(key)
-	}
+	cd.LocalCache.Del(key)
 }
 
-func (cd *Cache) Marshal(value interface{}) ([]byte, error) {
-	return cd.marshal(value)
+func (cd *Cache) getChannel() string {
+	return strings.Join([]string{defaultPubSubKey, cd.Name}, ":")
 }
 
-func (cd *Cache) _marshal(value interface{}) ([]byte, error) {
-	switch value := value.(type) {
-	case nil:
-		return nil, nil
-	case []byte:
-		return value, nil
-	case string:
-		return []byte(value), nil
-	}
-
-	b, err := msgpack.Marshal(value)
-	if err != nil {
-		return nil, err
-	}
-
-	return compress(b), nil
-}
-
-func compress(data []byte) []byte {
-	if len(data) < compressionThreshold {
-		n := len(data) + 1
-		b := make([]byte, n, n+timeLen)
-		copy(b, data)
-		b[len(b)-1] = noCompression
-		return b
-	}
-
-	n := s2.MaxEncodedLen(len(data)) + 1
-	b := make([]byte, n, n+timeLen)
-	b = s2.Encode(b, data)
-	b = append(b, s2Compression)
-	return b
-}
-
-func (cd *Cache) Unmarshal(b []byte, value interface{}) error {
-	return cd.unmarshal(b, value)
-}
-
-func (cd *Cache) _unmarshal(b []byte, value interface{}) error {
-	if len(b) == 0 {
-		return nil
-	}
-
-	switch value := value.(type) {
-	case nil:
-		return nil
-	case *[]byte:
-		clone := make([]byte, len(b))
-		copy(clone, b)
-		*value = clone
-		return nil
-	case *string:
-		*value = string(b)
-		return nil
-	}
-
-	switch c := b[len(b)-1]; c {
-	case noCompression:
-		b = b[:len(b)-1]
-	case s2Compression:
-		b = b[:len(b)-1]
-
-		var err error
-		b, err = s2.Decode(nil, b)
-		if err != nil {
-			return err
-		}
-	default:
-		return fmt.Errorf("unknown compression method: %x", c)
-	}
-
-	return msgpack.Unmarshal(b, value)
-}
-
-func (cd *Cache) GetChannel() string {
-	return strings.Join([]string{defaultPubSubKey, cd.opt.Name}, ":")
-}
-
-func (cd *Cache) Subscribe(channel string) error {
+func (cd *Cache) subscribe(channel string) error {
 	ctx := context.Background()
-	pubSub := cd.opt.Redis.Subscribe(ctx, channel)
+	pubSub := cd.Redis.Subscribe(ctx, channel)
 	// 使用完毕，记得关闭
 	defer func(pubSub *redis.PubSub) {
 		err := pubSub.Close()
 		if err != nil {
 			fmt.Printf("pubSub close err: %s", err)
 		}
+		fmt.Println("pubSub close success")
 	}(pubSub)
 	for {
 		msg, err := pubSub.ReceiveMessage(ctx)
 		if err != nil {
-			panic(err)
+			slog.Error("pubSub ReceiveMessage err:", err.Error())
 		}
-		cd.DeleteFromLocalCache(msg.String())
+		if msg.String() != "" {
+			slog.Info("pubSub ReceiveMessage :", msg.String())
+			cd.DeleteFromLocalCache(msg.String())
+		}
 	}
 }
 
-func (cd *Cache) Publish(ctx context.Context, channel string, key string) error {
-	return cd.opt.Redis.Publish(ctx, channel, key).Err()
+func (cd *Cache) publish(ctx context.Context, channel string, key string) error {
+	return cd.Redis.Publish(ctx, channel, key).Err()
 }
 
-//------------------------------------------------------------------------------
-
-type Stats struct {
-	Hits   uint64
-	Misses uint64
+func ZlibCompress(data []byte) ([]byte, error) {
+	var b bytes.Buffer
+	w := zlib.NewWriter(&b)
+	defer func(w *zlib.Writer) {
+		_ = w.Close()
+	}(w)
+	_, err := w.Write(data)
+	if err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
 }
 
-// Stats returns cache statistics.
-func (cd *Cache) Stats() *Stats {
-	if !cd.opt.StatsEnabled {
-		return nil
+func ZlibUnCompress(data []byte) ([]byte, error) {
+	var b bytes.Buffer
+	w := bytes.NewReader(data)
+	r, err := zlib.NewReader(w)
+	if err != nil {
+		return nil, err
 	}
-	return &Stats{
-		Hits:   atomic.LoadUint64(&cd.hits),
-		Misses: atomic.LoadUint64(&cd.misses),
+	defer func(r io.ReadCloser) {
+		_ = r.Close()
+	}(r)
+	_, err = io.Copy(&b, r)
+	if err != nil {
+		return nil, err
 	}
+	return b.Bytes(), nil
 }

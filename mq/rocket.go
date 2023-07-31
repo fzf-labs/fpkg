@@ -161,7 +161,7 @@ func (r *Rocket) do(b *BusinessConfig, handle Handle) {
 			return consumer.ConsumeSuccess, nil
 		})
 	if err != nil {
-		log.Printf("rocket mq Subscribe err:%v", err)
+		log.Printf("rocket mq subscribe err:%v", err)
 	}
 	// Note: start after subscribe
 	err = c.Start()
