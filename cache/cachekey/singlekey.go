@@ -7,7 +7,7 @@ import (
 
 	"github.com/fzf-labs/fpkg/cache/rockscache"
 	"github.com/fzf-labs/fpkg/conv"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 func (p *KeyPrefix) NewSingleKey(rd *redis.Client) *SingleKey {

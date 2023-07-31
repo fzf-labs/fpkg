@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/fzf-labs/fpkg/cache/rockscache"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 func (p *KeyPrefix) NewBatchKey(rd *redis.Client) *BatchKey {

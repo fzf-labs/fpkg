@@ -12,7 +12,7 @@ import (
 	"github.com/fzf-labs/fpkg/cache/cachekey"
 	"github.com/fzf-labs/fpkg/db/gen/example/postgres/user_dao"
 	"github.com/fzf-labs/fpkg/db/gen/example/postgres/user_model"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 

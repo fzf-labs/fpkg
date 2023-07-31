@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fzf-labs/fpkg/cache/redislock"
+	"github.com/bsm/redislock"
 	"github.com/fzf-labs/fpkg/conv"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 func (p *KeyPrefix) NewLockKey(rd *redis.Client) *LockKey {

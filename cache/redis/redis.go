@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-redis/redis/extra/redisotel/v8"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/extra/redisotel/v9"
+	"github.com/redis/go-redis/v9"
 )
 
 type GoRedisConfig struct {
@@ -21,7 +21,7 @@ type GoRedisConfig struct {
 
 // NewGoRedis 初始化go-redis客户端
 func NewGoRedis(cfg GoRedisConfig) (*redis.Client, error) {
-	Client := redis.NewClient(&redis.Options{
+	client := redis.NewClient(&redis.Options{
 		Addr:         cfg.Addr,
 		Password:     cfg.Password,
 		DB:           cfg.DB,
@@ -29,14 +29,20 @@ func NewGoRedis(cfg GoRedisConfig) (*redis.Client, error) {
 		WriteTimeout: cfg.WriteTimeout,
 		ReadTimeout:  cfg.ReadTimeout,
 	})
-	//添加链路追踪
-	Client.AddHook(redisotel.NewTracingHook())
+	// 启用跟踪工具。
+	if err := redisotel.InstrumentTracing(client); err != nil {
+		panic(err)
+	}
+	// 启用度量工具。
+	if err := redisotel.InstrumentMetrics(client); err != nil {
+		panic(err)
+	}
 	//ping 检测一下
-	_, err := Client.Ping(context.Background()).Result()
+	_, err := client.Ping(context.Background()).Result()
 	if err != nil {
 		return nil, err
 	}
-	return Client, nil
+	return client, nil
 }
 
 // RedisInfo Redis服务信息

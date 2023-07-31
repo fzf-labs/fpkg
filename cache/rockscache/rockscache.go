@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/dtm-labs/rockscache"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 // NewWeakRocksCacheClient //弱一致性RocksCache缓存客户端
