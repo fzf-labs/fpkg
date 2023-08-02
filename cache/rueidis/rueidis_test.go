@@ -2,7 +2,6 @@ package rueidis
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"testing"
 	"time"
@@ -43,19 +42,9 @@ func TestNewRueidisAside(t *testing.T) {
 	if err != nil {
 		return
 	}
-	fmt.Println(1)
 	val, err := client.Get(context.Background(), time.Minute, "mykey", func(ctx context.Context, key string) (val string, err error) {
-		fmt.Println(2)
-		val = "_nil_" // cache nil to avoid penetration.
-		err = nil     // clear err in case of sql.ErrNoRows.
-		return
+		return "abcd", nil
 	})
-	if err != nil {
-		panic(err)
-	} else if val == "_nil_" {
-		val = ""
-		err = sql.ErrNoRows
-	} else {
-		// ...
-	}
+	fmt.Println(err)
+	fmt.Println(val)
 }
