@@ -39,7 +39,7 @@ require (
 	github.com/pyroscope-io/client v0.3.0
 	github.com/redis/go-redis/extra/redisotel/v9 v9.0.5
 	github.com/redis/go-redis/v9 v9.0.5
-	github.com/redis/rueidis v1.0.10
+	github.com/redis/rueidis v1.0.13
 	github.com/segmentio/ksuid v1.0.4
 	github.com/shirou/gopsutil/v3 v3.23.2
 	github.com/silenceper/wechat/v2 v2.1.5
@@ -58,7 +58,6 @@ require (
 	golang.org/x/crypto v0.11.0
 	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53
 	golang.org/x/net v0.12.0
-	golang.org/x/sync v0.3.0
 	golang.org/x/text v0.11.0
 	golang.org/x/time v0.3.0
 	golang.org/x/tools v0.10.0
@@ -118,6 +117,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/oklog/ulid/v2 v2.1.0 // indirect
 	github.com/onsi/ginkgo/v2 v2.9.2 // indirect
 	github.com/openzipkin/zipkin-go v0.4.1 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
@@ -153,6 +153,7 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
 	golang.org/x/mod v0.11.0 // indirect
+	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/mail.v2 v2.3.1 // indirect
