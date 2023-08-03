@@ -3,7 +3,7 @@ func (r *{{.upperTableName}}Repo) FindMultiCacheBy{{.upperFieldPlural}}(ctx cont
 	resp := make([]*{{.lowerDbName}}_model.{{.upperTableName}}, 0)
 	cacheKey := Cache{{.upperTableName}}By{{.upperField}}.NewBatchKey(r.redis)
 	batchKeys := make([]string,0)
-	for _, v := range IDS {
+	for _, v := range {{.lowerFieldPlural}} {
 		batchKeys = append(batchKeys,conv.String(v))
 	}
 	cacheValue, err := cacheKey.BatchKeyCache(ctx, batchKeys, func() (map[string]string, error) {
