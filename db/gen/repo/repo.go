@@ -73,10 +73,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 	if err != nil {
 		return err
 	}
-	fmt.Println(r.gorm.NamingStrategy.SchemaName(table))
 	upperTableName := r.UpperName(table)
-	fmt.Println(table)
-	fmt.Println(upperTableName)
 	lowerTableName := r.LowerName(table)
 	interfaceCreateOneTpl, err := NewTemplate("InterfaceCreateOne").Parse(InterfaceCreateOne).Execute(map[string]any{
 		"lowerDbName":    dbName,
