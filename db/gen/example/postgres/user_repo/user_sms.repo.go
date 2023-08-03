@@ -17,46 +17,46 @@ import (
 	"gorm.io/gorm"
 )
 
-var _ IUserRepo = (*UserRepo)(nil)
+var _ IUserSmsRepo = (*UserSmsRepo)(nil)
 
 var (
 	// 缓存管理器
-	cacheKeyUserManage = cachekey.NewKeyManage("UserRepo")
+	cacheKeyUserSmsManage = cachekey.NewKeyManage("UserSmsRepo")
 	// 只针对唯一索引做缓存
-	CacheUserByID = cacheKeyUserManage.AddKey("CacheUserByID", time.Hour*24, "CacheUserByID")
+	CacheUserSmsByID = cacheKeyUserSmsManage.AddKey("CacheUserSmsByID", time.Hour*24, "CacheUserSmsByID")
 )
 
 type (
-	IUserRepo interface {
+	IUserSmsRepo interface {
 		// CreateOne 创建一条数据
-		CreateOne(ctx context.Context, data *user_model.User) error
+		CreateOne(ctx context.Context, data *user_model.UserSms) error
 		// UpdateOne 更新一条数据
-		UpdateOne(ctx context.Context, data *user_model.User) error
+		UpdateOne(ctx context.Context, data *user_model.UserSms) error
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
 		DeleteOneCacheByID(ctx context.Context, ID int64) error
 		// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
 		DeleteMultiCacheByIDS(ctx context.Context, IDS []int64) error
 		// DeleteUniqueIndexCache 删除唯一索引存在的缓存
-		DeleteUniqueIndexCache(ctx context.Context, data []*user_model.User) error
+		DeleteUniqueIndexCache(ctx context.Context, data []*user_model.UserSms) error
 		// FindOneCacheByID 根据ID查询一条数据并设置缓存
-		FindOneCacheByID(ctx context.Context, ID int64) (*user_model.User, error)
+		FindOneCacheByID(ctx context.Context, ID int64) (*user_model.UserSms, error)
 		// FindMultiCacheByIDS 根据IDS查询多条数据并设置缓存
-		FindMultiCacheByIDS(ctx context.Context, IDS []int64) ([]*user_model.User, error)
+		FindMultiCacheByIDS(ctx context.Context, IDS []int64) ([]*user_model.UserSms, error)
 	}
 
-	UserRepo struct {
+	UserSmsRepo struct {
 		db    *gorm.DB
 		redis *redis.Client
 	}
 )
 
-func NewUserRepo(db *gorm.DB, redis *redis.Client) *UserRepo {
-	return &UserRepo{db: db, redis: redis}
+func NewUserSmsRepo(db *gorm.DB, redis *redis.Client) *UserSmsRepo {
+	return &UserSmsRepo{db: db, redis: redis}
 }
 
 // CreateOne 创建一条数据
-func (r *UserRepo) CreateOne(ctx context.Context, data *user_model.User) error {
-	dao := user_dao.Use(r.db).User
+func (r *UserSmsRepo) CreateOne(ctx context.Context, data *user_model.UserSms) error {
+	dao := user_dao.Use(r.db).UserSms
 	err := dao.WithContext(ctx).Create(data)
 	if err != nil {
 		return err
@@ -65,13 +65,13 @@ func (r *UserRepo) CreateOne(ctx context.Context, data *user_model.User) error {
 }
 
 // UpdateOne 更新一条数据
-func (r *UserRepo) UpdateOne(ctx context.Context, data *user_model.User) error {
-	dao := user_dao.Use(r.db).User
+func (r *UserSmsRepo) UpdateOne(ctx context.Context, data *user_model.UserSms) error {
+	dao := user_dao.Use(r.db).UserSms
 	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Updates(data)
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, []*user_model.User{data})
+	err = r.DeleteUniqueIndexCache(ctx, []*user_model.UserSms{data})
 	if err != nil {
 		return err
 	}
@@ -79,8 +79,8 @@ func (r *UserRepo) UpdateOne(ctx context.Context, data *user_model.User) error {
 }
 
 // DeleteOneCacheByID 根据ID删除一条数据并清理缓存
-func (r *UserRepo) DeleteOneCacheByID(ctx context.Context, ID int64) error {
-	dao := user_dao.Use(r.db).User
+func (r *UserSmsRepo) DeleteOneCacheByID(ctx context.Context, ID int64) error {
+	dao := user_dao.Use(r.db).UserSms
 	first, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return err
@@ -92,7 +92,7 @@ func (r *UserRepo) DeleteOneCacheByID(ctx context.Context, ID int64) error {
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, []*user_model.User{first})
+	err = r.DeleteUniqueIndexCache(ctx, []*user_model.UserSms{first})
 	if err != nil {
 		return err
 	}
@@ -100,8 +100,8 @@ func (r *UserRepo) DeleteOneCacheByID(ctx context.Context, ID int64) error {
 }
 
 // DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
-func (r *UserRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []int64) error {
-	dao := user_dao.Use(r.db).User
+func (r *UserSmsRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []int64) error {
+	dao := user_dao.Use(r.db).UserSms
 	list, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
 	if err != nil {
 		return err
@@ -121,12 +121,12 @@ func (r *UserRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []int64) error
 }
 
 // DeleteUniqueIndexCache 删除唯一索引存在的缓存
-func (r *UserRepo) DeleteUniqueIndexCache(ctx context.Context, data []*user_model.User) error {
+func (r *UserSmsRepo) DeleteUniqueIndexCache(ctx context.Context, data []*user_model.UserSms) error {
 	var err error
-	cacheUserByID := CacheUserByID.NewSingleKey(r.redis)
+	cacheUserSmsByID := CacheUserSmsByID.NewSingleKey(r.redis)
 
 	for _, v := range data {
-		err = cacheUserByID.SingleCacheDel(ctx, cacheUserByID.BuildKey(v.ID))
+		err = cacheUserSmsByID.SingleCacheDel(ctx, cacheUserSmsByID.BuildKey(v.ID))
 		if err != nil {
 			return err
 		}
@@ -136,11 +136,11 @@ func (r *UserRepo) DeleteUniqueIndexCache(ctx context.Context, data []*user_mode
 }
 
 // FindOneCacheByID 根据ID查询一条数据并设置缓存
-func (r *UserRepo) FindOneCacheByID(ctx context.Context, ID int64) (*user_model.User, error) {
-	resp := new(user_model.User)
-	cache := CacheUserByID.NewSingleKey(r.redis)
+func (r *UserSmsRepo) FindOneCacheByID(ctx context.Context, ID int64) (*user_model.UserSms, error) {
+	resp := new(user_model.UserSms)
+	cache := CacheUserSmsByID.NewSingleKey(r.redis)
 	cacheValue, err := cache.SingleCache(ctx, conv.String(ID), func() (string, error) {
-		dao := user_dao.Use(r.db).User
+		dao := user_dao.Use(r.db).UserSms
 		result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 		if err != nil && err != gorm.ErrRecordNotFound {
 			return "", err
@@ -162,15 +162,15 @@ func (r *UserRepo) FindOneCacheByID(ctx context.Context, ID int64) (*user_model.
 }
 
 // FindMultiCacheByIDS 根据IDS查询多条数据并设置缓存
-func (r *UserRepo) FindMultiCacheByIDS(ctx context.Context, IDS []int64) ([]*user_model.User, error) {
-	resp := make([]*user_model.User, 0)
-	cacheKey := CacheUserByID.NewBatchKey(r.redis)
+func (r *UserSmsRepo) FindMultiCacheByIDS(ctx context.Context, IDS []int64) ([]*user_model.UserSms, error) {
+	resp := make([]*user_model.UserSms, 0)
+	cacheKey := CacheUserSmsByID.NewBatchKey(r.redis)
 	batchKeys := make([]string, 0)
 	for _, v := range IDS {
 		batchKeys = append(batchKeys, conv.String(v))
 	}
 	cacheValue, err := cacheKey.BatchKeyCache(ctx, batchKeys, func() (map[string]string, error) {
-		dao := user_dao.Use(r.db).User
+		dao := user_dao.Use(r.db).UserSms
 		result, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
 		if err != nil && err != gorm.ErrRecordNotFound {
 			return nil, err
@@ -189,7 +189,7 @@ func (r *UserRepo) FindMultiCacheByIDS(ctx context.Context, IDS []int64) ([]*use
 		return nil, err
 	}
 	for _, v := range cacheValue {
-		tmp := new(user_model.User)
+		tmp := new(user_model.UserSms)
 		err := json.Unmarshal([]byte(v), tmp)
 		if err != nil {
 			return nil, err

@@ -1,8 +1,12 @@
-// FindMultiBy{{.upperFieldPlural}} 根据{{.lowerFieldPlural}}查询多条数据并设置缓存
-func (r *{{.upperTableName}}Repo) FindMultiBy{{.upperFieldPlural}}(ctx context.Context, {{.lowerFieldPlural}} []{{.dataType}}) ([]*{{.lowerDbName}}_model.{{.upperTableName}}, error) {
+// FindMultiCacheBy{{.upperFieldPlural}} 根据{{.lowerFieldPlural}}查询多条数据并设置缓存
+func (r *{{.upperTableName}}Repo) FindMultiCacheBy{{.upperFieldPlural}}(ctx context.Context, {{.lowerFieldPlural}} []{{.dataType}}) ([]*{{.lowerDbName}}_model.{{.upperTableName}}, error) {
 	resp := make([]*{{.lowerDbName}}_model.{{.upperTableName}}, 0)
 	cacheKey := Cache{{.upperTableName}}By{{.upperField}}.NewBatchKey(r.redis)
-	cacheValue, err := cacheKey.BatchKeyCache(ctx, {{.lowerFieldPlural}}, func() (map[string]string, error) {
+	batchKeys := make([]string,0)
+	for _, v := range IDS {
+		batchKeys = append(batchKeys,conv.String(v))
+	}
+	cacheValue, err := cacheKey.BatchKeyCache(ctx, batchKeys, func() (map[string]string, error) {
 		dao := {{.lowerDbName}}_dao.Use(r.db).{{.upperTableName}}
 		result, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.In({{.lowerFieldPlural}}...)).Find()
 		if err != nil && err != gorm.ErrRecordNotFound {
@@ -14,7 +18,7 @@ func (r *{{.upperTableName}}Repo) FindMultiBy{{.upperFieldPlural}}(ctx context.C
 			if err != nil {
 				return nil, err
 			}
-			value[v.{{.upperField}}] = string(marshal)
+			value[conv.String(v.{{.upperField}})] = string(marshal)
 		}
 		return value, nil
 	})

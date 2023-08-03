@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/jinzhu/inflection"
 	"golang.org/x/tools/go/packages"
@@ -72,8 +73,11 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 	if err != nil {
 		return err
 	}
-	upperTableName := UpperName(table)
-	lowerTableName := LowerName(table)
+	fmt.Println(r.gorm.NamingStrategy.SchemaName(table))
+	upperTableName := r.UpperName(table)
+	fmt.Println(table)
+	fmt.Println(upperTableName)
+	lowerTableName := r.LowerName(table)
 	interfaceCreateOneTpl, err := NewTemplate("InterfaceCreateOne").Parse(InterfaceCreateOne).Execute(map[string]any{
 		"lowerDbName":    dbName,
 		"upperTableName": upperTableName,
@@ -120,8 +124,8 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 			var cacheField string
 			cacheFieldsJoinSli := make([]string, 0)
 			for _, column := range index.Columns() {
-				cacheField += UpperName(column)
-				cacheFieldsJoinSli = append(cacheFieldsJoinSli, fmt.Sprintf("v.%s", UpperName(column)))
+				cacheField += r.UpperName(column)
+				cacheFieldsJoinSli = append(cacheFieldsJoinSli, fmt.Sprintf("v.%s", r.UpperName(column)))
 			}
 			varCacheTpl, err := NewTemplate("VarCache").Parse(VarCache).Execute(map[string]any{
 				"upperTableName": upperTableName,
@@ -156,9 +160,9 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 			fieldsJoin := strings.Join(index.Columns(), ",")
 			var whereFields string
 			for _, v := range index.Columns() {
-				upperFields += UpperName(v)
-				fieldAndDataTypes += fmt.Sprintf("%s %s,", LowerName(v), columnNameToDataType[v])
-				whereFields += fmt.Sprintf("dao.%s.Eq(%s),", UpperName(v), LowerName(v))
+				upperFields += r.UpperName(v)
+				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerName(v), columnNameToDataType[v])
+				whereFields += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperName(v), r.LowerName(v))
 			}
 			if unique {
 				interfaceFindOneCacheByFields, err := NewTemplate("InterfaceFindOneCacheByFields").Parse(InterfaceFindOneCacheByFields).Execute(map[string]any{
@@ -189,8 +193,8 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					"lowerDbName":       dbName,
 					"upperTableName":    upperTableName,
 					"lowerTableName":    lowerTableName,
-					"upperField":        UpperName(index.Columns()[0]),
-					"lowerField":        LowerName(index.Columns()[0]),
+					"upperField":        r.UpperName(index.Columns()[0]),
+					"lowerField":        r.LowerName(index.Columns()[0]),
 					"upperFields":       upperFields,
 					"dataType":          columnNameToDataType[index.Columns()[0]],
 					"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
@@ -203,8 +207,8 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					"lowerDbName":       dbName,
 					"upperTableName":    upperTableName,
 					"lowerTableName":    lowerTableName,
-					"upperField":        UpperName(index.Columns()[0]),
-					"lowerField":        LowerName(index.Columns()[0]),
+					"upperField":        r.UpperName(index.Columns()[0]),
+					"lowerField":        r.LowerName(index.Columns()[0]),
 					"upperFields":       upperFields,
 					"dataType":          columnNameToDataType[index.Columns()[0]],
 					"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
@@ -249,8 +253,8 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 
 					"upperTableName": upperTableName,
 					"lowerTableName": lowerTableName,
-					"upperField":     UpperName(index.Columns()[0]),
-					"lowerField":     LowerName(index.Columns()[0]),
+					"upperField":     r.UpperName(index.Columns()[0]),
+					"lowerField":     r.LowerName(index.Columns()[0]),
 					"dataType":       columnNameToDataType[index.Columns()[0]],
 				})
 				if err != nil {
@@ -261,8 +265,8 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 
 					"upperTableName": upperTableName,
 					"lowerTableName": lowerTableName,
-					"upperField":     UpperName(index.Columns()[0]),
-					"lowerField":     LowerName(index.Columns()[0]),
+					"upperField":     r.UpperName(index.Columns()[0]),
+					"lowerField":     r.LowerName(index.Columns()[0]),
 					"dataType":       columnNameToDataType[index.Columns()[0]],
 				})
 				if err != nil {
@@ -276,10 +280,10 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 
 					"upperTableName":   upperTableName,
 					"lowerTableName":   lowerTableName,
-					"upperField":       UpperName(index.Columns()[0]),
-					"lowerField":       LowerName(index.Columns()[0]),
-					"upperFieldPlural": inflection.Plural(UpperName(index.Columns()[0])),
-					"lowerFieldPlural": inflection.Plural(LowerName(index.Columns()[0])),
+					"upperField":       r.UpperName(index.Columns()[0]),
+					"lowerField":       r.LowerName(index.Columns()[0]),
+					"upperFieldPlural": inflection.Plural(r.UpperName(index.Columns()[0])),
+					"lowerFieldPlural": inflection.Plural(r.LowerName(index.Columns()[0])),
 					"dataType":         columnNameToDataType[index.Columns()[0]],
 				})
 				if err != nil {
@@ -290,10 +294,10 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 
 					"upperTableName":   upperTableName,
 					"lowerTableName":   lowerTableName,
-					"upperField":       UpperName(index.Columns()[0]),
-					"lowerField":       LowerName(index.Columns()[0]),
-					"upperFieldPlural": inflection.Plural(UpperName(index.Columns()[0])),
-					"lowerFieldPlural": inflection.Plural(LowerName(index.Columns()[0])),
+					"upperField":       r.UpperName(index.Columns()[0]),
+					"lowerField":       r.LowerName(index.Columns()[0]),
+					"upperFieldPlural": inflection.Plural(r.UpperName(index.Columns()[0])),
+					"lowerFieldPlural": inflection.Plural(r.LowerName(index.Columns()[0])),
 					"dataType":         columnNameToDataType[index.Columns()[0]],
 				})
 				if err != nil {
@@ -306,8 +310,8 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					"lowerDbName":    dbName,
 					"upperTableName": upperTableName,
 					"lowerTableName": lowerTableName,
-					"upperField":     UpperName(index.Columns()[0]),
-					"lowerField":     LowerName(index.Columns()[0]),
+					"upperField":     r.UpperName(index.Columns()[0]),
+					"lowerField":     r.LowerName(index.Columns()[0]),
 					"dataType":       columnNameToDataType[index.Columns()[0]],
 				})
 				if err != nil {
@@ -317,8 +321,8 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					"lowerDbName":    dbName,
 					"upperTableName": upperTableName,
 					"lowerTableName": lowerTableName,
-					"upperField":     UpperName(index.Columns()[0]),
-					"lowerField":     LowerName(index.Columns()[0]),
+					"upperField":     r.UpperName(index.Columns()[0]),
+					"lowerField":     r.LowerName(index.Columns()[0]),
 					"dataType":       columnNameToDataType[index.Columns()[0]],
 				})
 				if err != nil {
@@ -330,10 +334,10 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					"lowerDbName":      dbName,
 					"upperTableName":   upperTableName,
 					"lowerTableName":   lowerTableName,
-					"upperField":       UpperName(index.Columns()[0]),
-					"lowerField":       LowerName(index.Columns()[0]),
-					"upperFieldPlural": inflection.Plural(UpperName(index.Columns()[0])),
-					"lowerFieldPlural": inflection.Plural(LowerName(index.Columns()[0])),
+					"upperField":       r.UpperName(index.Columns()[0]),
+					"lowerField":       r.LowerName(index.Columns()[0]),
+					"upperFieldPlural": inflection.Plural(r.UpperName(index.Columns()[0])),
+					"lowerFieldPlural": inflection.Plural(r.LowerName(index.Columns()[0])),
 					"dataType":         columnNameToDataType[index.Columns()[0]],
 				})
 				if err != nil {
@@ -343,10 +347,10 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					"lowerDbName":      dbName,
 					"upperTableName":   upperTableName,
 					"lowerTableName":   lowerTableName,
-					"upperField":       UpperName(index.Columns()[0]),
-					"lowerField":       LowerName(index.Columns()[0]),
-					"upperFieldPlural": inflection.Plural(UpperName(index.Columns()[0])),
-					"lowerFieldPlural": inflection.Plural(LowerName(index.Columns()[0])),
+					"upperField":       r.UpperName(index.Columns()[0]),
+					"lowerField":       r.LowerName(index.Columns()[0]),
+					"upperFieldPlural": inflection.Plural(r.UpperName(index.Columns()[0])),
+					"lowerFieldPlural": inflection.Plural(r.LowerName(index.Columns()[0])),
 					"dataType":         columnNameToDataType[index.Columns()[0]],
 				})
 				if err != nil {
@@ -359,8 +363,8 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					"lowerDbName":      dbName,
 					"upperTableName":   upperTableName,
 					"lowerTableName":   lowerTableName,
-					"upperFieldPlural": inflection.Plural(UpperName(index.Columns()[0])),
-					"lowerFieldPlural": inflection.Plural(LowerName(index.Columns()[0])),
+					"upperFieldPlural": inflection.Plural(r.UpperName(index.Columns()[0])),
+					"lowerFieldPlural": inflection.Plural(r.LowerName(index.Columns()[0])),
 					"dataType":         columnNameToDataType[index.Columns()[0]],
 				})
 				if err != nil {
@@ -368,11 +372,11 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				}
 				findMultiByFieldPlural, err := NewTemplate("FindMultiByFieldPlural").Parse(FindMultiByFieldPlural).Execute(map[string]any{
 					"lowerDbName":      dbName,
-					"upperField":       UpperName(index.Columns()[0]),
+					"upperField":       r.UpperName(index.Columns()[0]),
 					"upperTableName":   upperTableName,
 					"lowerTableName":   lowerTableName,
-					"upperFieldPlural": inflection.Plural(UpperName(index.Columns()[0])),
-					"lowerFieldPlural": inflection.Plural(LowerName(index.Columns()[0])),
+					"upperFieldPlural": inflection.Plural(r.UpperName(index.Columns()[0])),
+					"lowerFieldPlural": inflection.Plural(r.LowerName(index.Columns()[0])),
 					"dataType":         columnNameToDataType[index.Columns()[0]],
 				})
 				if err != nil {
@@ -487,4 +491,28 @@ func FillModelPkgPath(filePath string) string {
 		return ""
 	}
 	return pkgs[0].PkgPath
+}
+func (r *Repo) UpperName(s string) string {
+	return r.gorm.NamingStrategy.SchemaName(s)
+}
+
+func (r *Repo) LowerName(s string) string {
+	s = r.UpperName(s)
+	if len(s) == 0 {
+		return s
+	}
+	commonInitialisms := []string{"API", "ASCII", "CPU", "CSS", "DNS", "EOF", "GUID", "HTML", "HTTP", "HTTPS", "ID", "IP", "JSON", "LHS", "QPS", "RAM", "RHS", "RPC", "SLA", "SMTP", "SSH", "TLS", "TTL", "UID", "UI", "UUID", "URI", "URL", "UTF8", "VM", "XML", "XSRF", "XSS"}
+	//如果第一个单词命中  则不处理
+	for _, v := range commonInitialisms {
+		if strings.HasPrefix(s, v) {
+			return s
+		}
+	}
+	rs := []rune(s)
+	f := rs[0]
+
+	if 'A' <= f && f <= 'Z' {
+		return string(unicode.ToLower(f)) + string(rs[1:])
+	}
+	return s
 }
