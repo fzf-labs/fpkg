@@ -356,6 +356,31 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				delMethods += fmt.Sprintln(interfaceDeleteMultiByFieldPlural.String())
 				delFunc += fmt.Sprintln(deleteMultiByFieldPlural.String())
 			} else {
+				interfaceFindMultiByField, err := NewTemplate("InterfaceFindMultiByField").Parse(InterfaceFindMultiByField).Execute(map[string]any{
+					"lowerDbName":    dbName,
+					"upperTableName": upperTableName,
+					"lowerTableName": lowerTableName,
+					"upperField":     r.UpperName(index.Columns()[0]),
+					"lowerField":     r.LowerName(index.Columns()[0]),
+					"dataType":       columnNameToDataType[index.Columns()[0]],
+				})
+				if err != nil {
+					return err
+				}
+				findMultiByField, err := NewTemplate("FindMultiByField").Parse(FindMultiByField).Execute(map[string]any{
+					"lowerDbName":    dbName,
+					"upperTableName": upperTableName,
+					"lowerTableName": lowerTableName,
+					"upperField":     r.UpperName(index.Columns()[0]),
+					"lowerField":     r.LowerName(index.Columns()[0]),
+					"dataType":       columnNameToDataType[index.Columns()[0]],
+				})
+				if err != nil {
+					return err
+				}
+				findMethods += fmt.Sprintln(interfaceFindMultiByField.String())
+				findFunc += fmt.Sprintln(findMultiByField.String())
+
 				interfaceFindMultiByFieldPlural, err := NewTemplate("InterfaceFindMultiByFieldPlural").Parse(InterfaceFindMultiByFieldPlural).Execute(map[string]any{
 					"lowerDbName":      dbName,
 					"upperTableName":   upperTableName,

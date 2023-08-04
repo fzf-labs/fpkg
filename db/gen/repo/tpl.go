@@ -52,6 +52,12 @@ var InterfaceDeleteOneCacheByFields string
 //go:embed tpl/delete-one-cache-by-fields.tpl
 var DeleteOneCacheByFields string
 
+//go:embed tpl/interface-find-multi-by-field.tpl
+var InterfaceFindMultiByField string
+
+//go:embed tpl/find-multi-by-field.tpl
+var FindMultiByField string
+
 //go:embed tpl/interface-find-multi-by-field-plural.tpl
 var InterfaceFindMultiByFieldPlural string
 

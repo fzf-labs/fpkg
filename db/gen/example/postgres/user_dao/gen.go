@@ -17,26 +17,23 @@ import (
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:      db,
-		User:    newUser(db, opts...),
-		UserSms: newUserSms(db, opts...),
+		db:          db,
+		SystemUsers: newSystemUsers(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
-	User    user
-	UserSms userSms
+	SystemUsers systemUsers
 }
 
 func (q *Query) Available() bool { return q.db != nil }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:      db,
-		User:    q.User.clone(db),
-		UserSms: q.UserSms.clone(db),
+		db:          db,
+		SystemUsers: q.SystemUsers.clone(db),
 	}
 }
 
@@ -50,21 +47,18 @@ func (q *Query) WriteDB() *Query {
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:      db,
-		User:    q.User.replaceDB(db),
-		UserSms: q.UserSms.replaceDB(db),
+		db:          db,
+		SystemUsers: q.SystemUsers.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
-	User    *userDo
-	UserSms *userSmsDo
+	SystemUsers *systemUsersDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		User:    q.User.WithContext(ctx),
-		UserSms: q.UserSms.WithContext(ctx),
+		SystemUsers: q.SystemUsers.WithContext(ctx),
 	}
 }
 
