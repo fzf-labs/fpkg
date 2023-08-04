@@ -7,6 +7,7 @@ package user_repo
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/fzf-labs/fpkg/cache/cachekey"
@@ -82,7 +83,7 @@ func (r *UserRepo) UpdateOne(ctx context.Context, data *user_model.User) error {
 func (r *UserRepo) DeleteOneCacheByID(ctx context.Context, ID int64) error {
 	dao := user_dao.Use(r.db).User
 	first, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
-	if err != nil && err != gorm.ErrRecordNotFound {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 	if first == nil {
@@ -142,7 +143,7 @@ func (r *UserRepo) FindOneCacheByID(ctx context.Context, ID int64) (*user_model.
 	cacheValue, err := cache.SingleCache(ctx, conv.String(ID), func() (string, error) {
 		dao := user_dao.Use(r.db).User
 		result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
-		if err != nil && err != gorm.ErrRecordNotFound {
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", err
 		}
 		marshal, err := json.Marshal(result)
@@ -172,7 +173,7 @@ func (r *UserRepo) FindMultiCacheByIDS(ctx context.Context, IDS []int64) ([]*use
 	cacheValue, err := cacheKey.BatchKeyCache(ctx, batchKeys, func() (map[string]string, error) {
 		dao := user_dao.Use(r.db).User
 		result, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
-		if err != nil && err != gorm.ErrRecordNotFound {
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
 		}
 		value := make(map[string]string)

@@ -1,5 +1,6 @@
 import (
 	"context"
+	"errors"
 	"encoding/json"
 	"time"
 	"github.com/redis/go-redis/v9"

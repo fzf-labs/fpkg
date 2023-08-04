@@ -5,7 +5,7 @@ func (r *{{.upperTableName}}Repo) FindOneCacheBy{{.upperFields}}(ctx context.Con
 	cacheValue, err := cache.SingleCache(ctx, cache.BuildKey( {{.fieldsJoin}}), func() (string, error) {
 		dao := {{.lowerDbName}}_dao.Use(r.db).{{.upperTableName}}
 		result, err := dao.WithContext(ctx).Where({{.whereFields}}).First()
-		if err != nil && err != gorm.ErrRecordNotFound {
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", err
 		}
 		marshal, err := json.Marshal(result)

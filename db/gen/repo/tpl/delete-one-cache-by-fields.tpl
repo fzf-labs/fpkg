@@ -2,7 +2,7 @@
 func (r *{{.upperTableName}}Repo) DeleteOneCacheBy{{.upperFields}}(ctx context.Context, {{.fieldAndDataTypes}}) error {
 	dao := {{.lowerDbName}}_dao.Use(r.db).{{.upperTableName}}
 	first, err := dao.WithContext(ctx).Where({{.whereFields}}).First()
-	if err != nil && err != gorm.ErrRecordNotFound {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 	if first == nil {

@@ -9,7 +9,7 @@ func (r *{{.upperTableName}}Repo) FindMultiCacheBy{{.upperFieldPlural}}(ctx cont
 	cacheValue, err := cacheKey.BatchKeyCache(ctx, batchKeys, func() (map[string]string, error) {
 		dao := {{.lowerDbName}}_dao.Use(r.db).{{.upperTableName}}
 		result, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.In({{.lowerFieldPlural}}...)).Find()
-		if err != nil && err != gorm.ErrRecordNotFound {
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
 		}
 		value := make(map[string]string)
