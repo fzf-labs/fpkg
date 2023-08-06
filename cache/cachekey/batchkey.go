@@ -5,21 +5,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fzf-labs/fpkg/cache/rockscache"
-	"github.com/redis/go-redis/v9"
+	"github.com/dtm-labs/rockscache"
 )
 
-func (p *KeyPrefix) NewBatchKey(rd *redis.Client) *BatchKey {
+func (p *KeyPrefix) NewBatchKey(rc *rockscache.Client) *BatchKey {
 	return &BatchKey{
 		keyPrefix: p,
-		rd:        rd,
+		rc:        rc,
 	}
 }
 
 // BatchKey 实际key参数
 type BatchKey struct {
 	keyPrefix *KeyPrefix
-	rd        *redis.Client
+	rc        *rockscache.Client
 }
 
 // FinalKey 获取实际key
@@ -47,7 +46,7 @@ func (p *BatchKey) TTLSecond() int {
 func (p *BatchKey) BatchKeyCache(ctx context.Context, keys []string, fn func() (map[string]string, error)) (map[string]string, error) {
 	resp := make(map[string]string)
 	finalKeys := p.FinalKey(keys)
-	fetchBatch, err := rockscache.NewWeakRocksCacheClient(p.rd).FetchBatch2(ctx, finalKeys, p.TTL(), func(ids []int) (map[int]string, error) {
+	fetchBatch, err := p.rc.FetchBatch2(ctx, finalKeys, p.TTL(), func(ids []int) (map[int]string, error) {
 		values := make(map[int]string)
 		m, err := fn()
 		if err != nil {
@@ -69,5 +68,5 @@ func (p *BatchKey) BatchKeyCache(ctx context.Context, keys []string, fn func() (
 
 // BatchKeyCacheDel 缓存删除
 func (p *BatchKey) BatchKeyCacheDel(ctx context.Context, keys []string) error {
-	return rockscache.NewWeakRocksCacheClient(p.rd).TagAsDeletedBatch2(ctx, p.FinalKey(keys))
+	return p.rc.TagAsDeletedBatch2(ctx, p.FinalKey(keys))
 }

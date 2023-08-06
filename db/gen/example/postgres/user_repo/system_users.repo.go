@@ -10,11 +10,11 @@ import (
 	"errors"
 	"time"
 
+	"github.com/dtm-labs/rockscache"
 	"github.com/fzf-labs/fpkg/cache/cachekey"
 	"github.com/fzf-labs/fpkg/conv"
 	"github.com/fzf-labs/fpkg/db/gen/example/postgres/user_dao"
 	"github.com/fzf-labs/fpkg/db/gen/example/postgres/user_model"
-	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -70,13 +70,16 @@ type (
 	}
 
 	SystemUsersRepo struct {
-		db    *gorm.DB
-		redis *redis.Client
+		db         *gorm.DB
+		rockscache *rockscache.Client
 	}
 )
 
-func NewSystemUsersRepo(db *gorm.DB, redis *redis.Client) *SystemUsersRepo {
-	return &SystemUsersRepo{db: db, redis: redis}
+func NewSystemUsersRepo(db *gorm.DB, rockscache *rockscache.Client) *SystemUsersRepo {
+	return &SystemUsersRepo{
+		db:         db,
+		rockscache: rockscache,
+	}
 }
 
 // CreateOne 创建一条数据
@@ -232,9 +235,9 @@ func (r *SystemUsersRepo) DeleteMultiCacheByMobiles(ctx context.Context, mobiles
 // DeleteUniqueIndexCache 删除唯一索引存在的缓存
 func (r *SystemUsersRepo) DeleteUniqueIndexCache(ctx context.Context, data []*user_model.SystemUsers) error {
 	var err error
-	cacheSystemUsersByUsername := CacheSystemUsersByUsername.NewSingleKey(r.redis)
-	cacheSystemUsersByID := CacheSystemUsersByID.NewSingleKey(r.redis)
-	cacheSystemUsersByMobile := CacheSystemUsersByMobile.NewSingleKey(r.redis)
+	cacheSystemUsersByUsername := CacheSystemUsersByUsername.NewSingleKey(r.rockscache)
+	cacheSystemUsersByID := CacheSystemUsersByID.NewSingleKey(r.rockscache)
+	cacheSystemUsersByMobile := CacheSystemUsersByMobile.NewSingleKey(r.rockscache)
 
 	for _, v := range data {
 		err = cacheSystemUsersByUsername.SingleCacheDel(ctx, cacheSystemUsersByUsername.BuildKey(v.Username))
@@ -257,7 +260,7 @@ func (r *SystemUsersRepo) DeleteUniqueIndexCache(ctx context.Context, data []*us
 // FindOneCacheByUsername 根据username查询一条数据并设置缓存
 func (r *SystemUsersRepo) FindOneCacheByUsername(ctx context.Context, username string) (*user_model.SystemUsers, error) {
 	resp := new(user_model.SystemUsers)
-	cache := CacheSystemUsersByUsername.NewSingleKey(r.redis)
+	cache := CacheSystemUsersByUsername.NewSingleKey(r.rockscache)
 	cacheValue, err := cache.SingleCache(ctx, conv.String(username), func() (string, error) {
 		dao := user_dao.Use(r.db).SystemUsers
 		result, err := dao.WithContext(ctx).Where(dao.Username.Eq(username)).First()
@@ -283,7 +286,7 @@ func (r *SystemUsersRepo) FindOneCacheByUsername(ctx context.Context, username s
 // FindMultiCacheByUsernames 根据usernames查询多条数据并设置缓存
 func (r *SystemUsersRepo) FindMultiCacheByUsernames(ctx context.Context, usernames []string) ([]*user_model.SystemUsers, error) {
 	resp := make([]*user_model.SystemUsers, 0)
-	cacheKey := CacheSystemUsersByUsername.NewBatchKey(r.redis)
+	cacheKey := CacheSystemUsersByUsername.NewBatchKey(r.rockscache)
 	batchKeys := make([]string, 0)
 	for _, v := range usernames {
 		batchKeys = append(batchKeys, conv.String(v))
@@ -321,7 +324,7 @@ func (r *SystemUsersRepo) FindMultiCacheByUsernames(ctx context.Context, usernam
 // FindOneCacheByID 根据ID查询一条数据并设置缓存
 func (r *SystemUsersRepo) FindOneCacheByID(ctx context.Context, ID int64) (*user_model.SystemUsers, error) {
 	resp := new(user_model.SystemUsers)
-	cache := CacheSystemUsersByID.NewSingleKey(r.redis)
+	cache := CacheSystemUsersByID.NewSingleKey(r.rockscache)
 	cacheValue, err := cache.SingleCache(ctx, conv.String(ID), func() (string, error) {
 		dao := user_dao.Use(r.db).SystemUsers
 		result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
@@ -347,7 +350,7 @@ func (r *SystemUsersRepo) FindOneCacheByID(ctx context.Context, ID int64) (*user
 // FindMultiCacheByIDS 根据IDS查询多条数据并设置缓存
 func (r *SystemUsersRepo) FindMultiCacheByIDS(ctx context.Context, IDS []int64) ([]*user_model.SystemUsers, error) {
 	resp := make([]*user_model.SystemUsers, 0)
-	cacheKey := CacheSystemUsersByID.NewBatchKey(r.redis)
+	cacheKey := CacheSystemUsersByID.NewBatchKey(r.rockscache)
 	batchKeys := make([]string, 0)
 	for _, v := range IDS {
 		batchKeys = append(batchKeys, conv.String(v))
@@ -385,7 +388,7 @@ func (r *SystemUsersRepo) FindMultiCacheByIDS(ctx context.Context, IDS []int64) 
 // FindOneCacheByMobile 根据mobile查询一条数据并设置缓存
 func (r *SystemUsersRepo) FindOneCacheByMobile(ctx context.Context, mobile string) (*user_model.SystemUsers, error) {
 	resp := new(user_model.SystemUsers)
-	cache := CacheSystemUsersByMobile.NewSingleKey(r.redis)
+	cache := CacheSystemUsersByMobile.NewSingleKey(r.rockscache)
 	cacheValue, err := cache.SingleCache(ctx, conv.String(mobile), func() (string, error) {
 		dao := user_dao.Use(r.db).SystemUsers
 		result, err := dao.WithContext(ctx).Where(dao.Mobile.Eq(mobile)).First()
@@ -411,7 +414,7 @@ func (r *SystemUsersRepo) FindOneCacheByMobile(ctx context.Context, mobile strin
 // FindMultiCacheByMobiles 根据mobiles查询多条数据并设置缓存
 func (r *SystemUsersRepo) FindMultiCacheByMobiles(ctx context.Context, mobiles []string) ([]*user_model.SystemUsers, error) {
 	resp := make([]*user_model.SystemUsers, 0)
-	cacheKey := CacheSystemUsersByMobile.NewBatchKey(r.redis)
+	cacheKey := CacheSystemUsersByMobile.NewBatchKey(r.rockscache)
 	batchKeys := make([]string, 0)
 	for _, v := range mobiles {
 		batchKeys = append(batchKeys, conv.String(v))

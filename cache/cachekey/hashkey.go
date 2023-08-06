@@ -6,15 +6,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fzf-labs/fpkg/cache/rockscache"
+	"github.com/dtm-labs/rockscache"
 	"github.com/fzf-labs/fpkg/conv"
 	"github.com/redis/go-redis/v9"
 )
 
-func (p *KeyPrefix) NewHashKey(rd *redis.Client) *HashKey {
+func (p *KeyPrefix) NewHashKey(rd *redis.Client, rc *rockscache.Client) *HashKey {
 	return &HashKey{
 		keyPrefix: p,
 		rd:        rd,
+		rc:        rc,
 	}
 }
 
@@ -22,6 +23,7 @@ func (p *KeyPrefix) NewHashKey(rd *redis.Client) *HashKey {
 type HashKey struct {
 	keyPrefix *KeyPrefix
 	rd        *redis.Client
+	rc        *rockscache.Client
 }
 
 // BuildKey  获取key
@@ -60,8 +62,7 @@ func (p *HashKey) TTLUnix() int64 {
 
 // HashCache  缓存生成
 func (p *HashKey) HashCache(ctx context.Context, key string, field string, fn func() (string, error)) (string, error) {
-
-	return rockscache.NewWeakRocksCacheClient(p.rd).Fetch2(ctx, p.FinalKey(key, field), p.TTL(), func() (string, error) {
+	return p.rc.Fetch2(ctx, p.FinalKey(key, field), p.TTL(), func() (string, error) {
 		result, err := fn()
 		if err != nil {
 			return "", err
@@ -89,7 +90,7 @@ func (p *HashKey) HashCacheDel(ctx context.Context, key string) error {
 		}
 	}
 	if len(delKeys) > 0 {
-		err = rockscache.NewWeakRocksCacheClient(p.rd).TagAsDeletedBatch2(ctx, delKeys)
+		err = p.rc.TagAsDeletedBatch2(ctx, delKeys)
 		if err != nil {
 			return err
 		}

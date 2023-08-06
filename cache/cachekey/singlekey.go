@@ -5,22 +5,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fzf-labs/fpkg/cache/rockscache"
+	"github.com/dtm-labs/rockscache"
 	"github.com/fzf-labs/fpkg/conv"
-	"github.com/redis/go-redis/v9"
 )
 
-func (p *KeyPrefix) NewSingleKey(rd *redis.Client) *SingleKey {
+func (p *KeyPrefix) NewSingleKey(rc *rockscache.Client) *SingleKey {
 	return &SingleKey{
 		keyPrefix: p,
-		rd:        rd,
+		rc:        rc,
 	}
 }
 
 // SingleKey 实际key参数
 type SingleKey struct {
 	keyPrefix *KeyPrefix
-	rd        *redis.Client
+	rc        *rockscache.Client
 }
 
 // BuildKey  获取key
@@ -49,10 +48,10 @@ func (p *SingleKey) TTLSecond() int {
 
 // SingleCache  缓存生成
 func (p *SingleKey) SingleCache(ctx context.Context, key string, fn func() (string, error)) (string, error) {
-	return rockscache.NewWeakRocksCacheClient(p.rd).Fetch2(ctx, p.FinalKey(key), p.TTL(), fn)
+	return p.rc.Fetch2(ctx, p.FinalKey(key), p.TTL(), fn)
 }
 
 // SingleCacheDel 缓存删除
 func (p *SingleKey) SingleCacheDel(ctx context.Context, key string) error {
-	return rockscache.NewWeakRocksCacheClient(p.rd).TagAsDeleted2(ctx, p.FinalKey(key))
+	return p.rc.TagAsDeleted2(ctx, p.FinalKey(key))
 }

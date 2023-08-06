@@ -5,6 +5,6 @@ type (
 
 	{{.upperTableName}}Repo struct {
 		db    *gorm.DB
-		redis *redis.Client
+		rockscache *rockscache.Client
 	}
 )

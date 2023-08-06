@@ -1,7 +1,7 @@
 // FindMultiCacheBy{{.upperFieldPlural}} 根据{{.lowerFieldPlural}}查询多条数据并设置缓存
 func (r *{{.upperTableName}}Repo) FindMultiCacheBy{{.upperFieldPlural}}(ctx context.Context, {{.lowerFieldPlural}} []{{.dataType}}) ([]*{{.lowerDbName}}_model.{{.upperTableName}}, error) {
 	resp := make([]*{{.lowerDbName}}_model.{{.upperTableName}}, 0)
-	cacheKey := Cache{{.upperTableName}}By{{.upperField}}.NewBatchKey(r.redis)
+	cacheKey := Cache{{.upperTableName}}By{{.upperField}}.NewBatchKey(r.rockscache)
 	batchKeys := make([]string,0)
 	for _, v := range {{.lowerFieldPlural}} {
 		batchKeys = append(batchKeys,conv.String(v))

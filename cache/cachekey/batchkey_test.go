@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/fzf-labs/fpkg/cache/redis"
+	"github.com/fzf-labs/fpkg/cache/rockscache"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,7 +31,8 @@ func TestBatchKey_RocksCacheBatch(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	buildBatchKey := key.NewBatchKey(newGoRedis)
+	client := rockscache.NewWeakRocksCacheClient(newGoRedis)
+	buildBatchKey := key.NewBatchKey(client)
 	batch, err := buildBatchKey.BatchKeyCache(context.Background(), []string{"a", "b", "c", "d", "e", "f"}, func() (map[string]string, error) {
 		fmt.Println("do....")
 		return kv, nil
@@ -53,7 +55,8 @@ func TestBatchKey_BatchKeyCacheDel(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	buildKey := key.NewBatchKey(newGoRedis)
+	client := rockscache.NewWeakRocksCacheClient(newGoRedis)
+	buildKey := key.NewBatchKey(client)
 	err = buildKey.BatchKeyCacheDel(context.Background(), []string{"a", "b", "c", "d", "e", "f"})
 	if err != nil {
 		return

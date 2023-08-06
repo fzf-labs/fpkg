@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/fzf-labs/fpkg/cache/redis"
+	"github.com/fzf-labs/fpkg/cache/rockscache"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,7 +25,8 @@ func TestHashKey_RocksCache(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	hashKey := key.NewHashKey(newGoRedis)
+	client := rockscache.NewWeakRocksCacheClient(newGoRedis)
+	hashKey := key.NewHashKey(newGoRedis, client)
 	for i := 0; i < 100; i++ {
 		cache, err := hashKey.HashCache(context.Background(), "k", strconv.Itoa(i), func() (string, error) {
 			return strconv.Itoa(rand.Int()), nil
@@ -48,7 +50,8 @@ func TestHashKey_RocksCacheDel(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	hashKey := key.NewHashKey(newGoRedis)
+	client := rockscache.NewWeakRocksCacheClient(newGoRedis)
+	hashKey := key.NewHashKey(newGoRedis, client)
 	err = hashKey.HashCacheDel(context.Background(), "k")
 	if err != nil {
 		return
