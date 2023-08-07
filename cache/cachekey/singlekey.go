@@ -33,7 +33,7 @@ func (p *SingleKey) BuildKey(keys ...any) string {
 
 // FinalKey 获取实际key
 func (p *SingleKey) FinalKey(key string) string {
-	return strings.Join([]string{p.keyPrefix.ServerName, p.keyPrefix.PrefixName, key}, ":")
+	return p.keyPrefix.Key(key)
 }
 
 // TTL 获取缓存key的过期时间time.Duration

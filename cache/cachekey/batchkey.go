@@ -2,7 +2,6 @@ package cachekey
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/dtm-labs/rockscache"
@@ -23,13 +22,7 @@ type BatchKey struct {
 
 // FinalKey 获取实际key
 func (p *BatchKey) FinalKey(keys []string) []string {
-	result := make([]string, 0)
-	if len(keys) > 0 {
-		for _, key := range keys {
-			result = append(result, strings.Join([]string{p.keyPrefix.ServerName, p.keyPrefix.PrefixName, key}, ":"))
-		}
-	}
-	return result
+	return p.keyPrefix.Keys(keys)
 }
 
 // TTL 获取缓存key的过期时间time.Duration

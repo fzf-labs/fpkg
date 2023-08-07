@@ -3,6 +3,7 @@ package cachekey
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -52,4 +53,20 @@ type KeyPrefix struct {
 	PrefixName     string
 	Remark         string
 	ExpirationTime time.Duration
+}
+
+// Key 获取key
+func (p *KeyPrefix) Key(keys ...string) string {
+	return strings.Join(append([]string{p.ServerName, p.PrefixName}, keys...), ":")
+}
+
+// Keys 获取keys
+func (p *KeyPrefix) Keys(keys []string) []string {
+	result := make([]string, 0)
+	if len(keys) > 0 {
+		for _, key := range keys {
+			result = append(result, strings.Join([]string{p.ServerName, p.PrefixName, key}, ":"))
+		}
+	}
+	return result
 }
