@@ -1,7 +1,7 @@
 package plugin
 
 import (
-	"github.com/go-gorm/caches"
+	"github.com/go-gorm/caches/v2"
 )
 
 func NewCaches() *caches.Caches {
