@@ -9,8 +9,8 @@ require (
 	github.com/aliyunmq/mq-http-go-sdk v1.0.3
 	github.com/apache/rocketmq-client-go/v2 v2.1.1
 	github.com/bsm/redislock v0.9.4
-	github.com/bytedance/sonic v1.9.2
-	github.com/casbin/casbin/v2 v2.51.2
+	github.com/bytedance/sonic v1.10.0
+	github.com/casbin/casbin/v2 v2.73.1
 	github.com/dtm-labs/rockscache v0.1.1
 	github.com/gabriel-vasile/mimetype v1.4.1
 	github.com/go-gorm/caches/v2 v2.0.1
@@ -21,7 +21,7 @@ require (
 	github.com/go-playground/validator/v10 v10.11.1
 	github.com/gogap/errors v0.0.0-20210818113853-edfbba0ddea9
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/golang-module/carbon/v2 v2.1.9
+	github.com/golang-module/carbon/v2 v2.2.3
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/hibiken/asynq v0.24.1
@@ -39,7 +39,7 @@ require (
 	github.com/pyroscope-io/client v0.3.0
 	github.com/redis/go-redis/extra/redisotel/v9 v9.0.5
 	github.com/redis/go-redis/v9 v9.0.5
-	github.com/redis/rueidis v1.0.13
+	github.com/redis/rueidis v1.0.14
 	github.com/segmentio/ksuid v1.0.4
 	github.com/shirou/gopsutil/v3 v3.23.2
 	github.com/silenceper/wechat/v2 v2.1.5
@@ -64,9 +64,9 @@ require (
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.5.1
-	gorm.io/driver/postgres v1.5.0
+	gorm.io/driver/postgres v1.5.2
 	gorm.io/gen v0.3.23
-	gorm.io/gorm v1.25.2
+	gorm.io/gorm v1.25.3
 	gorm.io/plugin/dbresolver v1.4.2
 	gorm.io/plugin/opentelemetry v0.1.3
 	gorm.io/sharding v0.5.3
@@ -83,7 +83,8 @@ require (
 	github.com/bradfitz/gomemcache v0.0.0-20230611145640-acc696258285 // indirect
 	github.com/bwmarrin/snowflake v0.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
+	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
+	github.com/chenzhuoyu/iasm v0.9.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
@@ -117,7 +118,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/oklog/ulid/v2 v2.1.0 // indirect
-	github.com/onsi/ginkgo/v2 v2.9.2 // indirect
+	github.com/onsi/ginkgo/v2 v2.11.0 // indirect
 	github.com/openzipkin/zipkin-go v0.4.1 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
