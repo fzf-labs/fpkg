@@ -73,7 +73,7 @@ func DumpPostgres(db *gorm.DB, dsn string, outPath string) {
 	// 查找命令的可执行文件
 	_, err := exec.LookPath("pg_dump")
 	if err != nil {
-		slog.Error("Command %s not found\n", "pg_dump")
+		slog.Error("command pg_dump not found,please install")
 		return
 	}
 	tables, err := db.Migrator().GetTables()
