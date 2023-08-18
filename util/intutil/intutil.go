@@ -21,17 +21,22 @@ func Abs(a int) int {
 	return (a ^ a>>31) - a>>31
 }
 
+// RandSeed 随机数种子
+func RandSeed() *rand.Rand {
+	return rand.New(rand.NewSource(time.Now().UnixNano()))
+}
+
 // RandInt 随机int
 func RandInt(min, max int) int {
-	return min + rand.New(rand.NewSource(time.Now().UnixNano())).Intn(max-min)
+	return min + RandSeed().Intn(max-min)
 }
 
 // RandInt64 随机int64
 func RandInt64(min, max int64) int64 {
-	return min + rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(max-min)
+	return min + RandSeed().Int63n(max-min)
 }
 
 // RandomIntWithSeed 在 [min, max) 处返回一个随机整数
 func RandomIntWithSeed(min, max int) int {
-	return min + rand.New(rand.NewSource(time.Now().UnixNano())).Intn(max-min)
+	return min + RandSeed().Intn(max-min)
 }

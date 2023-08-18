@@ -41,7 +41,7 @@ type Jwt struct {
 }
 
 const (
-	//jwt 官方定义
+	// jwt 官方定义
 	JwtAudience  = "aud" // 受众
 	JwtID        = "jti" // 编号
 	JwtIssueAt   = "iat" // 签发时间
@@ -50,7 +50,7 @@ const (
 	JwtNotBefore = "nbf" // 生效时间，在此之前是无效的
 	JwtSubject   = "sub" // 主题
 
-	//自定义
+	// 自定义
 	JwtRefresh = "ref" // 刷新时间
 	JwtUID     = "uid" // 用户标识
 )

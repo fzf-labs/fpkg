@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewRueiis(t *testing.T) {
@@ -25,12 +27,13 @@ func TestNewRueiis(t *testing.T) {
 	ticker := time.NewTicker(time.Second * 5)
 	for range ticker.C {
 		fmt.Println("do")
-		array, err := client.DoCache(context.Background(), client.B().Hmget().Key("myhash").Field("1", "2").Cache(), time.Minute).ToArray()
-		if err != nil {
+		array, err2 := client.DoCache(context.Background(), client.B().Hmget().Key("myhash").Field("1", "2").Cache(), time.Minute).ToArray()
+		if err2 != nil {
 			return
 		}
 		fmt.Printf("%+v \n", array)
 	}
+	assert.Equal(t, nil, err)
 }
 
 func TestNewRueidisAside(t *testing.T) {
@@ -47,4 +50,5 @@ func TestNewRueidisAside(t *testing.T) {
 	})
 	fmt.Println(err)
 	fmt.Println(val)
+	assert.Equal(t, nil, err)
 }

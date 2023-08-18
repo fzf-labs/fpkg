@@ -1,13 +1,13 @@
 package errx
 
 import (
-	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
-	stack := callersStack(2, 1)
-	s1 := stack.String()
-
-	fmt.Println(s1)
+	s := callersStack(2, 1)
+	str := s.String()
+	assert.True(t, len(str) > 0)
 }

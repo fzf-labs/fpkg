@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/fzf-labs/fpkg/db"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGenerationPostgres(t *testing.T) {
@@ -19,6 +20,7 @@ func TestGenerationPostgres(t *testing.T) {
 		return
 	}
 	Generation(client, DefaultMySQLDataMap, "./example/postgres/")
+	assert.Equal(t, nil, err)
 }
 
 func TestGenerationMysql(t *testing.T) {
