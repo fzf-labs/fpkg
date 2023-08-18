@@ -57,7 +57,7 @@ func (p *Profile) startBlockProfile() {
 	})
 }
 
-func (p *Profile) startCpuProfile() {
+func (p *Profile) startCPUProfile() {
 	fn := createDumpFile("cpu")
 	f, err := os.Create(fn)
 	if err != nil {
@@ -171,7 +171,7 @@ func StartProfile() Stopper {
 	}
 
 	var prof Profile
-	prof.startCpuProfile()
+	prof.startCPUProfile()
 	prof.startMemProfile()
 	prof.startMutexProfile()
 	prof.startBlockProfile()

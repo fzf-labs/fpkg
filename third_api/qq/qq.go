@@ -2,12 +2,12 @@ package qq
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/fzf-labs/fpkg/util/uuidutil"
 	"github.com/imroc/req/v3"
+	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 )
 
@@ -23,7 +23,7 @@ type UserInfo struct {
 	Gender         string `json:"gender"`         // 性别。 如果获取不到则默认返回"男"
 	Openid         string `json:"openid"`
 	Unionid        string `json:"unionid"`
-	IdentifierCode string `json:"identifier_code"`
+	IDentifierCode string `json:"identifier_code"`
 }
 
 type AccessToken struct {
@@ -34,10 +34,10 @@ type AccessToken struct {
 
 // AuthConfig 基本配置
 type AuthConfig struct {
-	ClientId     string
+	ClientID     string
 	ClientSecret string
-	RedirectUrl  string
-	ApplyUnionId string
+	RedirectURL  string
+	ApplyUnionID string
 }
 
 // AuthQq QQ授权登录
@@ -65,17 +65,17 @@ func (a *AuthQq) AuthorizationCode(code string) (*AccessToken, error) {
 	var accessToken AccessToken
 	resp, err := req.R().
 		SetQueryParam("grant_type", "authorization_code").
-		SetQueryParam("client_id", a.config.ClientId).
+		SetQueryParam("client_id", a.config.ClientID).
 		SetQueryParam("client_secret", a.config.ClientSecret).
 		SetQueryParam("code", code).
-		SetQueryParam("redirect_uri", a.config.RedirectUrl).
+		SetQueryParam("redirect_uri", a.config.RedirectURL).
 		SetSuccessResult(&accessToken).
 		Get("https://graph.qq.com/oauth2.0/token")
 	if err != nil {
 		return nil, err
 	}
 	if resp.IsSuccessState() {
-		return nil, fmt.Errorf("http response err")
+		return nil, errors.New("http response err")
 	}
 	return &accessToken, nil
 }
@@ -83,19 +83,19 @@ func (a *AuthQq) AuthorizationCode(code string) (*AccessToken, error) {
 // GetOpenid 获取openid
 // 文档：https://wiki.connect.qq.com/%E8%8E%B7%E5%8F%96%E7%94%A8%E6%88%B7openid_oauth2-0
 // 接口：https://graph.qq.com/oauth2.0/me
-func (a *AuthQq) GetOpenid(accessToken string) (client_id string, openid string, unionid string, err error) {
+func (a *AuthQq) GetOpenid(accessToken string) (clientID, openid, unionID string, err error) {
 	resp, err := req.R().
 		SetQueryParam("access_token", accessToken).
-		SetQueryParam("unionid", a.config.ApplyUnionId). // 申请unionId，0：不申请，1：申请
+		SetQueryParam("unionID", a.config.ApplyUnionID). // 申请unionID，0：不申请，1：申请
 		Get("https://graph.qq.com/oauth2.0/me")
 	if err != nil {
 		return "", "", "", err
 	}
 	content := resp.String()
 	content = a.removeCallback(content)
-	client_id = gjson.Get(content, "client_id").String()
+	clientID = gjson.Get(content, "client_id").String()
 	openid = gjson.Get(content, "openid").String()
-	unionid = gjson.Get(content, "unionid").String()
+	unionID = gjson.Get(content, "unionID").String()
 	return
 }
 
@@ -103,16 +103,16 @@ func (a *AuthQq) GetOpenid(accessToken string) (client_id string, openid string,
 // 文档：https://wiki.connect.qq.com/get_user_info
 // 接口：https://graph.qq.com/user/get_user_info
 func (a *AuthQq) GetUserInfo(accessToken string) (*UserInfo, error) {
-	client_id, openid, unionid, err := a.GetOpenid(accessToken)
+	clientID, openid, unionID, err := a.GetOpenid(accessToken)
 	if err != nil {
 		return nil, err
 	}
-	if client_id != a.config.ClientId {
-		return nil, fmt.Errorf("qq login err client_id")
+	if clientID != a.config.ClientID {
+		return nil, errors.New("qq login err clientID")
 	}
 	resp, err := req.R().
 		SetQueryParam("access_token", accessToken).
-		SetQueryParam("oauth_consumer_key", client_id).
+		SetQueryParam("oauth_consumer_key", clientID).
 		SetQueryParam("openid", openid).
 		Get("https://graph.qq.com/user/get_user_info")
 	if err != nil {
@@ -124,7 +124,7 @@ func (a *AuthQq) GetUserInfo(accessToken string) (*UserInfo, error) {
 	msg := gjson.Get(content, "msg").String()
 
 	if ret != 0 {
-		return nil, fmt.Errorf("get_user_info:ret=" + strconv.FormatInt(ret, 10) + ",msg=" + msg)
+		return nil, errors.New("get_user_info:ret=" + strconv.FormatInt(ret, 10) + ",msg=" + msg)
 	}
 
 	userInfo := &UserInfo{}
@@ -133,11 +133,11 @@ func (a *AuthQq) GetUserInfo(accessToken string) (*UserInfo, error) {
 		return nil, err
 	}
 	userInfo.Openid = openid
-	userInfo.Unionid = unionid
-	if a.config.ApplyUnionId == "0" {
-		userInfo.IdentifierCode = openid
+	userInfo.Unionid = unionID
+	if a.config.ApplyUnionID == "0" {
+		userInfo.IDentifierCode = openid
 	} else {
-		userInfo.IdentifierCode = unionid
+		userInfo.IDentifierCode = unionID
 	}
 	return userInfo, nil
 }

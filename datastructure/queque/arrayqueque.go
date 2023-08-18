@@ -52,7 +52,7 @@ func (q *ArrayQueue[T]) Back() T {
 	return q.items[q.tail-1]
 }
 
-// EnQueue put element into queue
+// Enqueue  put element into queue
 func (q *ArrayQueue[T]) Enqueue(item T) bool {
 	if q.head == 0 && q.tail == q.capacity {
 		return false
@@ -60,7 +60,7 @@ func (q *ArrayQueue[T]) Enqueue(item T) bool {
 		for i := q.head; i < q.tail; i++ {
 			q.items[i-q.head] = q.items[i]
 		}
-		q.tail = q.tail - q.head
+		q.tail -= q.head
 		q.head = 0
 	}
 
@@ -70,7 +70,7 @@ func (q *ArrayQueue[T]) Enqueue(item T) bool {
 	return true
 }
 
-// DeQueue 删除队列的头元素并返回它，如果队列为空，则返回 nil 和错误
+// Dequeue 删除队列的头元素并返回它，如果队列为空，则返回 nil 和错误
 func (q *ArrayQueue[T]) Dequeue() (T, bool) {
 	var item T
 	if q.head == q.tail {

@@ -25,11 +25,11 @@ func NewHashMap() *HashMap {
 }
 
 // NewHashMapWithCapacity 返回具有给定大小和容量的 HashMap 实例
-func NewHashMapWithCapacity(size, cap uint64) *HashMap {
+func NewHashMapWithCapacity(size, capLen uint64) *HashMap {
 	return &HashMap{
 		size:  size,
-		cap:   cap,
-		table: make([]*mapNode, cap),
+		cap:   capLen,
+		table: make([]*mapNode, capLen),
 	}
 }
 

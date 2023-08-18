@@ -16,14 +16,14 @@ type AsynqConfig struct {
 }
 
 type Asynq struct {
-	Cfg       *AsynqConfig               //配置
-	Consumers map[*BusinessConfig]Handle //消费者
-	Lock      sync.Mutex                 //锁
+	Cfg       *AsynqConfig               // 配置
+	Consumers map[*BusinessConfig]Handle // 消费者
+	Lock      sync.Mutex                 // 锁
 }
 
-func NewAsynq(Cfg *AsynqConfig) *Asynq {
+func NewAsynq(cfg *AsynqConfig) *Asynq {
 	return &Asynq{
-		Cfg:       Cfg,
+		Cfg:       cfg,
 		Consumers: make(map[*BusinessConfig]Handle),
 		Lock:      sync.Mutex{},
 	}
@@ -81,7 +81,7 @@ func (a *Asynq) Listen() {
 		mux.HandleFunc(b.Topic, func(ctx context.Context, task *asynq.Task) error {
 			err := h(string(task.Payload()))
 			if err != nil {
-				log.Printf("Asynq 消息业务处理失败 topic:%v,tag:%v,group_id:%v,body:%v, err:%v", b.Topic, b.Tag, b.GroupId, string(task.Payload()), err)
+				log.Printf("Asynq 消息业务处理失败 topic:%v,tag:%v,group_id:%v,body:%v, err:%v", b.Topic, b.Tag, b.GroupID, string(task.Payload()), err)
 				return err
 			}
 			return nil

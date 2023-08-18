@@ -45,8 +45,8 @@ func (r *RocketAli) Publish(b *BusinessConfig, msg string) error {
 		MessageBody: msg,   // 消息内容
 		MessageTag:  b.Tag, // 消息标签
 	}
-	instanceId := r.Cfg.InstanceId
-	mqProducer := r.newMQClient().GetProducer(instanceId, b.Topic)
+	instanceID := r.Cfg.InstanceID
+	mqProducer := r.newMQClient().GetProducer(instanceID, b.Topic)
 	ret, err := mqProducer.PublishMessage(msgReq)
 	if err != nil {
 		return GeneralMessageDeliveryFailed
@@ -62,13 +62,13 @@ func (r *RocketAli) DeferredPublish(b *BusinessConfig, msg string, t time.Durati
 		MessageTag:       b.Tag, // 消息标签
 		StartDeliverTime: time.Now().Add(t).UTC().Unix() * 1000,
 	}
-	instanceId := r.Cfg.InstanceId
-	mqProducer := r.newMQClient().GetProducer(instanceId, b.Topic)
+	instanceID := r.Cfg.InstanceID
+	mqProducer := r.newMQClient().GetProducer(instanceID, b.Topic)
 	ret, err := mqProducer.PublishMessage(msgReq)
 	if err != nil {
 		return DelayedMessageDeliveryFailed
 	}
-	log.Printf("阿里云rocketmq 延时消息生产成功,topic:%s,tag:%s,MessageId:%s,Body:%s", b.Topic, b.Tag, ret.MessageId, msgReq.MessageBody)
+	log.Printf("阿里云rocketmq 延时消息生产成功,topic:%s,tag:%s,MessageID:%s,Body:%s", b.Topic, b.Tag, ret.MessageId, msgReq.MessageBody)
 	return nil
 }
 
@@ -90,8 +90,8 @@ func (r *RocketAli) Listen() {
 }
 
 func (r *RocketAli) do(b *BusinessConfig, handle Handle) {
-	instanceId := r.Cfg.InstanceId
-	consumer := r.newMQClient().GetConsumer(instanceId, b.Topic, b.GroupId, b.Tag)
+	instanceID := r.Cfg.InstanceID
+	consumer := r.newMQClient().GetConsumer(instanceID, b.Topic, b.GroupID, b.Tag)
 	for {
 		endChan := make(chan int)
 		respChan := make(chan mq_http_sdk.ConsumeMessageResponse)
@@ -112,13 +112,13 @@ func (r *RocketAli) do(b *BusinessConfig, handle Handle) {
 
 					// 处理业务逻辑
 					var handles []string
-					for _, v := range resp.Messages {
-						err := handle(v.MessageBody)
+					for k := range resp.Messages {
+						err := handle(resp.Messages[k].MessageBody)
 						if err != nil {
-							log.Printf(b.Name+"业务处理失败 msgBody=%s err=%v", v.MessageBody, err)
+							log.Printf(b.Name+"业务处理失败 msgBody=%s err=%v", resp.Messages[k].MessageBody, err)
 							continue
 						}
-						handles = append(handles, v.ReceiptHandle)
+						handles = append(handles, resp.Messages[k].ReceiptHandle)
 					}
 
 					// NextConsumeTime前若不确认消息消费成功，则消息会重复消费
@@ -157,9 +157,11 @@ func (r *RocketAli) do(b *BusinessConfig, handle Handle) {
 
 		// 长轮询消费消息
 		// 长轮询表示如果topic没有消息则请求会在服务端挂住3s，3s内如果有消息可以消费则立即返回
+		// 一次最多消费3条(最多可设置为16条)
+		// 长轮询时间3秒（最多可设置为30秒）
 		consumer.ConsumeMessage(respChan, errChan,
-			3, // 一次最多消费3条(最多可设置为16条)
-			3, // 长轮询时间3秒（最多可设置为30秒）
+			3,
+			3,
 		)
 		<-endChan
 	}

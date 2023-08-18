@@ -35,7 +35,7 @@ type Consistent[M Member] struct {
 	NumberOfReplicas int
 	count            int64
 	UseFnv           bool
-	sync.RWMutex
+	mu               sync.RWMutex
 }
 
 // New creates a new Consistent object with a default setting of 20 replicas for each entry.
@@ -50,19 +50,19 @@ func New[M Member]() *Consistent[M] {
 }
 
 // eltKey generates a string key for an element with an index.
+// return elt + "|" + strconv.Itoa(idx)
 func (c *Consistent[M]) eltKey(elt string, idx int) string {
-	// return elt + "|" + strconv.Itoa(idx)
 	return strconv.Itoa(idx) + elt
 }
 
 // Add inserts a string element in the consistent hash.
 func (c *Consistent[M]) Add(elt M) {
-	c.Lock()
-	defer c.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.add(elt)
 }
 
-// need c.Lock() before calling
+// need c.mu.Lock() before calling
 func (c *Consistent[M]) add(elt M) {
 	for i := 0; i < c.NumberOfReplicas; i++ {
 		c.circle[c.hashKey(c.eltKey(elt.String(), i))] = elt
@@ -74,12 +74,12 @@ func (c *Consistent[M]) add(elt M) {
 
 // Remove removes an element from the hash.
 func (c *Consistent[M]) Remove(elt M) {
-	c.Lock()
-	defer c.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.remove(elt.String())
 }
 
-// need c.Lock() before calling
+// need c.mu.Lock() before calling
 func (c *Consistent[M]) remove(elt string) {
 	for i := 0; i < c.NumberOfReplicas; i++ {
 		delete(c.circle, c.hashKey(c.eltKey(elt, i)))
@@ -92,8 +92,8 @@ func (c *Consistent[M]) remove(elt string) {
 // Set sets all the elements in the hash.  If there are existing elements not
 // present in elts, they will be removed.
 func (c *Consistent[M]) Set(elts []M) {
-	c.Lock()
-	defer c.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	for k := range c.members {
 		found := false
 		for _, v := range elts {
@@ -116,8 +116,8 @@ func (c *Consistent[M]) Set(elts []M) {
 }
 
 func (c *Consistent[M]) Members() []string {
-	c.RLock()
-	defer c.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	var m []string
 	for k := range c.members {
 		m = append(m, k)
@@ -127,8 +127,8 @@ func (c *Consistent[M]) Members() []string {
 
 // Get returns an element close to where name hashes to in the circle.
 func (c *Consistent[M]) Get(name string) (res M, err error) {
-	c.RLock()
-	defer c.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	if len(c.circle) == 0 {
 		err = ErrEmptyCircle
 		return
@@ -151,9 +151,9 @@ func (c *Consistent[M]) search(key uint32) (i int) {
 }
 
 // GetTwo returns the two closest distinct elements to the name input in the circle.
-func (c *Consistent[M]) GetTwo(name string) (a M, b M, err error) {
-	c.RLock()
-	defer c.RUnlock()
+func (c *Consistent[M]) GetTwo(name string) (a, b M, err error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	if len(c.circle) == 0 {
 		err = ErrEmptyCircle
 		return
@@ -181,18 +181,14 @@ func (c *Consistent[M]) GetTwo(name string) (a M, b M, err error) {
 
 // GetN returns the N closest distinct elements to the name input in the circle.
 func (c *Consistent[M]) GetN(name string, n int) (res []M, err error) {
-	c.RLock()
-	defer c.RUnlock()
-
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	if len(c.circle) == 0 {
-		err = ErrEmptyCircle
-		return
+		return nil, ErrEmptyCircle
 	}
-
 	if c.count < int64(n) {
 		n = int(c.count)
 	}
-
 	var (
 		key   = c.hashKey(name)
 		i     = c.search(key)
@@ -201,11 +197,9 @@ func (c *Consistent[M]) GetN(name string, n int) (res []M, err error) {
 	)
 	res = make([]M, 0, n)
 	res = append(res, elem)
-
 	if len(res) == n {
 		return res, nil
 	}
-
 	for i = start + 1; i != start; i++ {
 		if i >= len(c.sortedHashes) {
 			i = 0
@@ -218,7 +212,6 @@ func (c *Consistent[M]) GetN(name string, n int) (res []M, err error) {
 			break
 		}
 	}
-
 	return res, nil
 }
 

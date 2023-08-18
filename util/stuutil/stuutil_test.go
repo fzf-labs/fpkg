@@ -12,13 +12,13 @@ type Data struct {
 	Sex  int    `json:"sex"`
 }
 
-func TestStructToUrlEncode(t *testing.T) {
+func TestStructToURLEncode(t *testing.T) {
 	data := Data{
 		Name: "Xiao",
 		Age:  "18",
 		Sex:  1,
 	}
-	assert.Equal(t, StructToUrlEncode(data), "age=18&name=Xiao&sex=1")
+	assert.Equal(t, StructToURLEncode(data), "age=18&name=Xiao&sex=1")
 }
 
 func TestStructToSliceAndMap(t *testing.T) {

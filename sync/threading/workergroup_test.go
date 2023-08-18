@@ -16,7 +16,7 @@ func TestWorkerGroup(t *testing.T) {
 	wg.Add(runtime.NumCPU())
 	group := NewWorkerGroup(func() {
 		lock.Lock()
-		m[fmt.Sprint(RoutineId())] = struct{}{}
+		m[fmt.Sprint(RoutineID())] = struct{}{}
 		lock.Unlock()
 		wg.Done()
 	}, runtime.NumCPU())

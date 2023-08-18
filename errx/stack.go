@@ -14,9 +14,7 @@ type stack []uintptr
 
 // Format stack trace
 func (s *stack) Format(fs fmt.State, verb rune) {
-	switch verb {
-	// case 'v', 's':
-	case 'v':
+	if verb == 'v' {
 		_, _ = s.WriteTo(fs)
 	}
 }
@@ -167,8 +165,7 @@ func TraceDepth(traceDepth int) func(opt *ErrStackOpt) {
 
 func callersStack(skip, depth int) *stack {
 	pcs := make([]uintptr, depth)
-	num := runtime.Callers(skip, pcs[:])
-
+	num := runtime.Callers(skip, pcs)
 	var st stack = pcs[0:num]
 	return &st
 }

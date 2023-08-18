@@ -5,14 +5,15 @@ import (
 	"log"
 
 	"github.com/imroc/req/v3"
+	"github.com/pkg/errors"
 )
 
 type ChatGPT struct {
-	ApiKey string
+	APIKey string
 }
 
 func NewChatGPT(apiKey string) *ChatGPT {
-	return &ChatGPT{ApiKey: apiKey}
+	return &ChatGPT{APIKey: apiKey}
 }
 
 type CompletionsReq struct {
@@ -28,7 +29,7 @@ type CompletionsReq struct {
 }
 
 type CompletionsResp struct {
-	Id      string `json:"id"`
+	ID      string `json:"id"`
 	Object  string `json:"object"`
 	Created int    `json:"created"`
 	Model   string `json:"model"`
@@ -59,13 +60,13 @@ func (c *ChatGPT) Completions(msg string) (string, error) {
 	}
 	var response CompletionsResp
 	client := req.C()
-	resp, err := client.R().SetHeader("Authorization", fmt.Sprintf("Bearer %s", c.ApiKey)).SetBody(param).SetSuccessResult(&response).Post(url)
+	resp, err := client.R().SetHeader("Authorization", fmt.Sprintf("Bearer %s", c.APIKey)).SetBody(param).SetSuccessResult(&response).Post(url)
 	if err != nil {
 		return "", err
 	}
 	fmt.Println(resp)
 	if !resp.IsSuccessState() {
-		return "", fmt.Errorf("bad response status: %s", resp.Status)
+		return "", errors.New(fmt.Sprintf("bad response status: %s", resp.Status))
 	}
 	if len(response.Choices) > 0 {
 		result = response.Choices[0].Text
@@ -88,7 +89,7 @@ type ChatCompletionsReq struct {
 }
 
 type ChatCompletionsResp struct {
-	Id      string `json:"id"`
+	ID      string `json:"id"`
 	Object  string `json:"object"`
 	Created int    `json:"created"`
 	Choices []struct {
@@ -119,13 +120,13 @@ func (c *ChatGPT) ChatCompletions(messages []ChatMessage) (*ChatMessage, error) 
 	}
 	var response ChatCompletionsResp
 	client := req.C()
-	resp, err := client.R().SetHeader("Authorization", fmt.Sprintf("Bearer %s", c.ApiKey)).SetBody(param).SetSuccessResult(&response).Post(url)
+	resp, err := client.R().SetHeader("Authorization", fmt.Sprintf("Bearer %s", c.APIKey)).SetBody(param).SetSuccessResult(&response).Post(url)
 	if err != nil {
 		return nil, err
 	}
 	log.Println(resp)
 	if !resp.IsSuccessState() {
-		return nil, fmt.Errorf("bad response status: %s", resp.Status)
+		return nil, errors.New(fmt.Sprintf("bad response status: %s", resp.Status))
 	}
 	if len(response.Choices) > 0 {
 		result = &response.Choices[0].Message

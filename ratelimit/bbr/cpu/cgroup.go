@@ -51,7 +51,7 @@ func (c *cgroup) CPUAcctUsagePerCPU() ([]uint64, error) {
 		return nil, err
 	}
 	var usage []uint64
-	for _, v := range strings.Fields(string(data)) {
+	for _, v := range strings.Fields(data) {
 		var u uint64
 		if u, err = parseUint(v); err != nil {
 			return nil, err

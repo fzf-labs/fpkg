@@ -11,12 +11,12 @@ import (
 )
 
 // PathExists 检查文件或目录是否存在。
-func PathExists(path string) bool {
-	if path == "" {
+func PathExists(p string) bool {
+	if p == "" {
 		return false
 	}
 
-	if _, err := os.Stat(path); err != nil {
+	if _, err := os.Stat(p); err != nil {
 		if os.IsNotExist(err) {
 			return false
 		}
@@ -25,29 +25,29 @@ func PathExists(path string) bool {
 }
 
 // IsDir 检查是否是目录
-func IsDir(path string) bool {
-	if path == "" {
+func IsDir(p string) bool {
+	if p == "" {
 		return false
 	}
 
-	if fi, err := os.Stat(path); err == nil {
+	if fi, err := os.Stat(p); err == nil {
 		return fi.IsDir()
 	}
 	return false
 }
 
 // FileExists 检查文件是否存在。
-func FileExists(path string) bool {
-	return IsFile(path)
+func FileExists(p string) bool {
+	return IsFile(p)
 }
 
 // IsFile 检查是否是文件。
-func IsFile(path string) bool {
-	if path == "" {
+func IsFile(p string) bool {
+	if p == "" {
 		return false
 	}
 
-	if fi, err := os.Stat(path); err == nil {
+	if fi, err := os.Stat(p); err == nil {
 		return !fi.IsDir()
 	}
 	return false
@@ -73,8 +73,8 @@ var ImageMimeTypes = map[string]string{
 }
 
 // IsImageFile check file is image file.
-func IsImageFile(path string) bool {
-	mime := MimeType(path)
+func IsImageFile(p string) bool {
+	mime := MimeType(p)
 	if mime == "" {
 		return false
 	}
@@ -105,8 +105,8 @@ func IsZipFile(filepath string) bool {
 }
 
 // MimeType 获取文件 Mime 类型名称。例如“image/png”
-func MimeType(path string) (mime string) {
-	file, err := os.Open(path)
+func MimeType(p string) (mime string) {
+	file, err := os.Open(p)
 	if err != nil {
 		return
 	}
@@ -124,7 +124,7 @@ func ReaderMimeType(r io.Reader) (mime string) {
 }
 
 // ReaderMimeTypeAndExt 获取文件的mime和ext后缀(使用扩展包)
-func ReaderMimeTypeAndExt(r io.Reader) (mime string, ext string) {
+func ReaderMimeTypeAndExt(r io.Reader) (mime, ext string) {
 	reader, err := mimetype.DetectReader(r)
 	if err != nil {
 		return "", ""

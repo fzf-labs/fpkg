@@ -23,6 +23,7 @@ var (
 	}
 )
 
+//nolint:gochecknoinits
 func init() {
 	encoding.RegisterCodec(codec{})
 }

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/fzf-labs/fpkg/encoding"
@@ -74,19 +73,8 @@ func (s *Server) Name() string {
 
 func (s *Server) Endpoint() (*url.URL, error) {
 	addr := s.address
-
 	prefix := "tcp://"
-	if s.tlsConf == nil {
-		if !strings.HasPrefix(addr, "tcp://") {
-			prefix = "tcp://"
-		}
-	} else {
-		if !strings.HasPrefix(addr, "tcp://") {
-			prefix = "tcp://"
-		}
-	}
 	addr = prefix + addr
-
 	var endpoint *url.URL
 	endpoint, s.err = url.Parse(addr)
 	return endpoint, nil
@@ -111,11 +99,11 @@ func (s *Server) DeregisterMessageHandler(messageType MessageType) {
 }
 
 // SendRawData send raw data to client
-func (s *Server) SendRawData(sessionId SessionID, message []byte) error {
-	session, ok := s.sessions[sessionId]
+func (s *Server) SendRawData(sessionID SessionID, message []byte) error {
+	session, ok := s.sessions[sessionID]
 	if !ok {
-		slog.Error("[tcp] session not found:", sessionId)
-		return fmt.Errorf("[tcp] session not found: %s", sessionId)
+		slog.Error("[tcp] session not found:", sessionID)
+		return fmt.Errorf("[tcp] session not found: %s", sessionID)
 	}
 
 	session.SendMessage(message)
@@ -129,14 +117,14 @@ func (s *Server) BroadcastRawData(message []byte) {
 	}
 }
 
-func (s *Server) SendMessage(sessionId SessionID, messageType MessageType, message MessagePayload) error {
+func (s *Server) SendMessage(sessionID SessionID, messageType MessageType, message MessagePayload) error {
 	buf, err := s.marshalMessage(messageType, message)
 	if err != nil {
 		slog.Error("[tcp] marshal message exception:", err)
 		return fmt.Errorf("[tcp] marshal message exception: %s", err.Error())
 	}
 
-	return s.SendRawData(sessionId, buf)
+	return s.SendRawData(sessionID, buf)
 }
 
 func (s *Server) Broadcast(messageType MessageType, message MessagePayload) {
@@ -197,9 +185,9 @@ func (s *Server) marshalMessage(messageType MessageType, message MessagePayload)
 	return buff, nil
 }
 
-func (s *Server) messageHandler(sessionId SessionID, buf []byte) error {
+func (s *Server) messageHandler(sessionID SessionID, buf []byte) error {
 	if s.rawMessageHandler != nil {
-		if err := s.rawMessageHandler(sessionId, buf); err != nil {
+		if err := s.rawMessageHandler(sessionID, buf); err != nil {
 			slog.Error("[tcp] raw data handler exception: %s", err)
 			return err
 		}
@@ -231,7 +219,7 @@ func (s *Server) messageHandler(sessionId SessionID, buf []byte) error {
 		return err
 	}
 
-	if err := handlerData.Handler(sessionId, payload); err != nil {
+	if err := handlerData.Handler(sessionID, payload); err != nil {
 		slog.Error("[tcp] message handler exception: %s", err)
 		return err
 	}

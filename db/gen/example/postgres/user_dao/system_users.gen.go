@@ -33,7 +33,7 @@ func newSystemUsers(db *gorm.DB, opts ...gen.DOOption) systemUsers {
 	_systemUsers.Nickname = field.NewString(tableName, "nickname")
 	_systemUsers.Remark = field.NewString(tableName, "remark")
 	_systemUsers.DeptID = field.NewInt64(tableName, "dept_id")
-	_systemUsers.PostIds = field.NewString(tableName, "post_ids")
+	_systemUsers.PostIDs = field.NewString(tableName, "post_ids")
 	_systemUsers.Email = field.NewString(tableName, "email")
 	_systemUsers.Mobile = field.NewString(tableName, "mobile")
 	_systemUsers.Sex = field.NewInt16(tableName, "sex")
@@ -63,7 +63,7 @@ type systemUsers struct {
 	Nickname   field.String // 用户昵称
 	Remark     field.String // 备注
 	DeptID     field.Int64  // 部门ID
-	PostIds    field.String // 岗位编号数组
+	PostIDs    field.String // 岗位编号数组
 	Email      field.String // 用户邮箱
 	Mobile     field.String // 手机号码
 	Sex        field.Int16  // 用户性别
@@ -99,7 +99,7 @@ func (s *systemUsers) updateTableName(table string) *systemUsers {
 	s.Nickname = field.NewString(table, "nickname")
 	s.Remark = field.NewString(table, "remark")
 	s.DeptID = field.NewInt64(table, "dept_id")
-	s.PostIds = field.NewString(table, "post_ids")
+	s.PostIDs = field.NewString(table, "post_ids")
 	s.Email = field.NewString(table, "email")
 	s.Mobile = field.NewString(table, "mobile")
 	s.Sex = field.NewInt16(table, "sex")
@@ -146,7 +146,7 @@ func (s *systemUsers) fillFieldMap() {
 	s.fieldMap["nickname"] = s.Nickname
 	s.fieldMap["remark"] = s.Remark
 	s.fieldMap["dept_id"] = s.DeptID
-	s.fieldMap["post_ids"] = s.PostIds
+	s.fieldMap["post_ids"] = s.PostIDs
 	s.fieldMap["email"] = s.Email
 	s.fieldMap["mobile"] = s.Mobile
 	s.fieldMap["sex"] = s.Sex

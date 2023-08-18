@@ -33,8 +33,8 @@ func (t *DefaultTemplate) Parse(text string) *DefaultTemplate {
 }
 
 // GoFmt sets the value to goFmt and marks the generated codes will be formatted or not
-func (t *DefaultTemplate) GoFmt(format bool) *DefaultTemplate {
-	t.goFmt = format
+func (t *DefaultTemplate) GoFmt(fmt bool) *DefaultTemplate {
+	t.goFmt = fmt
 	return t
 }
 

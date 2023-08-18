@@ -87,20 +87,19 @@ func String2Bytes(s string) []byte {
 }
 
 // SubStr 截取字符串，并返回实际截取的长度和子串
-func SubStr(str string, start, end int64) (int64, string, error) {
+func SubStr(str string, start, end int64) (n int64, sub string, err error) {
 	reader := strings.NewReader(str)
-
 	// Calling NewSectionReader method with its parameters
 	r := io.NewSectionReader(reader, start, end)
-
 	// Calling Copy method with its parameters
 	var buf bytes.Buffer
-	n, err := io.Copy(&buf, r)
-	return n, buf.String(), err
+	n, err = io.Copy(&buf, r)
+	sub = buf.String()
+	return n, sub, err
 }
 
 // SubstrReturnLeft 截取并返回left部分
-func SubstrReturnLeft(str string, target string) (string, bool) {
+func SubstrReturnLeft(str, target string) (string, bool) {
 	pos := strings.Index(str, target)
 	if pos == -1 {
 		return "", false
@@ -109,7 +108,7 @@ func SubstrReturnLeft(str string, target string) (string, bool) {
 }
 
 // SubstrReturnRight 截取并返回right部分
-func SubstrReturnRight(str string, target string) (string, bool) {
+func SubstrReturnRight(str, target string) (string, bool) {
 	pos := strings.Index(str, target)
 	if pos == -1 {
 		return "", false
@@ -138,7 +137,7 @@ func JoinStringAndOther(val ...interface{}) string {
 
 // UcFirst 首字母大写
 func UcFirst(s string) string {
-	if len(s) == 0 {
+	if s == "" {
 		return s
 	}
 
@@ -153,7 +152,7 @@ func UcFirst(s string) string {
 
 // LcFirst 首字母小写
 func LcFirst(s string) string {
-	if len(s) == 0 {
+	if s == "" {
 		return s
 	}
 
@@ -224,7 +223,7 @@ func FormatPublicKey(publicKey string) (pKey string) {
 
 // CamelCase 将字符串转换为驼峰式字符串。
 func CamelCase(s string) string {
-	if len(s) == 0 {
+	if s == "" {
 		return ""
 	}
 
@@ -249,7 +248,7 @@ func CamelCase(s string) string {
 
 // Capitalize 将字符串的第一个字符转换为大写，其余字符转换为小写。
 func Capitalize(s string) string {
-	if len(s) == 0 {
+	if s == "" {
 		return ""
 	}
 
@@ -267,7 +266,7 @@ func Capitalize(s string) string {
 
 // KebabCase 将字符串转换为 kebab-case
 func KebabCase(s string) string {
-	if len(s) == 0 {
+	if s == "" {
 		return ""
 	}
 
@@ -289,7 +288,7 @@ func KebabCase(s string) string {
 
 // SnakeCase 将字符串转换为蛇形大小写
 func SnakeCase(s string) string {
-	if len(s) == 0 {
+	if s == "" {
 		return ""
 	}
 
@@ -443,7 +442,7 @@ func RTrim(s string, cutSet ...string) string {
 
 // UpperEnglishWord 将每个单词的第一个字符更改为大写
 func UpperEnglishWord(s string) string {
-	if len(s) == 0 {
+	if s == "" {
 		return s
 	}
 	if len(s) == 1 {

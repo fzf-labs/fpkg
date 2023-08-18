@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-// StructToUrlEncode 结构体转url参数
-func StructToUrlEncode(u interface{}) string {
+// StructToURLEncode 结构体转url参数
+func StructToURLEncode(u interface{}) string {
 	var str string
 	t := reflect.TypeOf(u)
 	v := reflect.ValueOf(u)
@@ -26,7 +26,7 @@ func StructToUrlEncode(u interface{}) string {
 }
 
 // StructToSliceAndMap 结构体转换为 切片key,切片值,map
-func StructToSliceAndMap(data interface{}) (sliceKey []string, sliceVale []string, Map map[string]string) {
+func StructToSliceAndMap(data interface{}) (sliceKey, sliceVale []string, m map[string]string) {
 	kvs := make(map[string]string)
 	var keys []string
 	var vals []string

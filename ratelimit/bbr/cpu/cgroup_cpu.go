@@ -21,7 +21,7 @@ type cgroupCPU struct {
 	preTotal  uint64
 }
 
-func newCgroupCPU() (cpu *cgroupCPU, err error) {
+func newCGroupCPU() (*cgroupCPU, error) {
 	cores, err := pscpu.Counts(true)
 	if err != nil || cores == 0 {
 		var cpus []uint64
@@ -31,17 +31,16 @@ func newCgroupCPU() (cpu *cgroupCPU, err error) {
 		}
 		cores = len(cpus)
 	}
-
 	sets, err := cpuSets()
 	if err != nil {
-		return
+		return nil, err
 	}
 	quota := float64(len(sets))
 	cq, err := cpuQuota()
 	if err == nil && cq != -1 {
 		var period uint64
 		if period, err = cpuPeriod(); err != nil {
-			return
+			return nil, err
 		}
 		limit := float64(cq) / float64(period)
 		if limit < quota {
@@ -49,23 +48,22 @@ func newCgroupCPU() (cpu *cgroupCPU, err error) {
 		}
 	}
 	maxFreq := cpuMaxFreq()
-
 	preSystem, err := systemCPUUsage()
 	if err != nil {
-		return
+		return nil, err
 	}
 	preTotal, err := totalCPUUsage()
 	if err != nil {
-		return
+		return nil, err
 	}
-	cpu = &cgroupCPU{
+	cpu := &cgroupCPU{
 		frequency: maxFreq,
 		quota:     quota,
 		cores:     uint64(cores),
 		preSystem: preSystem,
 		preTotal:  preTotal,
 	}
-	return
+	return cpu, nil
 }
 
 func (cpu *cgroupCPU) Usage() (u uint64, err error) {
@@ -117,7 +115,7 @@ func systemCPUUsage() (usage uint64, err error) {
 		f    *os.File
 	)
 	if f, err = os.Open("/proc/stat"); err != nil {
-		return
+		return 0, err
 	}
 	bufReader := bufio.NewReaderSize(nil, 128)
 	defer func() {
@@ -127,29 +125,26 @@ func systemCPUUsage() (usage uint64, err error) {
 	bufReader.Reset(f)
 	for err == nil {
 		if line, err = bufReader.ReadString('\n'); err != nil {
-			return
+			return 0, errors.New("readString \n err")
 		}
 		parts := strings.Fields(line)
-		switch parts[0] {
-		case "cpu":
+		if len(parts) > 0 && parts[0] == "cpu" {
 			if len(parts) < 8 {
-				err = errors.New("bad format of cpu stats")
-				return
+				return 0, errors.New("bad format of cpu stats")
 			}
 			var totalClockTicks uint64
 			for _, i := range parts[1:8] {
 				var v uint64
 				if v, err = strconv.ParseUint(i, 10, 64); err != nil {
-					return
+					return 0, errors.New("parseUint err")
 				}
 				totalClockTicks += v
 			}
 			usage = (totalClockTicks * nanoSecondsPerSecond) / clockTicksPerSecond
-			return
+			return usage, nil
 		}
 	}
-	err = errors.New("bad stats format")
-	return
+	return 0, errors.New("bad stats format")
 }
 
 func totalCPUUsage() (usage uint64, err error) {

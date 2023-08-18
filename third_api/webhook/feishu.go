@@ -9,10 +9,11 @@ import (
 	"time"
 
 	"github.com/imroc/req/v3"
+	"github.com/pkg/errors"
 )
 
 type FeiShuConfig struct {
-	Url  string
+	URL  string
 	Sign string
 }
 
@@ -68,12 +69,12 @@ func (f *FeiShu) SendText(msg string) error {
 			Text: msg,
 		},
 	}
-	resp, err := req.R().SetBody(param).Post(f.cfg.Url)
+	resp, err := req.R().SetBody(param).Post(f.cfg.URL)
 	if err != nil {
 		return err
 	}
 	if !resp.IsSuccessState() {
-		return fmt.Errorf("bad response status: %s", resp.Status)
+		return errors.New(fmt.Sprintf("bad response status: %s", resp.Status))
 	}
 	return nil
 }
@@ -98,7 +99,7 @@ type Card struct {
 				Content string `json:"content"`
 				Tag     string `json:"tag"`
 			} `json:"text"`
-			Url   string `json:"url"`
+			URL   string `json:"url"`
 			Type  string `json:"type"`
 			Value struct {
 			} `json:"value"`
@@ -125,12 +126,12 @@ func (f *FeiShu) SendInteractive(card Card) error {
 		MsgType:   "text",
 		Card:      card,
 	}
-	resp, err := req.R().SetBody(param).Post(f.cfg.Url)
+	resp, err := req.R().SetBody(param).Post(f.cfg.URL)
 	if err != nil {
 		return err
 	}
 	if !resp.IsSuccessState() {
-		return fmt.Errorf("bad response status: %s", resp.Status)
+		return errors.New(fmt.Sprintf("bad response status: %s", resp.Status))
 	}
 	return nil
 }

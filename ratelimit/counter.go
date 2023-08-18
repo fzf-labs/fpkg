@@ -7,11 +7,11 @@ import (
 
 // Counter 单机版计数器
 type Counter struct {
-	rate  int           //限制值
-	count int           //计数值
-	begin time.Time     //计数开始时间
-	cycle time.Duration //计数周期
-	lock  sync.Mutex    //互斥锁
+	rate  int           // 限制值
+	count int           // 计数值
+	begin time.Time     // 计数开始时间
+	cycle time.Duration // 计数周期
+	lock  sync.Mutex    // 互斥锁
 }
 
 // NewCounter 单机版计数器 构造函数

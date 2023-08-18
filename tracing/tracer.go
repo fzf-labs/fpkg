@@ -16,7 +16,7 @@ type Tracer struct {
 	opt    *options
 }
 
-func NewTracer(tracerName string, spanName string, kind trace.SpanKind, opts ...Option) *Tracer {
+func NewTracer(tracerName, spanName string, kind trace.SpanKind, opts ...Option) *Tracer {
 	op := options{
 		propagator: propagation.NewCompositeTextMapPropagator(propagation.Baggage{}, propagation.TraceContext{}),
 		kind:       kind,
@@ -63,7 +63,7 @@ func (t *Tracer) Start(ctx context.Context, carrier propagation.TextMapCarrier, 
 	return ctx, span
 }
 
-func (t *Tracer) End(ctx context.Context, span trace.Span, err error, attrs ...attribute.KeyValue) {
+func (t *Tracer) End(_ context.Context, span trace.Span, err error, attrs ...attribute.KeyValue) {
 	if span == nil {
 		return
 	}

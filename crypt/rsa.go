@@ -15,7 +15,7 @@ import (
 // GenRsaKey RSA公钥私钥产生
 func GenRsaKey() (prvKey, pubKey []byte) {
 	// 生成私钥文件
-	privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		panic(err)
 	}
@@ -40,7 +40,7 @@ func GenRsaKey() (prvKey, pubKey []byte) {
 
 // RsaEncrypt 公钥加密
 func RsaEncrypt(data, pubKey []byte) []byte {
-	//解密pem格式的公钥
+	// 解密pem格式的公钥
 	block, _ := pem.Decode(pubKey)
 	if block == nil {
 		panic(errors.New("public key error"))
@@ -52,7 +52,7 @@ func RsaEncrypt(data, pubKey []byte) []byte {
 	}
 	// 类型断言
 	pub := pubInterface.(*rsa.PublicKey)
-	//加密
+	// 加密
 	ciphertext, err := rsa.EncryptPKCS1v15(rand.Reader, pub, data)
 	if err != nil {
 		panic(err)
@@ -62,12 +62,12 @@ func RsaEncrypt(data, pubKey []byte) []byte {
 
 // RsaDecrypt 私钥解密
 func RsaDecrypt(ciphertext, prvKey []byte) []byte {
-	//获取私钥
+	// 获取私钥
 	block, _ := pem.Decode(prvKey)
 	if block == nil {
 		panic(errors.New("private key error!"))
 	}
-	//解析PKCS1格式的私钥
+	// 解析PKCS1格式的私钥
 	priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		panic(err)
@@ -81,7 +81,7 @@ func RsaDecrypt(ciphertext, prvKey []byte) []byte {
 }
 
 // RsaSignWithSha256 签名
-func RsaSignWithSha256(data []byte, keyBytes []byte) []byte {
+func RsaSignWithSha256(data, keyBytes []byte) []byte {
 	h := sha256.New()
 	h.Write(data)
 	hashed := h.Sum(nil)

@@ -106,14 +106,14 @@ func IsIntStr(str string) bool {
 	return regexp.MustCompile(`^[\+-]?\d+$`).MatchString(str)
 }
 
-// IsIp 检查字符串是否为 IP 地址。
-func IsIp(ipStr string) bool {
+// IsIP 检查字符串是否为 IP 地址。
+func IsIP(ipStr string) bool {
 	ip := net.ParseIP(ipStr)
 	return ip != nil
 }
 
-// IsIpV4 检查字符串是否为 ipv4 地址。
-func IsIpV4(ipStr string) bool {
+// IsIPV4 检查字符串是否为 ipv4 地址。
+func IsIPV4(ipStr string) bool {
 	ip := net.ParseIP(ipStr)
 	if ip == nil {
 		return false
@@ -121,8 +121,8 @@ func IsIpV4(ipStr string) bool {
 	return strings.Contains(ipStr, ".")
 }
 
-// IsIpV6 检查字符串是否为 ipv6 地址。
-func IsIpV6(ipStr string) bool {
+// IsIPV6 检查字符串是否为 ipv6 地址。
+func IsIPV6(ipStr string) bool {
 	ip := net.ParseIP(ipStr)
 	if ip == nil {
 		return false
@@ -138,8 +138,8 @@ func IsPort(str string) bool {
 	return false
 }
 
-// IsUrl 检查字符串是否为 url。
-func IsUrl(str string) bool {
+// IsURL 检查字符串是否为 url。
+func IsURL(str string) bool {
 	if str == "" || len(str) >= 2083 || len(str) <= 3 || strings.HasPrefix(str, ".") {
 		return false
 	}
@@ -157,9 +157,9 @@ func IsUrl(str string) bool {
 	return regexp.MustCompile(`^((ftp|http|https?):\/\/)?(\S+(:\S*)?@)?((([1-9]\d?|1\d\d|2[01]\d|22[0-3])(\.(1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.([0-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(([a-zA-Z0-9]+([-\.][a-zA-Z0-9]+)*)|((www\.)?))?(([a-z\x{00a1}-\x{ffff}0-9]+-?-?)*[a-z\x{00a1}-\x{ffff}0-9]+)(?:\.([a-z\x{00a1}-\x{ffff}]{2,}))?))(:(\d{1,5}))?((\/|\?|#)[^\s]*)?$`).MatchString(str)
 }
 
-// IsDns 检查字符串是否为 dns。
-func IsDns(dns string) bool {
-	return regexp.MustCompile(`^[a-zA-Z]([a-zA-Z0-9\-]+[\.]?)*[a-zA-Z0-9]$`).MatchString(dns)
+// IsDNS 检查字符串是否为 dns。
+func IsDNS(dns string) bool {
+	return regexp.MustCompile(`^[a-zA-Z]([a-zA-Z0-9\-]+\.?)*[a-zA-Z0-9]$`).MatchString(dns)
 }
 
 // IsEmail check if the string is a email address.
@@ -179,7 +179,7 @@ func IsBase64(base64 string) bool {
 
 // IsEmptyString 检查字符串是否为空。
 func IsEmptyString(str string) bool {
-	return len(str) == 0
+	return str == ""
 }
 
 // IsRegexMatch 检查字符串是否与正则表达式匹配
@@ -202,7 +202,7 @@ func IsRegexMatch(str, regex string) bool {
 //  3. China Telecom:
 //     133, 153, 180, 181, 189, 177(4G)
 //
-//  4. Satelite:
+//  4. Sate lite:
 //     1349
 //
 //  5. Virtual:
@@ -242,7 +242,7 @@ func IsPostalCode(postalCode string) bool {
 	return reg.MatchString(postalCode)
 }
 
-// IsResidentId 身份证ID校验
+// IsResidentID 身份证ID校验
 //
 // xxxxxx yyyy MM dd 375 0  十八位
 // xxxxxx   yy MM dd  75 0  十五位
@@ -262,7 +262,7 @@ func IsPostalCode(postalCode string) bool {
 //
 // 总：
 // (^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$)
-func IsResidentId(id string) bool {
+func IsResidentID(id string) bool {
 	id = strings.ToUpper(strings.TrimSpace(id))
 	if len(id) != 18 {
 		return false
@@ -278,7 +278,7 @@ func IsResidentId(id string) bool {
 		if err != nil {
 			return false
 		}
-		num = num + tmp*weightFactor[i]
+		num += tmp * weightFactor[i]
 	}
 	if checkCode[num%11] != last {
 		return false

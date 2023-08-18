@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
@@ -30,4 +31,5 @@ func TestNew(t *testing.T) {
 	}
 	fmt.Println(string(value2))
 	time.Sleep(time.Hour)
+	assert.Equal(t, "", string(value2))
 }

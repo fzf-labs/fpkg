@@ -10,6 +10,7 @@ import (
 // Name is the name registered for the proto compressor.
 const Name = "proto"
 
+//nolint:gochecknoinits
 func init() {
 	encoding.RegisterCodec(codec{})
 }

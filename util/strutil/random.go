@@ -12,6 +12,11 @@ const (
 	AlphaNumUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 )
 
+// RandSeed 随机数种子
+func RandSeed() *rand.Rand {
+	return rand.New(rand.NewSource(time.Now().UnixNano()))
+}
+
 // Random 随机字符串
 func Random(n int) string {
 	cs := make([]byte, n)
@@ -19,7 +24,7 @@ func Random(n int) string {
 	sl := len(str)
 	for i := 0; i < n; i++ {
 		// 1607400451937462000
-		idx := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(sl) // 0 - 25
+		idx := RandSeed().Intn(sl) // 0 - 25
 		cs[i] = str[idx]
 	}
 	return string(cs)
@@ -39,7 +44,7 @@ func RandomChars(n int, char ...string) string {
 	sl := len(str)
 	for i := 0; i < n; i++ {
 		// 1607400451937462000
-		idx := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(sl) // 0 - 25
+		idx := RandSeed().Intn(sl) // 0 - 25
 		cs[i] = str[idx]
 	}
 	return string(cs)
@@ -52,7 +57,7 @@ func RandomNumber(n int) string {
 	sl := len(str)
 	for i := 0; i < n; i++ {
 		// 1607400451937462000
-		idx := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(sl) // 0 - 25
+		idx := RandSeed().Intn(sl) // 0 - 25
 		cs[i] = str[idx]
 	}
 	return string(cs)

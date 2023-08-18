@@ -18,7 +18,7 @@ func TestNewClient(t *testing.T) {
 		Endpoint:     "http://127.0.0.1:14268/api/traces",
 		Sampler:      1.0,
 		Version:      "123",
-		InstanceId:   "123456",
+		InstanceID:   "123456",
 		Env:          "dev",
 	})
 	client.SetTracer(tracerProvider.Tracer("baidu"))

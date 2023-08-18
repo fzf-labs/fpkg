@@ -39,17 +39,17 @@ func TestRollingPolicy_Add(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run("test policy add", func(t *testing.T) {
-			var totalTs, lastOffset int
+			var totalTS, lastOffset int
 			timeSleep := test.timeSleep
 			policy := GetRollingPolicy()
 			for i, n := range timeSleep {
-				totalTs += n
+				totalTS += n
 				time.Sleep(time.Duration(n) * time.Millisecond)
 				policy.Add(float64(test.points[i]))
 				offset, points := test.offset[i], test.points[i]
 
 				assert.Equal(t, points, int(policy.window.buckets[offset].Points[0]),
-					fmt.Sprintf("error, time since last append: %vms, last offset: %v", totalTs, lastOffset))
+					fmt.Sprintf("error, time since last append: %vms, last offset: %v", totalTS, lastOffset))
 				lastOffset = offset
 			}
 		})

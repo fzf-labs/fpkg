@@ -115,7 +115,8 @@ func (l *List[T]) InsertAt(index int, value T) {
 	if index < 0 || index > size {
 		return
 	}
-	l.data = append(data[:index], append([]T{value}, data[index:]...)...)
+	data = append(data[:index], append([]T{value}, data[index:]...)...)
+	l.data = data
 }
 
 // PopFirst 删除列表的第一个值并返回
@@ -179,7 +180,7 @@ func (l *List[T]) DeleteIf(f func(T) bool) int {
 	return c
 }
 
-// UpdateAt更新索引处列表的值，索引应该在 0 和列表大小 -1 之间
+// UpdateAt 更新索引处列表的值，索引应该在 0 和列表大小 -1 之间
 func (l *List[T]) UpdateAt(index int, value T) {
 	data := l.data
 	size := len(data)
@@ -187,7 +188,8 @@ func (l *List[T]) UpdateAt(index int, value T) {
 	if index < 0 || index >= size {
 		return
 	}
-	l.data = append(data[:index], append([]T{value}, data[index+1:]...)...)
+	data = append(data[:index], append([]T{value}, data[index+1:]...)...)
+	l.data = data
 }
 
 // Equal 将列表与其他列表进行比较，使用 reflect.DeepEqual

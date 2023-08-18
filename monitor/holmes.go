@@ -1,6 +1,7 @@
 package monitor
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -27,8 +28,12 @@ func NewHolmesReporter() *HolmesReporter {
 	return &HolmesReporter{}
 }
 
+//nolint:gocritic
 func (r *HolmesReporter) Report(pType string, buf []byte, reason string, eventID string) error {
-
+	fmt.Println(pType)
+	fmt.Println(buf)
+	fmt.Println(reason)
+	fmt.Println(eventID)
 	return nil
 }
 

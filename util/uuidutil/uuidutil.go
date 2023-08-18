@@ -19,11 +19,11 @@ func GenShortID() (string, error) {
 	return shortid.Generate()
 }
 
-func KSUid() string { //2HhWuYvDuhvsOZWcVTujThVHPWf
+func KSUID() string { //2HhWuYvDuhvsOZWcVTujThVHPWf
 	return ksuid.New().String()
 }
 
-func KSUidByTime() string {
+func KSUIDByTime() string {
 	s, _ := ksuid.NewRandomWithTime(time.Now())
 	return strings.ToLower(s.String())
 }

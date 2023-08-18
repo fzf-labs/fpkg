@@ -7,7 +7,7 @@ import (
 
 // SafeString converts the input string into a safe naming style in golang
 func SafeString(in string) string {
-	if len(in) == 0 {
+	if in == "" {
 		return in
 	}
 
@@ -37,7 +37,7 @@ func isNumber(r rune) bool {
 
 // MkdirIfNotExist makes directories if the input path is not exists
 func MkdirIfNotExist(dir string) error {
-	if len(dir) == 0 {
+	if dir == "" {
 		return nil
 	}
 

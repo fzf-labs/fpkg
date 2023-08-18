@@ -64,11 +64,7 @@ func encodeByField(u url.Values, path string, m protoreflect.Message) (finalErr 
 			}
 		case fd.IsMap():
 			if v.Map().Len() > 0 {
-				m, err := encodeMapField(fd, v.Map())
-				if err != nil {
-					finalErr = err
-					return false
-				}
+				m := encodeMapField(fd, v.Map())
 				for k, value := range m {
 					u.Set(fmt.Sprintf("%s[%s]", newPath, k), value)
 				}
@@ -93,7 +89,7 @@ func encodeByField(u url.Values, path string, m protoreflect.Message) (finalErr 
 		}
 		return true
 	})
-	return
+	return nil
 }
 
 func encodeRepeatedField(fieldDescriptor protoreflect.FieldDescriptor, list protoreflect.List) ([]string, error) {
@@ -108,7 +104,7 @@ func encodeRepeatedField(fieldDescriptor protoreflect.FieldDescriptor, list prot
 	return values, nil
 }
 
-func encodeMapField(fieldDescriptor protoreflect.FieldDescriptor, mp protoreflect.Map) (map[string]string, error) {
+func encodeMapField(fieldDescriptor protoreflect.FieldDescriptor, mp protoreflect.Map) map[string]string {
 	m := make(map[string]string)
 	mp.Range(func(k protoreflect.MapKey, v protoreflect.Value) bool {
 		key, err := EncodeField(fieldDescriptor.MapValue(), k.Value())
@@ -122,8 +118,7 @@ func encodeMapField(fieldDescriptor protoreflect.FieldDescriptor, mp protoreflec
 		m[key] = value
 		return true
 	})
-
-	return m, nil
+	return m
 }
 
 // EncodeField encode proto message filed

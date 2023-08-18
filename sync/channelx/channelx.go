@@ -116,14 +116,12 @@ func (c *Channel[T]) FanIn(ctx context.Context, channels ...<-chan T) <-chan T {
 }
 
 // Tee 将一个channel拆分为两个通道，直到取消上下文。
-func (c *Channel[T]) Tee(ctx context.Context, in <-chan T) (<-chan T, <-chan T) {
+func (c *Channel[T]) Tee(ctx context.Context, in <-chan T) (ch1, ch2 <-chan T) {
 	out1 := make(chan T)
 	out2 := make(chan T)
-
 	go func() {
 		defer close(out1)
 		defer close(out2)
-
 		for val := range c.OrDone(ctx, in) {
 			var out1, out2 = out1, out2
 			for i := 0; i < 2; i++ {
@@ -137,7 +135,6 @@ func (c *Channel[T]) Tee(ctx context.Context, in <-chan T) (<-chan T, <-chan T) 
 			}
 		}
 	}()
-
 	return out1, out2
 }
 
@@ -225,7 +222,6 @@ func (c *Channel[T]) OrDone(ctx context.Context, channel <-chan T) <-chan T {
 				}
 			}
 		}
-
 	}()
 
 	return valStream

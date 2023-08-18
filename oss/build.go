@@ -7,8 +7,8 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
-func BuildNewNameAndPath(ext string, category ...string) (newFileName string, filePath string) {
-	//日期
+func BuildNewNameAndPath(ext string, category ...string) (newFileName, filePath string) {
+	// 日期
 	date := time.Now().Format("20060102")
 	join := make([]string, 0)
 	join = append(join, category...)

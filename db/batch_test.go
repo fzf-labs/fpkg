@@ -11,7 +11,7 @@ type Demo struct {
 	Width float64 `gorm:"column:width" json:"width"`
 }
 
-func TestBatchUpdateToSqlArray(t *testing.T) {
+func TestBatchUpdateToSQLArray(t *testing.T) {
 	var demo []*Demo
 	demo1 := &Demo{1, "nihao", 12.1}
 	demo2 := &Demo{2, "renzhen", 13.0}
@@ -19,7 +19,7 @@ func TestBatchUpdateToSqlArray(t *testing.T) {
 	demo4 := &Demo{4, "xiexie", 13.0}
 	demo5 := &Demo{5, "OOP", 12.0}
 	demo = append(demo, demo1, demo2, demo3, demo4, demo5)
-	sqls, err := MysqlBatchUpdateToSqlArray("demo_tab", demo)
+	sqls, err := MysqlBatchUpdateToSQLArray("demo_tab", demo)
 	if err != nil {
 		t.Log(err)
 	}

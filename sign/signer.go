@@ -61,7 +61,7 @@ func (s *Signer) GetBody() url.Values {
 }
 
 // AddBody 添加签名体字段和值
-func (s *Signer) AddBody(key string, value string) *Signer {
+func (s *Signer) AddBody(key, value string) *Signer {
 	return s.AddBodies(key, []string{value})
 }
 
@@ -91,7 +91,7 @@ func (s *Signer) GetNonceStr() string {
 	return s.body.Get(s.NonceStr)
 }
 
-// SetAppID 设置AppId参数
+// SetAppID 设置AppID参数
 func (s *Signer) SetAppID(appID string) *Signer {
 	return s.AddBody(s.AppID, appID)
 }

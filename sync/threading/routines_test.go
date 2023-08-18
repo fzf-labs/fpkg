@@ -7,18 +7,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRoutineId(t *testing.T) {
-	assert.True(t, RoutineId() > 0)
+func TestRoutineID(t *testing.T) {
+	assert.True(t, RoutineID() > 0)
 }
 
 func TestRunSafe(t *testing.T) {
-
 	i := 0
-
 	defer func() {
 		assert.Equal(t, 1, i)
 	}()
-
 	ch := make(chan struct{})
 	go RunSafe(func() {
 		defer func() {
@@ -27,7 +24,6 @@ func TestRunSafe(t *testing.T) {
 
 		panic("panic")
 	})
-
 	<-ch
 	i++
 }

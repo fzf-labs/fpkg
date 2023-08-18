@@ -44,18 +44,18 @@ func GetFmtTime(ms int64) (res string) {
 	return res
 }
 
-type CpuInfo struct {
-	VendorID string `json:"vendorId"` //CPU制造商ID
-	CpuModel string `json:"cpuModel"` //cpu具体型号
+type CPUInfo struct {
+	VendorID string `json:"vendorID"` //CPU制造商ID
+	CPUModel string `json:"cpuModel"` //cpu具体型号
 	CoreNum  string `json:"coreNum"`  //核心数
 	Percent  string `json:"percent"`  //百分比
 }
 
-// GetCpuInfo 获取CPU信息
-func GetCpuInfo() (*CpuInfo, error) {
-	result := &CpuInfo{
+// GetCPUInfo 获取CPU信息
+func GetCPUInfo() (*CPUInfo, error) {
+	result := &CPUInfo{
 		VendorID: "",
-		CpuModel: "",
+		CPUModel: "",
 		CoreNum:  "",
 		Percent:  "",
 	}
@@ -70,7 +70,7 @@ func GetCpuInfo() (*CpuInfo, error) {
 	}
 	if len(cpuInfo) > 0 {
 		result.VendorID = cpuInfo[0].VendorID
-		result.CpuModel = cpuInfo[0].ModelName
+		result.CPUModel = cpuInfo[0].ModelName
 	}
 	percent, _ := cpu.Percent(time.Second, false)
 	if len(percent) > 0 {
@@ -138,8 +138,8 @@ func GetDiskInfo() ([]DiskInfo, error) {
 
 type SysInfo struct {
 	ComputerName string `json:"computerName"` //服务器名称
-	LocalIp      string `json:"localIp"`      //内网ip
-	PublicIp     string `json:"publicIp"`     //外网ip
+	LocalIP      string `json:"localIP"`      //内网ip
+	PublicIP     string `json:"publicIP"`     //外网ip
 	Os           string `json:"os"`           //系统类型
 	Arch         string `json:"arch"`         //系统架构
 
@@ -178,14 +178,14 @@ func GetSysInfo() (*SysInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	publicIp, err := iputil.GetPublicIPByHttp()
+	publicIP, err := iputil.GetPublicIPByHTTP()
 	if err != nil {
 		return nil, err
 	}
 	return &SysInfo{
 		ComputerName:     infoStat.Hostname,
-		LocalIp:          iputil.GetLocalIp(),
-		PublicIp:         publicIp,
+		LocalIP:          iputil.GetLocalIP(),
+		PublicIP:         publicIP,
 		Os:               infoStat.OS,
 		Arch:             infoStat.KernelArch,
 		GoVersion:        runtime.Version(),

@@ -12,9 +12,9 @@ type psutilCPU struct {
 	interval time.Duration
 }
 
-func newPsutilCPU(interval time.Duration) (cpu *psutilCPU, err error) {
-	cpu = &psutilCPU{interval: interval}
-	_, err = cpu.Usage()
+func newPsutilCPU(interval time.Duration) (c *psutilCPU, err error) {
+	c = &psutilCPU{interval: interval}
+	_, err = c.Usage()
 	if err != nil {
 		return
 	}

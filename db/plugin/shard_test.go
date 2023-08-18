@@ -35,7 +35,6 @@ func TestNewMonthShardingPlugin(t *testing.T) {
 	if err != nil {
 		fmt.Println(err)
 	}
-
 }
 
 func TestNewShardingPlugin(t *testing.T) {

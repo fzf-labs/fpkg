@@ -11,7 +11,7 @@ import (
 func (c *AliConfig) EnCrypt(file multipart.File) string {
 	buffer := make([]byte, 500000)
 	n, _ := file.Read(buffer)
-	//base64压缩图片
+	// base64压缩图片
 	base64string := base64.StdEncoding.EncodeToString(buffer[:n])
 	// 指定值 + 反转图片base64值
 	base64string = c.Salt + Reverse(base64string)
@@ -19,7 +19,7 @@ func (c *AliConfig) EnCrypt(file multipart.File) string {
 }
 
 func (c *AliConfig) EnCryptByBytes(file []byte) string {
-	//base64压缩图片
+	// base64压缩图片
 	base64string := base64.StdEncoding.EncodeToString(file)
 	// 指定值 + 反转图片base64值
 	base64string = c.Salt + Reverse(base64string)

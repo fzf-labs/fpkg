@@ -7,10 +7,10 @@ import (
 
 func TestAuthQq_GetUserInfo(t *testing.T) {
 	authQq := NewAuthQq(&AuthConfig{
-		ClientId:     "",
+		ClientID:     "",
 		ClientSecret: "",
-		RedirectUrl:  "",
-		ApplyUnionId: "1",
+		RedirectURL:  "",
+		ApplyUnionID: "1",
 	})
 	token := ""
 	userInfo, err := authQq.GetUserInfo(token)

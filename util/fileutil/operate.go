@@ -4,7 +4,7 @@ import (
 	"archive/zip"
 	"bufio"
 	"bytes"
-	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/csv"
 	"encoding/hex"
 	"fmt"
@@ -31,24 +31,26 @@ func Mkdir(dirPath string) error {
 }
 
 // CreateDir 批量创建文件夹
-func CreateDir(dirs ...string) (err error) {
+func CreateDir(dirs ...string) error {
 	for _, v := range dirs {
 		if !FileExists(v) {
-			if err := os.MkdirAll(v, os.ModePerm); err != nil {
+			err := os.MkdirAll(v, os.ModePerm)
+			if err != nil {
 				return err
 			}
-			if err := os.Chmod(v, os.ModePerm); err != nil {
+			err = os.Chmod(v, os.ModePerm)
+			if err != nil {
 				return err
 			}
 		}
 	}
-	return err
+	return nil
 }
 
 // ReadDirAll 读取目录  fmt 打印
 // example ReadDirAll("/Users/why/Desktop/go/test", 0)
-func ReadDirAll(path string, curHer int) {
-	fileInfos, err := os.ReadDir(path)
+func ReadDirAll(p string, curHer int) {
+	fileInfos, err := os.ReadDir(p)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -60,7 +62,7 @@ func ReadDirAll(path string, curHer int) {
 				fmt.Printf("|\t")
 			}
 			fmt.Println(info.Name(), "\\")
-			ReadDirAll(path+"/"+info.Name(), curHer+1)
+			ReadDirAll(p+"/"+info.Name(), curHer+1)
 		} else {
 			for tmpHier := curHer; tmpHier > 0; tmpHier-- {
 				fmt.Printf("|\t")
@@ -71,9 +73,9 @@ func ReadDirAll(path string, curHer int) {
 }
 
 // ReadAllFileToMap 读取所有的文件形成一个map
-func ReadAllFileToMap(path string) (map[string]FileInfo, error) {
-	infos := make(map[string]FileInfo, 0)
-	err := newReadAllFileInfo().doFile(path, infos)
+func ReadAllFileToMap(p string) (map[string]FileInfo, error) {
+	infos := make(map[string]FileInfo)
+	err := newReadAllFileInfo().doFile(p, infos)
 	if err != nil {
 		return nil, err
 	}
@@ -81,9 +83,9 @@ func ReadAllFileToMap(path string) (map[string]FileInfo, error) {
 }
 
 // ReadAllFileToSli 读取所有的文件形成一个切片
-func ReadAllFileToSli(path string) ([]FileInfo, error) {
+func ReadAllFileToSli(p string) ([]FileInfo, error) {
 	res := make([]FileInfo, 0)
-	readFileToMap, err := ReadAllFileToMap(path)
+	readFileToMap, err := ReadAllFileToMap(p)
 	if err != nil {
 		return nil, err
 	}
@@ -91,15 +93,15 @@ func ReadAllFileToSli(path string) ([]FileInfo, error) {
 		res = append(res, v)
 	}
 	sort.SliceStable(res, func(i, j int) bool {
-		return res[i].Id < res[j].Id
+		return res[i].ID < res[j].ID
 	})
 	return res, nil
 }
 
 // ReadAllDirToMap 读取所有的文件形成一个map
-func ReadAllDirToMap(path string) (map[string]FileInfo, error) {
+func ReadAllDirToMap(p string) (map[string]FileInfo, error) {
 	infos := make(map[string]FileInfo, 0)
-	err := newReadAllFileInfo().doDir(path, infos)
+	err := newReadAllFileInfo().doDir(p, infos)
 	if err != nil {
 		return nil, err
 	}
@@ -107,9 +109,9 @@ func ReadAllDirToMap(path string) (map[string]FileInfo, error) {
 }
 
 // ReadAllDirToSli 读取所有的文件形成一个切片
-func ReadAllDirToSli(path string) ([]FileInfo, error) {
+func ReadAllDirToSli(p string) ([]FileInfo, error) {
 	res := make([]FileInfo, 0)
-	readFileToMap, err := ReadAllDirToMap(path)
+	readFileToMap, err := ReadAllDirToMap(p)
 	if err != nil {
 		return nil, err
 	}
@@ -117,13 +119,13 @@ func ReadAllDirToSli(path string) ([]FileInfo, error) {
 		res = append(res, v)
 	}
 	sort.SliceStable(res, func(i, j int) bool {
-		return res[i].Id < res[j].Id
+		return res[i].ID < res[j].ID
 	})
 	return res, nil
 }
 
 type FileInfo struct {
-	Id      int64  `json:"id"`
+	ID      int64  `json:"id"`
 	Pid     int64  `json:"pid"`
 	Name    string `json:"name"`
 	Path    string `json:"path"`
@@ -142,9 +144,9 @@ func newReadAllFileInfo() *readAllFile {
 }
 
 // 所有的文件
-func (r *readAllFile) doFile(path string, files map[string]FileInfo) error {
+func (r *readAllFile) doFile(p string, files map[string]FileInfo) error {
 	pid := r.id
-	fileInfos, err := os.ReadDir(path)
+	fileInfos, err := os.ReadDir(p)
 	if err != nil {
 		return err
 	}
@@ -154,19 +156,19 @@ func (r *readAllFile) doFile(path string, files map[string]FileInfo) error {
 		if err != nil {
 			return err
 		}
-		fileName := filepath.Join(path, fileInfo.Name())
+		fileName := filepath.Join(p, fileInfo.Name())
 		files[fileName] = FileInfo{
-			Id:      r.id,
+			ID:      r.id,
 			Pid:     pid,
 			Name:    fileInfo.Name(),
-			Path:    path,
+			Path:    p,
 			File:    fileName,
 			IsDir:   fileInfo.IsDir(),
 			ModTime: fileInfo.ModTime().Unix(),
 			Size:    fileInfo.Size(),
 		}
 		if info.IsDir() {
-			err := r.doFile(filepath.Join(path, info.Name()), files)
+			err := r.doFile(filepath.Join(p, info.Name()), files)
 			if err != nil {
 				return err
 			}
@@ -176,9 +178,9 @@ func (r *readAllFile) doFile(path string, files map[string]FileInfo) error {
 }
 
 // 文件夹
-func (r *readAllFile) doDir(path string, files map[string]FileInfo) error {
+func (r *readAllFile) doDir(p string, files map[string]FileInfo) error {
 	pid := r.id
-	fileInfos, err := os.ReadDir(path)
+	fileInfos, err := os.ReadDir(p)
 	if err != nil {
 		return err
 	}
@@ -189,12 +191,12 @@ func (r *readAllFile) doDir(path string, files map[string]FileInfo) error {
 			return err
 		}
 		if info.IsDir() {
-			fileName := filepath.Join(path, fileInfo.Name())
+			fileName := filepath.Join(p, fileInfo.Name())
 			files[fileName] = FileInfo{
-				Id:      r.id,
+				ID:      r.id,
 				Pid:     pid,
 				Name:    fileInfo.Name(),
-				Path:    path,
+				Path:    p,
 				File:    fileName,
 				IsDir:   fileInfo.IsDir(),
 				ModTime: fileInfo.ModTime().Unix(),
@@ -202,7 +204,7 @@ func (r *readAllFile) doDir(path string, files map[string]FileInfo) error {
 			}
 		}
 		if info.IsDir() {
-			err := r.doDir(filepath.Join(path, info.Name()), files)
+			err := r.doDir(filepath.Join(p, info.Name()), files)
 			if err != nil {
 				return err
 			}
@@ -221,23 +223,23 @@ type DeepFileInfo struct {
 }
 
 // ReadDeepFile 读取指定深度的文件
-func ReadDeepFile(path string, deep int) (map[string]DeepFileInfo, error) {
+func ReadDeepFile(p string, deep int) (map[string]DeepFileInfo, error) {
 	infos := make(map[string]DeepFileInfo, 0)
-	err := readDeepFile(path, 0, deep, infos)
+	err := readDeepFile(p, 0, deep, infos)
 	if err != nil {
 		return nil, err
 	}
 	return infos, nil
 }
 
-func readDeepFile(path string, deepNow int, deep int, files map[string]DeepFileInfo) error {
+func readDeepFile(p string, deepNow, deep int, files map[string]DeepFileInfo) error {
 	if deepNow > deep {
 		return nil
 	}
-	if !PathExists(path) {
+	if !PathExists(p) {
 		return nil
 	}
-	fileInfos, err := os.ReadDir(path)
+	fileInfos, err := os.ReadDir(p)
 	if err != nil {
 		return err
 	}
@@ -247,10 +249,10 @@ func readDeepFile(path string, deepNow int, deep int, files map[string]DeepFileI
 			return err
 		}
 		if deepNow == deep {
-			fileName := filepath.Join(path, fileInfo.Name())
+			fileName := filepath.Join(p, fileInfo.Name())
 			files[fileName] = DeepFileInfo{
 				Name:    fileInfo.Name(),
-				Path:    path,
+				Path:    p,
 				File:    fileName,
 				IsDir:   fileInfo.IsDir(),
 				ModTime: fileInfo.ModTime().Unix(),
@@ -258,7 +260,7 @@ func readDeepFile(path string, deepNow int, deep int, files map[string]DeepFileI
 			}
 		}
 		if info.IsDir() {
-			err := readDeepFile(filepath.Join(path, info.Name()), deepNow+1, deep, files)
+			err := readDeepFile(filepath.Join(p, info.Name()), deepNow+1, deep, files)
 			if err != nil {
 				return err
 			}
@@ -285,13 +287,13 @@ func OpenFile(fp string, flag int, perm os.FileMode) (*os.File, error) {
 }
 
 // QuickOpenFile 快速打开文件，目录不存在则会自动创建目录。
-func QuickOpenFile(filepath string) (*os.File, error) {
-	return OpenFile(filepath, DefaultFileFlags, DefaultFilePerm)
+func QuickOpenFile(filePath string) (*os.File, error) {
+	return OpenFile(filePath, DefaultFileFlags, DefaultFilePerm)
 }
 
 // OpenReadFile 只读方式打开文件
-func OpenReadFile(filepath string) (*os.File, error) {
-	return os.OpenFile(filepath, OnlyReadFileFlags, OnlyReadFilePerm)
+func OpenReadFile(filePath string) (*os.File, error) {
+	return os.OpenFile(filePath, OnlyReadFileFlags, OnlyReadFilePerm)
 }
 
 // ReadFileLineToSli  按行读取文件
@@ -336,18 +338,18 @@ func ReadFileToString(dir string) (string, error) {
 	return string(buffer), nil
 }
 
-// ReadFileByUrlToByte 读取url中的文件,并转为[]byte格式
-func ReadFileByUrlToByte(url string) ([]byte, error) {
+// ReadFileByURLToByte 读取url中的文件,并转为[]byte格式
+func ReadFileByURLToByte(url string) ([]byte, error) {
 	res, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-	bytes, err := io.ReadAll(res.Body)
+	all, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
-	return bytes, nil
+	return all, nil
 }
 
 // ************************************************************
@@ -401,21 +403,22 @@ func WriteCsvCover(filePath string, content []string) error {
 		return err
 	}
 	defer func(f *os.File) {
-		err := f.Close()
+		err = f.Close()
 		if err != nil {
 			fmt.Println(err)
 		}
 	}(f)
 	writer := csv.NewWriter(f)
 	for _, v := range content {
-		err := writer.Write([]string{v})
+		err = writer.Write([]string{v})
 		if err != nil {
 			return err
 		}
 	}
 	// 将缓存中的内容写入到文件里
 	writer.Flush()
-	if err = writer.Error(); err != nil {
+	err = writer.Error()
+	if err != nil {
 		return err
 	}
 	return nil
@@ -432,7 +435,7 @@ func WriteCsvDoubleSliCover(filePath string, content [][]string) error {
 		return err
 	}
 	defer func(f *os.File) {
-		err := f.Close()
+		err = f.Close()
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -444,14 +447,15 @@ func WriteCsvDoubleSliCover(filePath string, content [][]string) error {
 	}
 	// 将缓存中的内容写入到文件里
 	writer.Flush()
-	if err = writer.Error(); err != nil {
+	err = writer.Error()
+	if err != nil {
 		return err
 	}
 	return nil
 }
 
 // CopyFile 复制文件
-func CopyFile(srcPath string, dstPath string) error {
+func CopyFile(srcPath, dstPath string) error {
 	srcFile, err := os.OpenFile(srcPath, os.O_RDONLY, 0)
 	if err != nil {
 		return err
@@ -474,7 +478,7 @@ func CopyFile(srcPath string, dstPath string) error {
 // ************************************************************
 
 // Rename 重命名
-func Rename(src string, dst string) error {
+func Rename(src, dst string) error {
 	return os.Rename(src, dst)
 }
 
@@ -489,12 +493,12 @@ func Remove(fPath string) error {
 	}
 	return nil
 }
-func RemoveExt(path string) string {
-	ext := filepath.Ext(path)
-	if len(ext) == 0 {
-		return path
+func RemoveExt(p string) string {
+	ext := filepath.Ext(p)
+	if ext == "" {
+		return p
 	}
-	return strings.TrimRight(path, ext)
+	return strings.TrimRight(p, ext)
 }
 
 // ************************************************************
@@ -631,12 +635,20 @@ func unzipFile(file *zip.File, dstDir string) error {
 	defer w.Close()
 
 	// save the decompressed file content
-	_, err = io.Copy(w, r)
-	return err
+	for {
+		_, err = io.CopyN(w, r, 1024)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return err
+		}
+	}
+	return nil
 }
 
 // DownloadFile 会将url下载到本地文件，它会在下载时写入，而不是将整个文件加载到内存中。
-func DownloadFile(url, filepath string) error {
+func DownloadFile(url, filePath string) error {
 	// Get the data
 	resp, err := http.Get(url)
 	if err != nil {
@@ -645,7 +657,7 @@ func DownloadFile(url, filepath string) error {
 	defer resp.Body.Close()
 
 	// Create the file
-	out, err := os.Create(filepath)
+	out, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
@@ -661,7 +673,7 @@ func FilePrefix(filename string) string {
 }
 
 // Move 移动文件
-func Move(srcPath string, dstPath string) error {
+func Move(srcPath, dstPath string) error {
 	err := os.Rename(srcPath, dstPath)
 	if err != nil {
 		return err
@@ -670,13 +682,13 @@ func Move(srcPath string, dstPath string) error {
 }
 
 // Ext 文件扩展名
-func Ext(path string) string {
-	return strings.ToLower(filepath.Ext(path))
+func Ext(p string) string {
+	return strings.ToLower(filepath.Ext(p))
 }
 
-// Sha1 文件sha1值
-func Sha1(file io.Reader) (string, error) {
-	hash := sha1.New()
+// Sha256 文件Sha256值
+func Sha256(file io.Reader) (string, error) {
+	hash := sha256.New()
 	_, err := io.Copy(hash, file)
 	if err != nil {
 		return "", err

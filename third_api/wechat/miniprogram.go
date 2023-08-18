@@ -16,7 +16,7 @@ var (
 )
 
 type MiniProgramConfig struct {
-	AppId     string
+	AppID     string
 	AppSecret string
 }
 
@@ -30,7 +30,7 @@ func NewMiniProgram(cfg *MiniProgramConfig, cache *RedisCache) *WxMiniProgram {
 	miniProgramOnce.Do(func() {
 		wc := wechat.NewWechat()
 		config := &miniConfig.Config{
-			AppID:     cfg.AppId,
+			AppID:     cfg.AppID,
 			AppSecret: cfg.AppSecret,
 		}
 		if cache != nil {
@@ -43,8 +43,8 @@ func NewMiniProgram(cfg *MiniProgramConfig, cache *RedisCache) *WxMiniProgram {
 	return &wxMiniProgram
 }
 
-// GetMiniUrlScheme 获取小程序UrlScheme
-func (w *WxMiniProgram) GetMiniUrlScheme(envVersion urlscheme.EnvVersion) (string, error) {
+// GetMiniURLScheme 获取小程序URLScheme
+func (w *WxMiniProgram) GetMiniURLScheme(envVersion urlscheme.EnvVersion) (string, error) {
 	return w.wxMiniProgram.GetSURLScheme().Generate(&urlscheme.USParams{
 		JumpWxa: &urlscheme.JumpWxa{
 			Path:       "",
@@ -57,8 +57,8 @@ func (w *WxMiniProgram) GetMiniUrlScheme(envVersion urlscheme.EnvVersion) (strin
 	})
 }
 
-// GetMiniUrlLink 获取小程序UrlLink
-func (w *WxMiniProgram) GetMiniUrlLink(envVersion string) (string, error) {
+// GetMiniURLLink 获取小程序URLLink
+func (w *WxMiniProgram) GetMiniURLLink(envVersion string) (string, error) {
 	return w.wxMiniProgram.GetURLLink().Generate(&urllink.ULParams{
 		Path:           "",
 		Query:          "",

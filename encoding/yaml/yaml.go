@@ -8,6 +8,7 @@ import (
 // Name is the name registered for the yaml codec.
 const Name = "yaml"
 
+//nolint:gochecknoinits
 func init() {
 	encoding.RegisterCodec(codec{})
 }

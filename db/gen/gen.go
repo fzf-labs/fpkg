@@ -16,6 +16,11 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	SQLNullTime = "sql.NullTime"
+	TimeTime    = "time.Time"
+)
+
 func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType) (dataType string), outPutPath string) {
 	// 路径处理
 	dbName := db.Migrator().CurrentDatabase()
@@ -33,9 +38,7 @@ func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType)
 	// 自定义字段类型映射
 	g.WithDataTypeMap(dataMap)
 	// json 小驼峰模型命名
-	g.WithJSONTagNameStrategy(func(c string) string {
-		return LowerCamelCase(c)
-	})
+	g.WithJSONTagNameStrategy(LowerCamelCase)
 	// 针对PG空字符串特殊处理
 	g.WithOpts(gen.FieldGORMTagReg(".*?", func(tag field.GormTag) field.GormTag {
 		if strings.Contains(tag.Build(), "default:''::character varying") {
@@ -72,24 +75,24 @@ func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType)
 	}
 }
 
-// DefaultMySqlDataMap 默认mysql字段类型映射
-var DefaultMySqlDataMap = map[string]func(columnType gorm.ColumnType) (dataType string){
+// DefaultMySQLDataMap 默认mysql字段类型映射
+var DefaultMySQLDataMap = map[string]func(columnType gorm.ColumnType) (dataType string){
 	"int":     func(columnType gorm.ColumnType) (dataType string) { return "int64" },
 	"tinyint": func(columnType gorm.ColumnType) (dataType string) { return "int32" },
 	"json":    func(columnType gorm.ColumnType) string { return "datatypes.JSON" },
 	"timestamp": func(columnType gorm.ColumnType) string {
 		nullable, _ := columnType.Nullable()
 		if nullable {
-			return "sql.NullTime"
+			return SQLNullTime
 		}
-		return "time.Time"
+		return TimeTime
 	},
 	"datetime": func(columnType gorm.ColumnType) string {
 		nullable, _ := columnType.Nullable()
 		if nullable {
-			return "sql.NullTime"
+			return SQLNullTime
 		}
-		return "time.Time"
+		return TimeTime
 	},
 }
 
@@ -99,14 +102,14 @@ var DefaultPostgresDataMap = map[string]func(columnType gorm.ColumnType) (dataTy
 	"timestamptz": func(columnType gorm.ColumnType) string {
 		nullable, _ := columnType.Nullable()
 		if nullable {
-			return "sql.NullTime"
+			return SQLNullTime
 		}
-		return "time.Time"
+		return TimeTime
 	},
 }
 
 // ConnectDB 数据库连接
-func ConnectDB(dbType string, dsn string) *gorm.DB {
+func ConnectDB(dbType, dsn string) *gorm.DB {
 	var db *gorm.DB
 	var err error
 	switch dbType {
@@ -128,10 +131,10 @@ func ConnectDB(dbType string, dsn string) *gorm.DB {
 
 // UpperCamelCase 下划线单词转为大写驼峰单词
 func UpperCamelCase(s string) string {
-	s = strings.Replace(s, "_", " ", -1)
+	s = strings.ReplaceAll(s, "_", " ")
 	causer := cases.Title(language.English)
 	s = causer.String(s)
-	return strings.Replace(s, " ", "", -1)
+	return strings.ReplaceAll(s, " ", "")
 }
 
 // LowerCamelCase 下划线单词转为小写驼峰单词

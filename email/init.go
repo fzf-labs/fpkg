@@ -27,7 +27,7 @@ func Init(cfg *EmailConfig) {
 		Client.Close()
 	}
 
-	c := NewSMTPClient(SMTPConfig{
+	c := NewSMTPClient(&SMTPConfig{
 		Name:      cfg.Name,
 		Address:   cfg.Address,
 		ReplyTo:   cfg.ReplyTo,
@@ -39,5 +39,4 @@ func Init(cfg *EmailConfig) {
 	})
 	c.Init()
 	Client = c
-
 }

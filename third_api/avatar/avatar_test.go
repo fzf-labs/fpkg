@@ -1,14 +1,12 @@
 package avatar
 
 import (
-	"fmt"
 	"testing"
+
+	"github.com/fzf-labs/fpkg/util/validutil"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestUrl(t *testing.T) {
-	fmt.Println(Url())
-	fmt.Println(Url())
-	fmt.Println(Url())
-	fmt.Println(Url())
-	fmt.Println(Url())
+func TestURL(t *testing.T) {
+	assert.True(t, validutil.IsURL(URL()))
 }

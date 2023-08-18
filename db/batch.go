@@ -11,8 +11,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// MysqlBatchUpdateToSqlArray 批量更新
-func MysqlBatchUpdateToSqlArray(tableName string, dataList interface{}) ([]string, error) {
+// MysqlBatchUpdateToSQLArray 批量更新
+func MysqlBatchUpdateToSQLArray(tableName string, dataList interface{}) ([]string, error) {
 	//dataList 的数据类型
 	kind := reflect.TypeOf(dataList).Kind()
 	if kind != reflect.Slice {
@@ -24,7 +24,6 @@ func MysqlBatchUpdateToSqlArray(tableName string, dataList interface{}) ([]strin
 	sliceLength := fieldValue.Len()
 	//字段的数量
 	fieldNum := fieldType.NumField()
-
 	// 检验结构体标签是否为空和重复
 	verifyTagDuplicate := make(map[string]string)
 	for i := 0; i < fieldNum; i++ {
@@ -44,8 +43,7 @@ func MysqlBatchUpdateToSqlArray(tableName string, dataList interface{}) ([]strin
 	if _, ok := verifyTagDuplicate["id"]; !ok {
 		return nil, errors.New("please set json tag: id for struct")
 	}
-
-	var Ids []string
+	var IDs []string
 	updateMap := make(map[string][]string)
 	for i := 0; i < sliceLength; i++ {
 		// 得到某一个具体的结构体的
@@ -79,15 +77,13 @@ func MysqlBatchUpdateToSqlArray(tableName string, dataList interface{}) ([]strin
 				if id < 1 {
 					return nil, errors.New("this structure should have a primary key and gt 0")
 				}
-				Ids = append(Ids, temp)
+				IDs = append(IDs, temp)
 				continue
 			}
-			valueList := append(updateMap[fieldName], temp)
-			updateMap[fieldName] = valueList
+			updateMap[fieldName] = append(updateMap[fieldName], temp)
 		}
 	}
-
-	length := len(Ids)
+	length := len(IDs)
 	size := 200
 	SQLQuantity := getSQLQuantity(length, size)
 	var SQLArray []string
@@ -99,8 +95,8 @@ func MysqlBatchUpdateToSqlArray(tableName string, dataList interface{}) ([]strin
 		for fieldName, fieldValueList := range updateMap {
 			record.WriteString(fieldName)
 			record.WriteString(" = CASE " + "id")
-			for j := k; j < len(Ids) && j < len(fieldValueList) && j < size+k; j++ {
-				record.WriteString(" WHEN " + Ids[j] + " THEN " + fieldValueList[j])
+			for j := k; j < len(IDs) && j < len(fieldValueList) && j < size+k; j++ {
+				record.WriteString(" WHEN " + IDs[j] + " THEN " + fieldValueList[j])
 			}
 			count++
 			if count != fieldNum-1 {
@@ -109,11 +105,11 @@ func MysqlBatchUpdateToSqlArray(tableName string, dataList interface{}) ([]strin
 		}
 		record.WriteString(" END WHERE ")
 		record.WriteString("id" + " IN (")
-		min := size + k
-		if len(Ids) < min {
-			min = len(Ids)
+		m := size + k
+		if len(IDs) < m {
+			m = len(IDs)
 		}
-		record.WriteString(strings.Join(Ids[k:min], ","))
+		record.WriteString(strings.Join(IDs[k:m], ","))
 		record.WriteString(")")
 		k += size
 		SQLArray = append(SQLArray, record.String())

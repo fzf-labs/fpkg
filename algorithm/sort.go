@@ -57,7 +57,7 @@ func ShellSort[T any](slice []T, comparator Comparator) {
 				swap(slice, j, j-gap)
 			}
 		}
-		gap = gap / 3
+		gap /= 3
 	}
 }
 

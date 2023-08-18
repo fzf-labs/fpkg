@@ -3,9 +3,7 @@ package redislocalcache
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
-	"strings"
 	"time"
 
 	"github.com/klauspost/compress/zlib"
@@ -31,10 +29,10 @@ type Cache struct {
 	LocalCache LocalCache
 }
 
-func New(name string, redis rediser, localCache LocalCache, opts ...CacheOption) *Cache {
+func New(name string, r rediser, localCache LocalCache, opts ...CacheOption) *Cache {
 	cache := &Cache{
 		Name:       name,
-		Redis:      redis,
+		Redis:      r,
 		LocalCache: localCache,
 	}
 	if len(opts) > 0 {
@@ -43,10 +41,7 @@ func New(name string, redis rediser, localCache LocalCache, opts ...CacheOption)
 		}
 	}
 	go func() {
-		err := cache.subscribe(cache.getChannel())
-		if err != nil {
-			return
-		}
+		cache.subscribe(cache.getChannel())
 	}()
 	return cache
 }
@@ -97,19 +92,19 @@ func (cd *Cache) DeleteFromLocalCache(key string) {
 }
 
 func (cd *Cache) getChannel() string {
-	return strings.Join([]string{defaultPubSubKey, cd.Name}, ":")
+	return defaultPubSubKey + ":" + cd.Name
 }
 
-func (cd *Cache) subscribe(channel string) error {
+func (cd *Cache) subscribe(channel string) {
 	ctx := context.Background()
 	pubSub := cd.Redis.Subscribe(ctx, channel)
 	// 使用完毕，记得关闭
 	defer func(pubSub *redis.PubSub) {
 		err := pubSub.Close()
 		if err != nil {
-			fmt.Printf("pubSub close err: %s", err)
+			slog.Error("pubSub close err: %s", err)
 		}
-		fmt.Println("pubSub close success")
+		slog.Info("pubSub close success")
 	}(pubSub)
 	for {
 		msg, err := pubSub.ReceiveMessage(ctx)
@@ -123,7 +118,7 @@ func (cd *Cache) subscribe(channel string) error {
 	}
 }
 
-func (cd *Cache) publish(ctx context.Context, channel string, key string) error {
+func (cd *Cache) publish(ctx context.Context, channel, key string) error {
 	return cd.Redis.Publish(ctx, channel, key).Err()
 }
 

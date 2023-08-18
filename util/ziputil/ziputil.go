@@ -11,7 +11,6 @@ import (
 )
 
 func ZipFiles(filename string, files []string, oldForm, newForm string) error {
-
 	newZipFile, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -24,40 +23,38 @@ func ZipFiles(filename string, files []string, oldForm, newForm string) error {
 	defer func() {
 		_ = zipWriter.Close()
 	}()
-
 	// 把files添加到zip中
 	for _, file := range files {
-
 		err = func(file string) error {
-			zipFile, err := os.Open(file)
-			if err != nil {
-				return err
+			zipFile, err2 := os.Open(file)
+			if err2 != nil {
+				return err2
 			}
 			defer zipFile.Close()
 			// 获取file的基础信息
-			info, err := zipFile.Stat()
-			if err != nil {
-				return err
+			info, err2 := zipFile.Stat()
+			if err2 != nil {
+				return err2
 			}
 
-			header, err := azip.FileInfoHeader(info)
-			if err != nil {
-				return err
+			header, err2 := azip.FileInfoHeader(info)
+			if err2 != nil {
+				return err2
 			}
 
 			// 使用上面的FileInfoHeader() 就可以把文件保存的路径替换成我们自己想要的了，如下面
-			header.Name = strings.Replace(file, oldForm, newForm, -1)
+			header.Name = strings.ReplaceAll(file, oldForm, newForm)
 
 			// 优化压缩
 			// 更多参考see http://golang.org/pkg/archive/zip/#pkg-constants
 			header.Method = azip.Deflate
 
-			writer, err := zipWriter.CreateHeader(header)
-			if err != nil {
-				return err
+			writer, err2 := zipWriter.CreateHeader(header)
+			if err2 != nil {
+				return err2
 			}
-			if _, err = io.Copy(writer, zipFile); err != nil {
-				return err
+			if _, err2 = io.Copy(writer, zipFile); err2 != nil {
+				return err2
 			}
 			return nil
 		}(file)
@@ -68,8 +65,8 @@ func ZipFiles(filename string, files []string, oldForm, newForm string) error {
 	return nil
 }
 
-// 压缩
-func ZipFolder(srcFile string, destZip string) error {
+// ZipFolder 压缩
+func ZipFolder(srcFile, destZip string) error {
 	// 预防：旧文件无法覆盖
 	err := os.RemoveAll(destZip)
 	if err != nil {
@@ -105,14 +102,14 @@ func ZipFolder(srcFile string, destZip string) error {
 			return err
 		}
 		if !info.IsDir() {
-			file, err := os.Open(path)
-			if err != nil {
-				return err
+			file, err2 := os.Open(path)
+			if err2 != nil {
+				return err2
 			}
 			defer file.Close()
-			_, err = io.Copy(writer, file)
-			if err != nil {
-				return err
+			_, err2 = io.Copy(writer, file)
+			if err2 != nil {
+				return err2
 			}
 		}
 		return err
@@ -124,7 +121,7 @@ func ZipFolder(srcFile string, destZip string) error {
 }
 
 // Zip create zip file, fpath could be a single file or a directory
-func Zip(fpath string, destPath string) error {
+func Zip(fpath, destPath string) error {
 	zipFile, err := os.Create(destPath)
 	if err != nil {
 		return err
@@ -178,7 +175,7 @@ func Zip(fpath string, destPath string) error {
 }
 
 // UnZip unzip the file and save it to destPath
-func UnZip(zipFile string, destPath string) error {
+func UnZip(zipFile, destPath string) error {
 	zipReader, err := zip.OpenReader(zipFile)
 	if err != nil {
 		return err
@@ -188,30 +185,29 @@ func UnZip(zipFile string, destPath string) error {
 	for _, f := range zipReader.File {
 		path := filepath.Join(destPath, f.Name)
 		if f.FileInfo().IsDir() {
-			err := os.MkdirAll(path, os.ModePerm)
+			err = os.MkdirAll(path, os.ModePerm)
 			if err != nil {
 				return err
 			}
 		} else {
-			if err = os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
-				return err
+			if err2 := os.MkdirAll(filepath.Dir(path), os.ModePerm); err2 != nil {
+				return err2
 			}
-
-			inFile, err := f.Open()
-			if err != nil {
-				return err
+			inFile, err2 := f.Open()
+			if err2 != nil {
+				return err2
 			}
 			defer inFile.Close()
 
-			outFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-			if err != nil {
-				return err
+			outFile, err2 := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+			if err2 != nil {
+				return err2
 			}
 			defer outFile.Close()
 
-			_, err = io.Copy(outFile, inFile)
-			if err != nil {
-				return err
+			_, err2 = io.Copy(outFile, inFile)
+			if err2 != nil {
+				return err2
 			}
 		}
 	}

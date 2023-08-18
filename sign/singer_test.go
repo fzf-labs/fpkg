@@ -17,7 +17,7 @@ func TestSignMd5(t *testing.T) {
 	fmt.Println("生成签名前字符串：" + signer.GetSignBodyString())
 	fmt.Println("生成sign：" + signer.GetSignature())
 	fmt.Println("输出URL字符串：" + signer.GetSignedQuery())
-	if "app_id=123456&city=beijing&nonce_str=supertempstr&timestamp=1594458195&sign=af603c2375aa2265e970737600555d7f" != signer.GetSignedQuery() {
+	if signer.GetSignedQuery() != "app_id=123456&city=beijing&nonce_str=supertempstr&timestamp=1594458195&sign=af603c2375aa2265e970737600555d7f" {
 		t.Fatal("Md5校验失败")
 	}
 }

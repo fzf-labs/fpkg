@@ -26,6 +26,7 @@ var (
 	)
 )
 
+//nolint:gochecknoinits
 func init() {
 	prometheus.MustRegister(SendHTTPRequests, SendHTTPRequestsDuration)
 }

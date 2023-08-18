@@ -6,6 +6,7 @@ import (
 
 	"github.com/Timothylock/go-signin-with-apple/apple"
 	"github.com/fzf-labs/fpkg/util/strutil"
+	"github.com/pkg/errors"
 	"github.com/pyihe/apple_validator"
 )
 
@@ -14,10 +15,10 @@ import (
 // SignInWithAppleConfig 苹果配置
 type SignInWithAppleConfig struct {
 	Secret      string
-	KeyId       string
-	TeamId      string
-	ClientId    string
-	RedirectUrl string
+	KeyID       string
+	TeamID      string
+	ClientID    string
+	RedirectURL string
 }
 
 type SignInWithApple struct {
@@ -33,14 +34,14 @@ func NewSignInWithApple(cfg *SignInWithAppleConfig) *SignInWithApple {
 func (s *SignInWithApple) CheckByAuthorizationCode(code string) (uniqueID string, err error) {
 	privateKey := strutil.FormatPrivateKey(s.Cfg.Secret)
 	// 生成用于向 Apple 验证服务器进行身份验证的客户端密码
-	clientSecret, err := apple.GenerateClientSecret(privateKey, s.Cfg.TeamId, s.Cfg.ClientId, s.Cfg.KeyId)
+	clientSecret, err := apple.GenerateClientSecret(privateKey, s.Cfg.TeamID, s.Cfg.ClientID, s.Cfg.KeyID)
 	if err != nil {
-		return "", fmt.Errorf("error generating secret: " + err.Error())
+		return "", errors.New("error generating secret: " + err.Error())
 	}
 	// 生成新的验证客户端
 	client := apple.New()
 	vReq := apple.AppValidationTokenRequest{
-		ClientID:     s.Cfg.ClientId,
+		ClientID:     s.Cfg.ClientID,
 		ClientSecret: clientSecret,
 		Code:         code,
 	}
@@ -48,15 +49,15 @@ func (s *SignInWithApple) CheckByAuthorizationCode(code string) (uniqueID string
 	// 进行验证
 	err = client.VerifyAppToken(context.Background(), vReq, &resp)
 	if err != nil {
-		return "", fmt.Errorf("error verifying: " + err.Error())
+		return "", errors.New("error verifying: " + err.Error())
 	}
 	if resp.Error != "" {
-		return "", fmt.Errorf("apple returned an error: %s - %s\n", resp.Error, resp.ErrorDescription)
+		return "", fmt.Errorf("apple returned an error: %s - %s", resp.Error, resp.ErrorDescription)
 	}
 	// Get the unique user ID
 	unique, err := apple.GetUniqueID(resp.IDToken)
 	if err != nil {
-		return "", fmt.Errorf("failed to get unique ID: " + err.Error())
+		return "", errors.New("failed to get unique ID: " + err.Error())
 	}
 	return unique, nil
 }
@@ -66,11 +67,11 @@ func (s *SignInWithApple) CheckIdentityToken(token string) (uniqueID string, err
 	validator := apple_validator.NewValidator()
 	jwtToken, err := validator.CheckIdentityToken(token)
 	if err != nil {
-		return "", fmt.Errorf("CheckIdentityToken err: " + err.Error())
+		return "", errors.New("CheckIdentityToken err: " + err.Error())
 	}
 	ok, err := jwtToken.IsValid()
 	if !ok {
-		return "", fmt.Errorf("CheckIdentityToken IsValid err: " + err.Error())
+		return "", errors.New("CheckIdentityToken IsValid err: " + err.Error())
 	}
 	return jwtToken.Sub(), nil
 }

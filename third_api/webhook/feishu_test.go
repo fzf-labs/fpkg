@@ -7,7 +7,7 @@ import (
 
 func TestFeiShu_SendMsg(t *testing.T) {
 	feiShu := NewFeiShu(&FeiShuConfig{
-		Url:  "",
+		URL:  "",
 		Sign: "",
 	})
 	err := feiShu.SendText("测试")

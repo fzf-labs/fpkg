@@ -9,6 +9,7 @@ import (
 // Name is the name registered for the xml codec.
 const Name = "xml"
 
+//nolint:gochecknoinits
 func init() {
 	encoding.RegisterCodec(codec{})
 }

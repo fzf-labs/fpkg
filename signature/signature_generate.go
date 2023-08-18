@@ -15,26 +15,17 @@ import (
 
 // Generate
 // path 请求的路径 (不附带 querystring)
-func (s *signature) Generate(path string, method string, params json.RawMessage) (sign string, timeStamp string, err error) {
-	if err != nil {
-		return "", "", err
-	}
+func (s *signature) Generate(path, method string, params json.RawMessage) (sign, timeStamp string, err error) {
 	if path == "" {
-		err = errors.New("path required")
-		return
+		return "", "", errors.New("path required")
 	}
-
 	if method == "" {
-		err = errors.New("method required")
-		return
+		return "", "", errors.New("method required")
 	}
-
 	methodName := strings.ToUpper(method)
 	if !methods[methodName] {
-		err = errors.New("method param error")
-		return
+		return "", "", errors.New("method param error")
 	}
-
 	// Date
 	timeStamp = strconv.FormatInt(time.Now().Unix(), 10)
 	// 加密字符串规则
@@ -46,11 +37,9 @@ func (s *signature) Generate(path string, method string, params json.RawMessage)
 	buffer.WriteString(string(params))
 	buffer.WriteString(delimiter)
 	buffer.WriteString(timeStamp)
-
 	// 对数据进行 sha256 加密，并进行 base64 encode
 	hash := hmac.New(sha256.New, []byte(s.secret))
 	hash.Write(buffer.Bytes())
 	sign = base64.StdEncoding.EncodeToString(hash.Sum(nil))
-
-	return
+	return sign, timeStamp, nil
 }

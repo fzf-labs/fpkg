@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// @Description: 单机版滑动窗口
-type slidingWindow struct {
+// SlidingWindow 单机版滑动窗口
+type SlidingWindow struct {
 	max          int           //限制值
 	slotDuration time.Duration //插槽的时间长度
 	winDuration  time.Duration //整个窗口的时间长度
@@ -15,8 +15,8 @@ type slidingWindow struct {
 	mu           sync.Mutex //锁
 }
 
-func NewSlidingWindow(max int, slotDuration time.Duration, winDuration time.Duration) *slidingWindow {
-	return &slidingWindow{
+func NewSlidingWindow(max int, slotDuration, winDuration time.Duration) *SlidingWindow {
+	return &SlidingWindow{
 		max:          max,
 		slotDuration: slotDuration,
 		winDuration:  winDuration,
@@ -24,14 +24,14 @@ func NewSlidingWindow(max int, slotDuration time.Duration, winDuration time.Dura
 	}
 }
 
-// @Description: 时间插槽
+// 时间插槽
 type slot struct {
 	begin time.Time //这个插槽的起始时间
 	count int       //计数
 }
 
 // Allow 是否允许
-func (s *slidingWindow) Allow() bool {
+func (s *SlidingWindow) Allow() bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	//1.将过期的插槽移除
@@ -70,7 +70,7 @@ func (s *slidingWindow) Allow() bool {
 }
 
 // addSlot 添加插槽
-func (s *slidingWindow) addSlot(now time.Time) {
+func (s *SlidingWindow) addSlot(now time.Time) {
 	lastSlot := &slot{
 		begin: now,
 		count: 1,
@@ -79,7 +79,7 @@ func (s *slidingWindow) addSlot(now time.Time) {
 }
 
 // count 统计总数
-func (s *slidingWindow) count() int {
+func (s *SlidingWindow) count() int {
 	var count int
 	for _, ws := range s.window {
 		count += ws.count

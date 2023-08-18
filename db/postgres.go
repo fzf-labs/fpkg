@@ -23,7 +23,7 @@ import (
 // GormPostgresClientConfig 配置
 type GormPostgresClientConfig struct {
 	DataSourceName  string        `json:"DataSourceName"`
-	MaxIdleConn     int           `json:"MaxIdleConn"`
+	MaxIDleConn     int           `json:"MaxIDleConn"`
 	MaxOpenConn     int           `json:"MaxOpenConn"`
 	ConnMaxLifeTime time.Duration `json:"ConnMaxLifeTime"`
 	ShowLog         bool          `json:"ShowLog"`
@@ -41,7 +41,7 @@ func NewGormPostgresClient(cfg *GormPostgresClientConfig) (*gorm.DB, error) {
 	// 用于设置最大打开的连接数，默认值为0表示不限制.设置最大的连接数，可以避免并发太高导致连接mysql出现too many connections的错误。
 	sqlDB.SetMaxOpenConns(cfg.MaxOpenConn)
 	// 用于设置闲置的连接数.设置闲置的连接数则当开启的一个连接使用完成后可以放在池里等候下一次使用。
-	sqlDB.SetMaxIdleConns(cfg.MaxIdleConn)
+	sqlDB.SetMaxIdleConns(cfg.MaxIDleConn)
 	// 设置连接可以重复使用的最长时间.
 	sqlDB.SetConnMaxLifetime(cfg.ConnMaxLifeTime)
 	gormConfig := gorm.Config{
@@ -69,7 +69,7 @@ func NewGormPostgresClient(cfg *GormPostgresClientConfig) (*gorm.DB, error) {
 }
 
 // DumpPostgres 导出创建语句
-func DumpPostgres(db *gorm.DB, dsn string, outPath string) {
+func DumpPostgres(db *gorm.DB, dsn, outPath string) {
 	// 查找命令的可执行文件
 	_, err := exec.LookPath("pg_dump")
 	if err != nil {

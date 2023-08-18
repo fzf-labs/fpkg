@@ -16,17 +16,17 @@ var (
 	TokenExpired       = errors.New("token is expired")
 	TokenInvalid       = errors.New("token is invalid")
 	TokenCanNotRefresh = errors.New("token can not refresh")
-	UidNotRequest      = errors.New("uid not request")
+	UIDNotRequest      = errors.New("uid not request")
 	TokenStoreErr      = errors.New("token store fail")
 	TokenGetErr        = errors.New("token get fail")
 	TokenCheckErr      = errors.New("token check fail")
 )
 
 type Config struct {
-	AccessSecret string //秘钥
-	AccessExpire int64  //过期时间
-	RefreshAfter int64  //刷新时间 (小于过期时间,大于刷新时间,而小于过期时间,则刷新)
-	Issuer       string //签发人
+	AccessSecret string // 秘钥
+	AccessExpire int64  // 过期时间
+	RefreshAfter int64  // 刷新时间 (小于过期时间,大于刷新时间,而小于过期时间,则刷新)
+	Issuer       string // 签发人
 }
 
 type Token struct {
@@ -42,17 +42,17 @@ type Jwt struct {
 
 const (
 	//jwt 官方定义
-	JwtAudience  = "aud" //受众
-	JwtId        = "jti" //编号
-	JwtIssueAt   = "iat" //签发时间
-	JwtExpired   = "exp" //过期时间
-	JwtIssuer    = "iss" //签发人
-	JwtNotBefore = "nbf" //生效时间，在此之前是无效的
-	JwtSubject   = "sub" //主题
+	JwtAudience  = "aud" // 受众
+	JwtID        = "jti" // 编号
+	JwtIssueAt   = "iat" // 签发时间
+	JwtExpired   = "exp" // 过期时间
+	JwtIssuer    = "iss" // 签发人
+	JwtNotBefore = "nbf" // 生效时间，在此之前是无效的
+	JwtSubject   = "sub" // 主题
 
 	//自定义
-	JwtRefresh = "ref" //刷新时间
-	JwtUID     = "uid" //用户标识
+	JwtRefresh = "ref" // 刷新时间
+	JwtUID     = "uid" // 用户标识
 )
 
 func NewJwt(redisClient *redis.Client, cfg *Config) *Jwt {
@@ -65,14 +65,14 @@ func NewJwt(redisClient *redis.Client, cfg *Config) *Jwt {
 // GenerateToken token 生成
 func (j *Jwt) GenerateToken(payloads map[string]interface{}) (*Token, jwts.MapClaims, error) {
 	if payloads[JwtUID] == nil {
-		return nil, nil, UidNotRequest
+		return nil, nil, UIDNotRequest
 	}
 	now := time.Now()
 	iat := now.Unix()
 	expiredAt := iat + j.Cfg.AccessExpire
 	refreshAt := iat + j.Cfg.RefreshAfter
 	claims := make(jwts.MapClaims)
-	claims[JwtId] = strconv.FormatInt(now.UnixNano(), 10)
+	claims[JwtID] = strconv.FormatInt(now.UnixNano(), 10)
 	claims[JwtIssueAt] = iat
 	claims[JwtIssuer] = j.Cfg.Issuer
 	claims[JwtNotBefore] = iat - 1000
@@ -81,7 +81,7 @@ func (j *Jwt) GenerateToken(payloads map[string]interface{}) (*Token, jwts.MapCl
 	if len(payloads) > 0 {
 		for k, v := range payloads {
 			switch k {
-			case JwtAudience, JwtExpired, JwtId, JwtIssueAt, JwtIssuer, JwtNotBefore, JwtSubject, JwtRefresh:
+			case JwtAudience, JwtExpired, JwtID, JwtIssueAt, JwtIssuer, JwtNotBefore, JwtSubject, JwtRefresh:
 				// ignore the standard claims
 			default:
 				claims[k] = v
@@ -122,8 +122,8 @@ func (j *Jwt) ParseToken(tokenString string) (jwts.MapClaims, error) {
 		return nil, errors.Wrap(TokenInvalid, "token is nil")
 	}
 	claims := token.Claims.(jwts.MapClaims)
-	if _, ok := claims[JwtId]; !ok {
-		return nil, errors.Wrap(TokenInvalid, "not set JwtId")
+	if _, ok := claims[JwtID]; !ok {
+		return nil, errors.Wrap(TokenInvalid, "not set JwtID")
 	}
 	if _, ok := claims[JwtIssueAt]; !ok {
 		return nil, errors.Wrap(TokenInvalid, "not set JwtIssueAt")
@@ -142,10 +142,9 @@ func (j *Jwt) RefreshToken(oldClaims jwts.MapClaims) (*Token, jwts.MapClaims, er
 	if len(payloads) > 0 {
 		for k := range payloads {
 			switch k {
-			case JwtAudience, JwtExpired, JwtId, JwtIssueAt, JwtIssuer, JwtNotBefore, JwtSubject, JwtRefresh:
+			case JwtAudience, JwtExpired, JwtID, JwtIssueAt, JwtIssuer, JwtNotBefore, JwtSubject, JwtRefresh:
 				delete(payloads, k)
 			default:
-
 			}
 		}
 	}
@@ -172,7 +171,7 @@ func (j *Jwt) GetPayloads(claims jwts.MapClaims) map[string]string {
 	if len(claims) > 0 {
 		for k := range claims {
 			switch k {
-			case JwtAudience, JwtExpired, JwtId, JwtIssueAt, JwtIssuer, JwtNotBefore, JwtSubject, JwtRefresh:
+			case JwtAudience, JwtExpired, JwtID, JwtIssueAt, JwtIssuer, JwtNotBefore, JwtSubject, JwtRefresh:
 
 			default:
 				kv[k] = conv.String(claims[k])
@@ -182,7 +181,7 @@ func (j *Jwt) GetPayloads(claims jwts.MapClaims) map[string]string {
 	return kv
 }
 
-func (j *Jwt) GetUid(claims jwts.MapClaims) int64 {
+func (j *Jwt) GetUID(claims jwts.MapClaims) int64 {
 	return conv.Int64(claims[JwtUID])
 }
 
@@ -191,7 +190,7 @@ type ContextWithValueKey string
 func (j *Jwt) SetPayloadToContext(ctx context.Context, claims jwts.MapClaims) context.Context {
 	for k, v := range claims {
 		switch k {
-		case JwtAudience, JwtExpired, JwtId, JwtIssueAt, JwtIssuer, JwtNotBefore, JwtSubject, JwtRefresh:
+		case JwtAudience, JwtExpired, JwtID, JwtIssueAt, JwtIssuer, JwtNotBefore, JwtSubject, JwtRefresh:
 			// ignore the standard claims
 		default:
 			ctx = context.WithValue(ctx, ContextWithValueKey(k), v)
@@ -206,13 +205,13 @@ func (j *Jwt) buildCacheKey(jwtUID string) string {
 }
 
 // 黑名单的key
-func (j *Jwt) buildBlackCacheKey(jwtUID string, jwtId string) string {
-	return "jwt_black:" + j.Cfg.Issuer + ":" + jwtUID + ":" + jwtId
+func (j *Jwt) buildBlackCacheKey(jwtUID, jwtID string) string {
+	return "jwt_black:" + j.Cfg.Issuer + ":" + jwtUID + ":" + jwtID
 }
 
 // JwtBlackTokenStore 黑名单 防止刷新和请求时出现问题
 func (j *Jwt) JwtBlackTokenStore(oldClaims jwts.MapClaims, newToken string) error {
-	cacheKey := j.buildBlackCacheKey(conv.String(oldClaims[JwtUID]), conv.String(oldClaims[JwtId]))
+	cacheKey := j.buildBlackCacheKey(conv.String(oldClaims[JwtUID]), conv.String(oldClaims[JwtID]))
 	err := j.redis.Set(context.Background(), cacheKey, newToken, time.Second*time.Duration(10)).Err()
 	if err != nil {
 		return err
@@ -222,7 +221,7 @@ func (j *Jwt) JwtBlackTokenStore(oldClaims jwts.MapClaims, newToken string) erro
 
 // JwtBlackTokenCheck Token黑名单检测  在黑名单中时 暂时允许通过
 func (j *Jwt) JwtBlackTokenCheck(oldClaims jwts.MapClaims) (bool, *Token) {
-	cacheKey := j.buildBlackCacheKey(conv.String(oldClaims[JwtUID]), conv.String(oldClaims[JwtId]))
+	cacheKey := j.buildBlackCacheKey(conv.String(oldClaims[JwtUID]), conv.String(oldClaims[JwtID]))
 	newToken, err := j.redis.Get(context.Background(), cacheKey).Result()
 	if err != nil {
 		return false, nil
@@ -234,7 +233,6 @@ func (j *Jwt) JwtBlackTokenCheck(oldClaims jwts.MapClaims) (bool, *Token) {
 	newClaims, err := j.ParseToken(newToken)
 	if err != nil {
 		return false, nil
-
 	}
 	return true, &Token{
 		Token:     newToken,
@@ -244,11 +242,11 @@ func (j *Jwt) JwtBlackTokenCheck(oldClaims jwts.MapClaims) (bool, *Token) {
 }
 
 // JwtTokenStore 要做单一登录 即保存当前jwt的编号
-func (j *Jwt) JwtTokenStore(Claims jwts.MapClaims) error {
-	cacheKey := j.buildCacheKey(conv.String(Claims[JwtUID]))
-	refreshTime := time.Unix(conv.Int64(Claims[JwtRefresh]), 0)
+func (j *Jwt) JwtTokenStore(claims jwts.MapClaims) error {
+	cacheKey := j.buildCacheKey(conv.String(claims[JwtUID]))
+	refreshTime := time.Unix(conv.Int64(claims[JwtRefresh]), 0)
 	expiresAt := time.Until(refreshTime)
-	err := j.redis.Set(context.Background(), cacheKey, conv.String(Claims[JwtId]), expiresAt).Err()
+	err := j.redis.Set(context.Background(), cacheKey, conv.String(claims[JwtID]), expiresAt).Err()
 	if err != nil {
 		return err
 	}
@@ -256,16 +254,16 @@ func (j *Jwt) JwtTokenStore(Claims jwts.MapClaims) error {
 }
 
 // JwtTokenCheck Token检测
-func (j *Jwt) JwtTokenCheck(Claims jwts.MapClaims) error {
-	cacheKey := j.buildCacheKey(conv.String(Claims[JwtUID]))
+func (j *Jwt) JwtTokenCheck(claims jwts.MapClaims) error {
+	cacheKey := j.buildCacheKey(conv.String(claims[JwtUID]))
 	result, err := j.redis.Get(context.Background(), cacheKey).Result()
 	if err != nil {
 		if err != redis.Nil {
 			return TokenGetErr
 		}
 	}
-	jwtId := conv.Int64(Claims[JwtId])
-	if result != strconv.Itoa(int(jwtId)) {
+	jwtID := conv.Int64(claims[JwtID])
+	if result != strconv.Itoa(int(jwtID)) {
 		return TokenCheckErr
 	}
 	return nil

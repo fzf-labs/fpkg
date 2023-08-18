@@ -1,3 +1,4 @@
+//nolint:all
 package avatar
 
 import (
@@ -6,8 +7,8 @@ import (
 	"time"
 )
 
-// Url 头像地址
-func Url() string {
+// URL 头像地址
+func URL() string {
 	url := fmt.Sprintf(
 		"https://avataaars.io/?clotheColor=%s&accessoriesType=%s&avatarStyle=%s&clotheType=%s&eyeType=%s&eyebrowType=%s&facialHairColor=%s&facialHairType=%s&hairColor=%s&hatColor=%s&mouthType=%s&skinColor=%s&topType=%s",
 		clotheColor(),

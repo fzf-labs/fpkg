@@ -15,6 +15,7 @@ var (
 	SYSTEM uint64 = 64
 )
 
+//nolint:gochecknoinits
 func init() {
 	for k, v := range endCode {
 		deCode[v] = k
@@ -65,13 +66,10 @@ func Base64To10(str string) (uint64, error) {
 }
 
 // 过去字符在定义好的字符数组中的位置
-func searchV(rune rune) (uint64, error) {
-
-	k, ok := deCode[rune]
+func searchV(r rune) (uint64, error) {
+	k, ok := deCode[r]
 	if !ok {
 		return 0, errors.New("character does not exist")
 	}
-
 	return uint64(k), nil
-
 }

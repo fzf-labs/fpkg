@@ -8,7 +8,7 @@ import (
 func TestNewGormPostgresClient(t *testing.T) {
 	config := GormPostgresClientConfig{
 		DataSourceName:  "host=0.0.0.0 port=5432 user=postgres password=123456 dbname=user sslmode=disable TimeZone=Asia/Shanghai",
-		MaxIdleConn:     0,
+		MaxIDleConn:     0,
 		MaxOpenConn:     0,
 		ConnMaxLifeTime: 0,
 		ShowLog:         false,
@@ -26,10 +26,10 @@ func TestDsnParse(t *testing.T) {
 	fmt.Println(parse)
 }
 
-func TestDumpSql(t *testing.T) {
+func TestDumpSQL(t *testing.T) {
 	config := GormPostgresClientConfig{
 		DataSourceName:  "host=0.0.0.0 port=5432 user=postgres password=123456 dbname=user sslmode=disable TimeZone=Asia/Shanghai",
-		MaxIdleConn:     0,
+		MaxIDleConn:     0,
 		MaxOpenConn:     0,
 		ConnMaxLifeTime: 0,
 		ShowLog:         false,

@@ -98,10 +98,13 @@ func Intersect[K comparable, V any](maps ...map[K]V) map[K]V {
 	return result
 }
 
-func HtmlJsonEncoder(data map[string]interface{}) string {
-	strJson := bytes.NewBuffer([]byte{})
-	jsonEncoder := json.NewEncoder(strJson)
+func HtmlJsonEncoder(data map[string]interface{}) (string, error) {
+	strJSON := bytes.NewBuffer([]byte{})
+	jsonEncoder := json.NewEncoder(strJSON)
 	jsonEncoder.SetEscapeHTML(false)
-	_ = jsonEncoder.Encode(data)
-	return strJson.String()
+	err := jsonEncoder.Encode(data)
+	if err != nil {
+		return "", err
+	}
+	return strJSON.String(), nil
 }

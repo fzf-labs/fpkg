@@ -95,8 +95,8 @@ func isIntranet(ipStr string) bool {
 	return false
 }
 
-// GetLocalIp 获取本机内网IP
-func GetLocalIp() string {
+// GetLocalIP 获取本机内网IP
+func GetLocalIP() string {
 	localIP := "127.0.0.1"
 	//sync.Once 是在代码运行中需要的时候执行，且只执行一次
 	var once sync.Once
@@ -113,9 +113,10 @@ type IPInfo struct {
 	Origin string `json:"origin"`
 }
 
-// GetPublicIPByHttp 获取公网ip
-func GetPublicIPByHttp() (string, error) {
-	resp, err := http.Get("http://httpbin.org/ip")
+// GetPublicIPByHTTP 获取公网ip
+func GetPublicIPByHTTP() (string, error) {
+	url := "http://httpbin.org/ip"
+	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
 	}
@@ -158,7 +159,7 @@ func GetRealIP(ctx *http.Request) (ip string) {
 			return ip
 		}
 	}
-	if ip = ctx.Header.Get("X-Real-Ip"); ip != "" {
+	if ip = ctx.Header.Get("X-Real-IP"); ip != "" {
 		index = strings.IndexByte(ip, ',')
 		if index < 0 {
 			return ip
@@ -213,7 +214,7 @@ func GetRealIPFilterLocal(r *http.Request) string {
 			return ip
 		}
 	}
-	ip = strings.TrimSpace(r.Header.Get("X-Real-Ip"))
+	ip = strings.TrimSpace(r.Header.Get("X-Real-IP"))
 	if ip != "" && !HasLocalIPAddr(ip) {
 		return ip
 	}

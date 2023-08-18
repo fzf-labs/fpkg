@@ -51,7 +51,7 @@ func TestRollingCounterReduce(t *testing.T) {
 		BucketDuration: bucketDuration,
 	}
 	r := NewRollingCounter(opts)
-	for x := 0; x < size; x = x + 1 {
+	for x := 0; x < size; x++ {
 		for i := 0; i <= x; i++ {
 			r.Add(1)
 		}

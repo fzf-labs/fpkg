@@ -47,19 +47,17 @@ func (g *flightGroup) DoEx(key string, fn func() (any, error)) (val any, fresh b
 	return c.val, true, c.err
 }
 
-func (g *flightGroup) createCall(key string) (c *call, done bool) {
+func (g *flightGroup) createCall(key string) (*call, bool) {
 	g.lock.Lock()
 	if c, ok := g.calls[key]; ok {
 		g.lock.Unlock()
 		c.wg.Wait()
 		return c, true
 	}
-
-	c = new(call)
+	c := new(call)
 	c.wg.Add(1)
 	g.calls[key] = c
 	g.lock.Unlock()
-
 	return c, false
 }
 

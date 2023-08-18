@@ -14,7 +14,7 @@ type Website struct {
 	WebsiteDomain string `json:"website_domain"`
 }
 
-func NewWebsite(websiteURL string, websiteName string, websiteDomain string) *Website {
+func NewWebsite(websiteURL, websiteName, websiteDomain string) *Website {
 	return &Website{WebsiteURL: websiteURL, WebsiteName: websiteName, WebsiteDomain: websiteDomain}
 }
 
@@ -29,7 +29,7 @@ type ActiveUserMailData struct {
 }
 
 // ActivationHTMLEmail 发送激活邮件 html
-func (w *Website) ActivationHTMLEmail(username, activateURL string) (subject string, body string) {
+func (w *Website) ActivationHTMLEmail(username, activateURL string) (subject, body string) {
 	mailData := ActiveUserMailData{
 		UserName:      username,
 		WebsiteURL:    w.WebsiteURL,
@@ -56,7 +56,7 @@ type VerificationCodeData struct {
 }
 
 // VerificationCode 邮件验证码
-func (w *Website) VerificationCode(code string, greeting string, intro string, outro string) (subject string, body string) {
+func (w *Website) VerificationCode(code, greeting, intro, outro string) (subject, body string) {
 	mailData := &VerificationCodeData{
 		WebsiteURL:    w.WebsiteURL,
 		WebsiteName:   w.WebsiteName,
@@ -82,7 +82,7 @@ type ResetPasswordMailData struct {
 }
 
 // ResetPasswordHTMLEmail 发送重置密码邮件
-func (w *Website) ResetPasswordHTMLEmail(username, resetURL string) (subject string, body string) {
+func (w *Website) ResetPasswordHTMLEmail(username, resetURL string) (subject, body string) {
 	mailData := ResetPasswordMailData{
 		WebsiteURL:    w.WebsiteURL,
 		WebsiteName:   w.WebsiteName,
@@ -107,7 +107,7 @@ type NotifyMailData struct {
 	Year          int    `json:"year"`
 }
 
-func (w *Website) NotifyMailData(jumpURL string, greeting string, intro string, outro string) (subject string, body string) {
+func (w *Website) NotifyMailData(jumpURL, greeting, intro, outro string) (subject, body string) {
 	mailData := &NotifyMailData{
 		WebsiteURL:    w.WebsiteURL,
 		WebsiteName:   w.WebsiteName,

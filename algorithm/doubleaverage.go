@@ -21,12 +21,11 @@ func DoubleAverage(amount float64, num int) []float64 {
 		if remainNum == 1 {
 			result[i] = float64(remainAmount) / 100.0
 		} else {
-			max := remainAmount / remainNum * 2
-			money := 1 + rand.New(rand.NewSource(time.Now().UnixNano())).Intn(max-1)
-			remainAmount = remainAmount - money
+			m := remainAmount / remainNum * 2
+			money := 1 + rand.New(rand.NewSource(time.Now().UnixNano())).Intn(m-1)
+			remainAmount -= money
 			result[i] = float64(money) / 100.0
 		}
-
 	}
 	return result
 }

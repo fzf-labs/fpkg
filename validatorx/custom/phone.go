@@ -19,7 +19,6 @@ func (p *Phone) Tag() string {
 
 func (p *Phone) ZhTranslation() string {
 	return "{0} 错误的手机格式"
-
 }
 
 func (p *Phone) EnTranslation() string {

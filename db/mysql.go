@@ -23,7 +23,7 @@ import (
 // GormMysqlClientConfig 配置
 type GormMysqlClientConfig struct {
 	DataSourceName  string        `json:"DataSourceName"`
-	MaxIdleConn     int           `json:"MaxIdleConn"`
+	MaxIDleConn     int           `json:"MaxIDleConn"`
 	MaxOpenConn     int           `json:"MaxOpenConn"`
 	ConnMaxLifeTime time.Duration `json:"ConnMaxLifeTime"`
 	ShowLog         bool          `json:"ShowLog"`
@@ -41,7 +41,7 @@ func NewGormMysqlClient(cfg *GormMysqlClientConfig) (*gorm.DB, error) {
 	// 用于设置最大打开的连接数，默认值为0表示不限制.设置最大的连接数，可以避免并发太高导致连接mysql出现too many connections的错误。
 	sqlDB.SetMaxOpenConns(cfg.MaxOpenConn)
 	// 用于设置闲置的连接数.设置闲置的连接数则当开启的一个连接使用完成后可以放在池里等候下一次使用。
-	sqlDB.SetMaxIdleConns(cfg.MaxIdleConn)
+	sqlDB.SetMaxIdleConns(cfg.MaxIDleConn)
 	// 设置连接可以重复使用的最长时间.
 	sqlDB.SetConnMaxLifetime(cfg.ConnMaxLifeTime)
 	gormConfig := gorm.Config{
@@ -68,8 +68,8 @@ func NewGormMysqlClient(cfg *GormMysqlClientConfig) (*gorm.DB, error) {
 	return db, nil
 }
 
-// DumpMySql 导出创建语句
-func DumpMySql(db *gorm.DB, outPath string) {
+// DumpMySQL 导出创建语句
+func DumpMySQL(db *gorm.DB, outPath string) {
 	tables, err := db.Migrator().GetTables()
 	if err != nil {
 		return
@@ -77,21 +77,21 @@ func DumpMySql(db *gorm.DB, outPath string) {
 	outPath = filepath.Join(strings.Trim(outPath, "/"), db.Migrator().CurrentDatabase())
 	err = os.MkdirAll(outPath, os.ModePerm)
 	if err != nil {
-		slog.Error("DumpMySql create path err:", err)
+		slog.Error("DumpMySQL create path err:", err)
 		return
 	}
 	for _, v := range tables {
 		result := make(map[string]interface{})
 		err := db.Raw(fmt.Sprintf("SHOW CREATE TABLE `%s`.`%s`", db.Migrator().CurrentDatabase(), v)).Scan(result).Error
 		if err != nil {
-			slog.Error("DumpMySql sql err:", err)
+			slog.Error("DumpMySQL sql err:", err)
 			return
 		}
 		tableContent := conv.String(result["Create Table"])
 		if tableContent != "" {
 			err := fileutil.WriteContentCover(filepath.Join(outPath, fmt.Sprintf("%s.sql", v)), tableContent)
 			if err != nil {
-				slog.Error("DumpMySql file write err:", err)
+				slog.Error("DumpMySQL file write err:", err)
 				return
 			}
 		}

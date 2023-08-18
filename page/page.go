@@ -14,9 +14,8 @@ type Page struct {
 }
 
 func Paginator(page, pageSize, total int) *Page {
-
-	//根据nums总数，和prePage每页数量 生成分页总数
-	totalPage := int(math.Ceil(float64(total) / float64(pageSize))) //page总数
+	// 根据nums总数，和prePage每页数量 生成分页总数
+	totalPage := int(math.Ceil(float64(total) / float64(pageSize))) // page总数
 	if page > totalPage {
 		page = totalPage
 	}

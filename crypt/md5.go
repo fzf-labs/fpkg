@@ -1,3 +1,4 @@
+//nolint:all
 package crypt
 
 import (
@@ -25,7 +26,7 @@ func Md5(s any) (string, error) {
 		return "", err
 	}
 	h := md5.New()
-	h.Write([]byte(marshal))
+	h.Write(marshal)
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 

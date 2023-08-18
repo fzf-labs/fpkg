@@ -21,6 +21,7 @@ var (
 	decoder = form.NewDecoder()
 )
 
+//nolint:gochecknoinits
 func init() {
 	decoder.SetTagName("json")
 	encoder.SetTagName("json")

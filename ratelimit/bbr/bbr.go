@@ -23,6 +23,7 @@ type (
 	Option func(*options)
 )
 
+//nolint:gochecknoinits
 func init() {
 	go cpuproc()
 }
@@ -251,7 +252,7 @@ func (l *BBR) shouldDrop() bool {
 			// accept current request
 			return false
 		}
-		if time.Duration(now-prevDropTime) <= time.Second {
+		if now-prevDropTime <= time.Second {
 			// just start drop one second ago,
 			// check current inflight count
 			inFlight := atomic.LoadInt64(&l.inFlight)
@@ -310,7 +311,7 @@ func (l *BBR) Allow() (DoneFunc, error) {
 	start := time.Now().UnixNano()
 	ms := float64(time.Millisecond)
 	return func(DoneInfo) {
-		//nolint
+		//nolint:all
 		rt := int64(math.Ceil(float64(time.Now().UnixNano()-start)) / ms)
 		l.rtStat.Add(rt)
 		atomic.AddInt64(&l.inFlight, -1)

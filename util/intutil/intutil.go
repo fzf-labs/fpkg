@@ -32,6 +32,6 @@ func RandInt64(min, max int64) int64 {
 }
 
 // RandomIntWithSeed 在 [min, max) 处返回一个随机整数
-func RandomIntWithSeed(min, max int, seed int64) int {
+func RandomIntWithSeed(min, max int) int {
 	return min + rand.New(rand.NewSource(time.Now().UnixNano())).Intn(max-min)
 }

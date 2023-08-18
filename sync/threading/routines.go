@@ -17,8 +17,8 @@ func GoSafeCtx(ctx context.Context, fn func()) {
 	go RunSafeCtx(ctx, fn)
 }
 
-// RoutineId is only for debug, never use it in production.
-func RoutineId() uint64 {
+// RoutineID is only for debug, never use it in production.
+func RoutineID() uint64 {
 	b := make([]byte, 64)
 	b = b[:runtime.Stack(b, false)]
 	b = bytes.TrimPrefix(b, []byte("goroutine "))

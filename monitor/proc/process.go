@@ -10,6 +10,7 @@ var (
 	pid      int
 )
 
+//nolint:gochecknoinits
 func init() {
 	procName = filepath.Base(os.Args[0])
 	pid = os.Getpid()

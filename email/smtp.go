@@ -21,15 +21,15 @@ type SMTPConfig struct {
 
 // SMTP 协议协议发送
 type SMTP struct {
-	Config SMTPConfig
+	Config *SMTPConfig
 	ch     chan *mail.Message
 	chOpen bool
 }
 
 // NewSMTPClient 实例化一个SMTP客户端
-func NewSMTPClient(config SMTPConfig) *SMTP {
+func NewSMTPClient(smtpConfig *SMTPConfig) *SMTP {
 	client := &SMTP{
-		Config: config,
+		Config: smtpConfig,
 		ch:     make(chan *mail.Message, 30),
 		chOpen: false,
 	}

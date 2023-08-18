@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func UrlEncodeByMap(m map[string]string) string {
+func URLEncodeByMap(m map[string]string) string {
 	if len(m) == 0 {
 		return ""
 	}
@@ -20,7 +20,7 @@ func UrlEncodeByMap(m map[string]string) string {
 	return unescape
 }
 
-func UrlDecodeToMap(str string) map[string]string {
+func URLDecodeToMap(str string) map[string]string {
 	values, err := url.ParseQuery(str)
 	if err != nil {
 		return nil
@@ -32,16 +32,16 @@ func UrlDecodeToMap(str string) map[string]string {
 	return m
 }
 
-// UrlEncode 编码 url 字符串。
-func UrlEncode(s string) string {
+// URLEncode 编码 url 字符串。
+func URLEncode(s string) string {
 	if pos := strings.IndexRune(s, '?'); pos > -1 { // escape query data
 		return s[0:pos+1] + url.QueryEscape(s[pos+1:])
 	}
 	return s
 }
 
-// UrlDecode 解码 url 字符串。
-func UrlDecode(s string) string {
+// URLDecode 解码 url 字符串。
+func URLDecode(s string) string {
 	if pos := strings.IndexRune(s, '?'); pos > -1 { // un-escape query data
 		qy, err := url.QueryUnescape(s[pos+1:])
 		if err == nil {
@@ -51,9 +51,9 @@ func UrlDecode(s string) string {
 	return s
 }
 
-func RawUrlEncode(str string) string {
-	return strings.Replace(url.QueryEscape(str), "+", "%20", -1)
+func RawURLEncode(str string) string {
+	return strings.ReplaceAll(url.QueryEscape(str), "+", "%20")
 }
-func RawUrlDecode(str string) (string, error) {
-	return url.QueryUnescape(strings.Replace(str, "%20", "+", -1))
+func RawURLDecode(str string) (string, error) {
+	return url.QueryUnescape(strings.ReplaceAll(str, "%20", "+"))
 }

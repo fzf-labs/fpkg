@@ -28,10 +28,10 @@ var methods = map[string]bool{
 type Signature interface {
 	i()
 	// Generate 生成签名
-	Generate(path string, method string, params json.RawMessage) (sign string, timeStamp string, err error)
+	Generate(path, method string, params json.RawMessage) (sign string, timeStamp string, err error)
 
 	// Verify 验证签名
-	Verify(path string, method string, params json.RawMessage, sign string, timeStamp string) (err error)
+	Verify(sign, timeStamp, path, method string, params json.RawMessage) (err error)
 }
 
 type signature struct {

@@ -9,6 +9,6 @@ func TestGetPublicIP(t *testing.T) {
 	fmt.Println(GetPublicIP())
 }
 
-func TestGetPublicIPByHttp(t *testing.T) {
-	fmt.Println(GetPublicIPByHttp())
+func TestGetPublicIPByHTTP(t *testing.T) {
+	fmt.Println(GetPublicIPByHTTP())
 }

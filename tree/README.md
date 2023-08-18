@@ -4,7 +4,7 @@
 package tree
 
 type Tree struct {
-	Id    int         `json:"id"`
+	ID    int         `json:"id"`
 	Pid   int         `json:"pid"`
 	Data  interface{} `json:"data"`
 	Child []Tree      `json:"child"`
@@ -17,7 +17,7 @@ func (t Trees) Len() int {
 }
 
 func (t Trees) Less(i, j int) bool {
-	return t[i].Id < t[j].Id
+	return t[i].ID < t[j].ID
 }
 
 func (t Trees) Swap(i, j int) {
@@ -38,7 +38,7 @@ func GenerateTree(list []Tree) []Tree {
 
 	for _, v := range roots {
 		childTree := &Tree{
-			Id:    v.Id,
+			ID:    v.ID,
 			Pid:   v.Pid,
 			Data:  v.Data,
 			Child: make([]Tree, 0),
@@ -55,7 +55,7 @@ func GenerateRootTree(list []Tree, id int) Tree {
 	var tree Tree
 	trees := GenerateTree(list)
 	for _, v := range trees {
-		if v.Id == id {
+		if v.ID == id {
 			tree = v
 			break
 		}
@@ -69,9 +69,9 @@ func recursiveTree(tree *Tree, allNodes []Tree) {
 			// If the current node is the top-level root node, skip
 			continue
 		}
-		if tree.Id == v.Pid {
+		if tree.ID == v.Pid {
 			childTree := &Tree{
-				Id:    v.Id,
+				ID:    v.ID,
 				Pid:   v.Pid,
 				Data:  v.Data,
 				Child: make([]Tree, 0),
@@ -85,7 +85,7 @@ func recursiveTree(tree *Tree, allNodes []Tree) {
 // FindSubNode 查询子级
 func FindSubNode(node *Tree, allNodes []Tree) {
 	for _, v := range allNodes {
-		if node.Id == v.Pid {
+		if node.ID == v.Pid {
 			FindSubNode(&v, allNodes)
 			node.Child = append(node.Child, v)
 		}
@@ -96,7 +96,7 @@ func FindSubNode(node *Tree, allNodes []Tree) {
 func FindParentNode(node *Tree, allNodes []Tree) {
 	for _, v := range allNodes {
 		temp := v
-		if node.Pid == temp.Id {
+		if node.Pid == temp.ID {
 			temp.Child = append(temp.Child, *node)
 			*node = temp
 			FindParentNode(node, allNodes)

@@ -127,26 +127,21 @@ func (c *Client) SendMessage(messageType int, message interface{}) error {
 
 func (c *Client) run() {
 	defer c.Disconnect()
-
 	buf := make([]byte, 102400)
-
 	var err error
 	var readLen int
-
 	for {
 		if readLen, err = c.conn.Read(buf); err != nil {
 			slog.Error("[tcp] read message error: %v", err)
 			return
 		}
-
 		if c.rawMessageHandler != nil {
-			if err := c.rawMessageHandler(buf[:readLen]); err != nil {
+			if err = c.rawMessageHandler(buf[:readLen]); err != nil {
 				slog.Error("[tcp] raw data handler exception: %s", err)
 				continue
 			}
 			continue
 		}
-
 		if err = c.messageHandler(buf[:readLen]); err != nil {
 			slog.Error("[tcp] process message error: %v", err)
 		}

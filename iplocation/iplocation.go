@@ -9,13 +9,13 @@ import (
 
 var oo once.Once
 
-var il IpLocation
+var il IPLocation
 
-type IpLocation struct {
+type IPLocation struct {
 	searcher *xdb.Searcher
 }
 
-func NewIpLocation(dbPath string) (*IpLocation, error) {
+func NewIPLocation(dbPath string) (*IPLocation, error) {
 	err := oo.Do(func() error {
 		// 1、从 dbPath 加载整个 xdb 到内存
 		cBuff, err := xdb.LoadContentFromFile(dbPath)
@@ -40,7 +40,7 @@ func NewIpLocation(dbPath string) (*IpLocation, error) {
 }
 
 // SearchLocation 查询单个ip的归属地
-func (i *IpLocation) SearchLocation(ip string) (string, error) {
+func (i *IPLocation) SearchLocation(ip string) (string, error) {
 	str, err := i.searcher.SearchByStr(ip)
 	if err != nil {
 		return "", err
@@ -49,7 +49,7 @@ func (i *IpLocation) SearchLocation(ip string) (string, error) {
 }
 
 // SearchBatchLocation 查询多个ip的归属地
-func (i *IpLocation) SearchBatchLocation(ips []string) (map[string]string, error) {
+func (i *IPLocation) SearchBatchLocation(ips []string) (map[string]string, error) {
 	items := make(map[string]string)
 	for _, ip := range ips {
 		str, err := i.searcher.SearchByStr(ip)

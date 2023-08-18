@@ -168,7 +168,7 @@ func Difference[T comparable](slice, comparedSlice []T) []T {
 // DifferenceBy 差集
 // slice和comparedSlice先执行iteratee函数
 // 比较在slice中而不在mappedSlice中
-func DifferenceBy[T comparable](slice []T, comparedSlice []T, iteratee func(index int, item T) T) []T {
+func DifferenceBy[T comparable](slice, comparedSlice []T, iteratee func(index int, item T) T) []T {
 	originSliceAfterMap := Map(slice, iteratee)
 	comparedSliceAfterMap := Map(comparedSlice, iteratee)
 
@@ -183,7 +183,7 @@ func DifferenceBy[T comparable](slice []T, comparedSlice []T, iteratee func(inde
 }
 
 // DifferenceWith accepts comparator which is invoked to compare elements of slice to values. The order and references of result values are determined by the first slice. The comparator is invoked with two arguments: (arrVal, othVal).
-func DifferenceWith[T any](slice []T, comparedSlice []T, comparator func(value, otherValue T) bool) []T {
+func DifferenceWith[T any](slice, comparedSlice []T, comparator func(value, otherValue T) bool) []T {
 	result := make([]T, 0)
 
 	getIndex := func(arr []T, item T, comparison func(v1, v2 T) bool) int {
@@ -320,18 +320,15 @@ func Count[T any](slice []T, predicate func(index int, item T) bool) int {
 }
 
 // GroupBy 遍历切片的元素，每个元素将按条件分组，返回两个切片
-func GroupBy[T any](slice []T, groupFn func(index int, item T) bool) ([]T, []T) {
+func GroupBy[T any](slice []T, groupFn func(index int, item T) bool) (groupA, groupB []T) {
 	if groupFn == nil {
 		panic("groupFn func is missing")
 	}
-
+	groupA = make([]T, 0)
+	groupB = make([]T, 0)
 	if len(slice) == 0 {
-		return make([]T, 0), make([]T, 0)
+		return groupA, groupB
 	}
-
-	groupB := make([]T, 0)
-	groupA := make([]T, 0)
-
 	for i, v := range slice {
 		ok := groupFn(i, v)
 		if ok {
@@ -340,7 +337,6 @@ func GroupBy[T any](slice []T, groupFn func(index int, item T) bool) ([]T, []T) 
 			groupB = append(groupB, v)
 		}
 	}
-
 	return groupA, groupB
 }
 
@@ -449,7 +445,7 @@ func FlattenDeep(slice any) any {
 	return result.Interface()
 }
 
-func flattenRecursive(value reflect.Value, result reflect.Value) reflect.Value {
+func flattenRecursive(value, result reflect.Value) reflect.Value {
 	for i := 0; i < value.Len(); i++ {
 		item := value.Index(i)
 		kind := item.Kind()
@@ -773,9 +769,7 @@ func SymmetricDifference[T comparable](slices ...[]T) []T {
 				result = append(result, v)
 			}
 		}
-
 	}
-
 	return Unique(result)
 }
 
@@ -854,36 +848,36 @@ func SortByField(slice any, field string, sortType ...string) error {
 	if !ok {
 		return fmt.Errorf("field name %s not found", field)
 	}
-
+	var desc = "desc"
 	// Create a less function based on the field's kind.
 	var compare func(a, b reflect.Value) bool
 	switch sf.Type.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		if len(sortType) > 0 && sortType[0] == "desc" {
+		if len(sortType) > 0 && sortType[0] == desc {
 			compare = func(a, b reflect.Value) bool { return a.Int() > b.Int() }
 		} else {
 			compare = func(a, b reflect.Value) bool { return a.Int() < b.Int() }
 		}
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		if len(sortType) > 0 && sortType[0] == "desc" {
+		if len(sortType) > 0 && sortType[0] == desc {
 			compare = func(a, b reflect.Value) bool { return a.Uint() > b.Uint() }
 		} else {
 			compare = func(a, b reflect.Value) bool { return a.Uint() < b.Uint() }
 		}
 	case reflect.Float32, reflect.Float64:
-		if len(sortType) > 0 && sortType[0] == "desc" {
+		if len(sortType) > 0 && sortType[0] == desc {
 			compare = func(a, b reflect.Value) bool { return a.Float() > b.Float() }
 		} else {
 			compare = func(a, b reflect.Value) bool { return a.Float() < b.Float() }
 		}
 	case reflect.String:
-		if len(sortType) > 0 && sortType[0] == "desc" {
+		if len(sortType) > 0 && sortType[0] == desc {
 			compare = func(a, b reflect.Value) bool { return a.String() > b.String() }
 		} else {
 			compare = func(a, b reflect.Value) bool { return a.String() < b.String() }
 		}
 	case reflect.Bool:
-		if len(sortType) > 0 && sortType[0] == "desc" {
+		if len(sortType) > 0 && sortType[0] == desc {
 			compare = func(a, b reflect.Value) bool { return a.Bool() && !b.Bool() }
 		} else {
 			compare = func(a, b reflect.Value) bool { return !a.Bool() && b.Bool() }
@@ -1099,7 +1093,6 @@ func NilSliceToEmptySlice(inter interface{}) interface{} {
 
 				newSlice = reflect.Append(newSlice, newItem)
 			}
-
 		}
 		return newSlice.Interface()
 	case reflect.Struct:

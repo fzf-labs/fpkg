@@ -21,7 +21,6 @@ func BeEncode(values ...interface{}) []byte {
 		if values[i] == nil {
 			return buf.Bytes()
 		}
-
 		switch value := values[i].(type) {
 		case int:
 			buf.Write(BeEncodeInt(value))

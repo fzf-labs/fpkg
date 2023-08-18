@@ -39,7 +39,7 @@ func NAnd[T, U any](a T, b U) bool {
 }
 
 // TernaryOperator 检查参数“isTrue”的值，如果为真则返回ifValue否则返回elseValue。
-func TernaryOperator[T, U any](isTrue T, ifValue U, elseValue U) U {
+func TernaryOperator[T, U any](isTrue T, ifValue, elseValue U) U {
 	if conv.Bool(isTrue) {
 		return ifValue
 	} else {

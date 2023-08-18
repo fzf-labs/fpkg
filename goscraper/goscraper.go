@@ -2,6 +2,7 @@ package goscraper
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -19,8 +20,8 @@ var (
 )
 
 type Scraper struct {
-	Url                *url.URL
-	EscapedFragmentUrl *url.URL
+	URL                *url.URL
+	EscapedFragmentURL *url.URL
 	MaxRedirect        int
 }
 
@@ -43,7 +44,7 @@ func Scrape(uri string, maxRedirect int) (*Document, error) {
 	if err != nil {
 		return nil, err
 	}
-	return (&Scraper{Url: u, MaxRedirect: maxRedirect}).Scrape()
+	return (&Scraper{URL: u, MaxRedirect: maxRedirect}).Scrape()
 }
 
 func (scraper *Scraper) Scrape() (*Document, error) {
@@ -58,15 +59,15 @@ func (scraper *Scraper) Scrape() (*Document, error) {
 	return doc, nil
 }
 
-func (scraper *Scraper) getUrl() string {
-	if scraper.EscapedFragmentUrl != nil {
-		return scraper.EscapedFragmentUrl.String()
+func (scraper *Scraper) getURL() string {
+	if scraper.EscapedFragmentURL != nil {
+		return scraper.EscapedFragmentURL.String()
 	}
-	return scraper.Url.String()
+	return scraper.URL.String()
 }
 
-func (scraper *Scraper) toFragmentUrl() error {
-	unescapedurl, err := url.QueryUnescape(scraper.Url.String())
+func (scraper *Scraper) toFragmentURL() error {
+	unescapedurl, err := url.QueryUnescape(scraper.URL.String())
 	if err != nil {
 		return err
 	}
@@ -86,41 +87,41 @@ func (scraper *Scraper) toFragmentUrl() error {
 		}
 
 		p := "?"
-		if len(scraper.Url.Query()) > 0 {
+		if len(scraper.URL.Query()) > 0 {
 			p = "&"
 		}
-		fragmentUrl, err := url.Parse(strings.Replace(unescapedurl, matches[0], p+escapedFragment, 1))
+		fragmentURL, err := url.Parse(strings.Replace(unescapedurl, matches[0], p+escapedFragment, 1))
 		if err != nil {
 			return err
 		}
-		scraper.EscapedFragmentUrl = fragmentUrl
+		scraper.EscapedFragmentURL = fragmentURL
 	} else {
 		p := "?"
-		if len(scraper.Url.Query()) > 0 {
+		if len(scraper.URL.Query()) > 0 {
 			p = "&"
 		}
-		fragmentUrl, err := url.Parse(unescapedurl + p + EscapedFragment)
+		fragmentURL, err := url.Parse(unescapedurl + p + EscapedFragment)
 		if err != nil {
 			return err
 		}
-		scraper.EscapedFragmentUrl = fragmentUrl
+		scraper.EscapedFragmentURL = fragmentURL
 	}
 	return nil
 }
 
 func (scraper *Scraper) getDocument() (*Document, error) {
 	scraper.MaxRedirect -= 1
-	if strings.Contains(scraper.Url.String(), "#!") {
-		err := scraper.toFragmentUrl()
+	if strings.Contains(scraper.URL.String(), "#!") {
+		err := scraper.toFragmentURL()
 		if err != nil {
 			return nil, err
 		}
 	}
-	if strings.Contains(scraper.Url.String(), EscapedFragment) {
-		scraper.EscapedFragmentUrl = scraper.Url
+	if strings.Contains(scraper.URL.String(), EscapedFragment) {
+		scraper.EscapedFragmentURL = scraper.URL
 	}
 
-	req, err := http.NewRequest("GET", scraper.getUrl(), nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, scraper.getURL(), http.NoBody)
 	if err != nil {
 		return nil, err
 	}
@@ -134,15 +135,15 @@ func (scraper *Scraper) getDocument() (*Document, error) {
 		return nil, err
 	}
 
-	if resp.Request.URL.String() != scraper.getUrl() {
-		scraper.EscapedFragmentUrl = nil
-		scraper.Url = resp.Request.URL
+	if resp.Request.URL.String() != scraper.getURL() {
+		scraper.EscapedFragmentURL = nil
+		scraper.URL = resp.Request.URL
 	}
 	b, err := convertUTF8(resp.Body, resp.Header.Get("content-type"))
 	if err != nil {
 		return nil, err
 	}
-	doc := &Document{Body: b, Preview: DocumentPreview{Link: scraper.Url.String()}}
+	doc := &Document{Body: b, Preview: DocumentPreview{Link: scraper.URL.String()}}
 
 	return doc, nil
 }
@@ -166,14 +167,14 @@ func (scraper *Scraper) parseDocument(doc *Document) error {
 	var headPassed bool
 	var hasFragment bool
 	var hasCanonical bool
-	var canonicalUrl *url.URL
+	var canonicalURL *url.URL
 	doc.Preview.Images = []string{}
 	// saves previews' link in case that <link rel="canonical"> is found after <meta property="og:url">
 	link := doc.Preview.Link
 	// set default value to site name if <meta property="og:site_name"> not found
-	doc.Preview.Name = scraper.Url.Host
+	doc.Preview.Name = scraper.URL.Host
 	// set default icon to web root if <link rel="icon" href="/favicon.ico"> not found
-	doc.Preview.Icon = fmt.Sprintf("%s://%s%s", scraper.Url.Scheme, scraper.Url.Host, "/favicon.ico")
+	doc.Preview.Icon = fmt.Sprintf("%s://%s%s", scraper.URL.Scheme, scraper.URL.Host, "/favicon.ico")
 	for {
 		tokenType := t.Next()
 		if tokenType == html.ErrorToken {
@@ -209,7 +210,7 @@ func (scraper *Scraper) parseDocument(doc *Document) error {
 				if len(href) > 0 && canonical && link != href {
 					hasCanonical = true
 					var err error
-					canonicalUrl, err = url.Parse(href)
+					canonicalURL, err = url.Parse(href)
 					if err != nil {
 						return err
 					}
@@ -223,7 +224,7 @@ func (scraper *Scraper) parseDocument(doc *Document) error {
 			if len(token.Attr) != 2 {
 				break
 			}
-			if metaFragment(token) && scraper.EscapedFragmentUrl == nil {
+			if metaFragment(token) && scraper.EscapedFragmentURL == nil {
 				hasFragment = true
 			}
 			var property string
@@ -244,64 +245,59 @@ func (scraper *Scraper) parseDocument(doc *Document) error {
 			case "og:description":
 				doc.Preview.Description = content
 			case "description":
-				if len(doc.Preview.Description) == 0 {
+				if doc.Preview.Description == "" {
 					doc.Preview.Description = content
 				}
 			case "og:url":
 				doc.Preview.Link = content
 			case "og:image":
 				ogImage = true
-				ogImgUrl, err := url.Parse(content)
+				ogImgURL, err := url.Parse(content)
 				if err != nil {
 					return err
 				}
-				if !ogImgUrl.IsAbs() {
-					ogImgUrl, err = url.Parse(fmt.Sprintf("%s://%s%s", scraper.Url.Scheme, scraper.Url.Host, ogImgUrl.Path))
+				if !ogImgURL.IsAbs() {
+					ogImgURL, err = url.Parse(fmt.Sprintf("%s://%s%s", scraper.URL.Scheme, scraper.URL.Host, ogImgURL.Path))
 					if err != nil {
 						return err
 					}
 				}
 
-				doc.Preview.Images = []string{ogImgUrl.String()}
-
+				doc.Preview.Images = []string{ogImgURL.String()}
 			}
-
 		case "title":
 			if tokenType == html.StartTagToken {
 				t.Next()
 				token = t.Token()
-				if len(doc.Preview.Title) == 0 {
+				if doc.Preview.Title == "" {
 					doc.Preview.Title = token.Data
 				}
 			}
-
 		case "img":
 			for _, attr := range token.Attr {
 				if cleanStr(attr.Key) == "src" {
-					imgUrl, err := url.Parse(attr.Val)
+					imgURL, err := url.Parse(attr.Val)
 					if err != nil {
 						return err
 					}
-					if !imgUrl.IsAbs() {
-						doc.Preview.Images = append(doc.Preview.Images, fmt.Sprintf("%s://%s%s", scraper.Url.Scheme, scraper.Url.Host, imgUrl.Path))
+					if !imgURL.IsAbs() {
+						doc.Preview.Images = append(doc.Preview.Images, fmt.Sprintf("%s://%s%s", scraper.URL.Scheme, scraper.URL.Host, imgURL.Path))
 					} else {
 						doc.Preview.Images = append(doc.Preview.Images, attr.Val)
 					}
-
 				}
 			}
 		}
-
 		if hasCanonical && headPassed && scraper.MaxRedirect > 0 {
-			if !canonicalUrl.IsAbs() {
-				absCanonical, err := url.Parse(fmt.Sprintf("%s://%s%s", scraper.Url.Scheme, scraper.Url.Host, canonicalUrl.Path))
+			if !canonicalURL.IsAbs() {
+				absCanonical, err := url.Parse(fmt.Sprintf("%s://%s%s", scraper.URL.Scheme, scraper.URL.Host, canonicalURL.Path))
 				if err != nil {
 					return err
 				}
-				canonicalUrl = absCanonical
+				canonicalURL = absCanonical
 			}
-			scraper.Url = canonicalUrl
-			scraper.EscapedFragmentUrl = nil
+			scraper.URL = canonicalURL
+			scraper.EscapedFragmentURL = nil
 			fdoc, err := scraper.getDocument()
 			if err != nil {
 				return err
@@ -309,9 +305,8 @@ func (scraper *Scraper) parseDocument(doc *Document) error {
 			*doc = *fdoc
 			return scraper.parseDocument(doc)
 		}
-
 		if hasFragment && headPassed && scraper.MaxRedirect > 0 {
-			err := scraper.toFragmentUrl()
+			err := scraper.toFragmentURL()
 			if err != nil {
 				return err
 			}
@@ -322,11 +317,9 @@ func (scraper *Scraper) parseDocument(doc *Document) error {
 			*doc = *fdoc
 			return scraper.parseDocument(doc)
 		}
-
 		if len(doc.Preview.Title) > 0 && len(doc.Preview.Description) > 0 && ogImage && headPassed {
 			return nil
 		}
-
 	}
 }
 

@@ -95,7 +95,6 @@ func (e *ErrorX) Format(s fmt.State, verb rune) {
 // GoString to GO string, contains stack information.
 // printing an error with %#v will produce useful information.
 func (e *ErrorX) GoString() string {
-	// var sb strings.Builder
 	var buf bytes.Buffer
 	_, _ = e.WriteTo(&buf)
 	return buf.String()

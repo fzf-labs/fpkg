@@ -46,8 +46,8 @@ func NewGoRedis(cfg GoRedisConfig) (*redis.Client, error) {
 }
 
 // RedisInfo Redis服务信息
-func RedisInfo(redis *redis.Client, sections ...string) (res map[string]string) {
-	infoStr, err := redis.Info(context.Background(), sections...).Result()
+func RedisInfo(r *redis.Client, sections ...string) (res map[string]string) {
+	infoStr, err := r.Info(context.Background(), sections...).Result()
 	res = map[string]string{}
 	if err != nil {
 		return res
@@ -79,8 +79,8 @@ func stringToLines(s string) (lines []string, err error) {
 }
 
 // DBSize 当前数据库key数量
-func DBSize(redis *redis.Client) int64 {
-	size, err := redis.DBSize(context.Background()).Result()
+func DBSize(r *redis.Client) int64 {
+	size, err := r.DBSize(context.Background()).Result()
 	if err != nil {
 		return 0
 	}
@@ -88,7 +88,7 @@ func DBSize(redis *redis.Client) int64 {
 }
 
 // stringToKV string拆分key和val
-func stringToKV(s string) (string, string) {
+func stringToKV(s string) (key, val string) {
 	ss := strings.Split(s, ":")
 	if len(ss) < 2 {
 		return s, ""

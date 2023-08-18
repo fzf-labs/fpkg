@@ -11,7 +11,7 @@ import (
 )
 
 type OfficialAccountConfig struct {
-	AppID     string `json:"AppId"`
+	AppID     string `json:"AppID"`
 	AppSecret string `json:"AppSecret"`
 }
 
@@ -53,7 +53,7 @@ func (oa *OfficialAccount) GetUserInfo(accessToken, openID string) (oauth.UserIn
 }
 
 // GetQrcode 获取二维码
-func (oa *OfficialAccount) GetQrcode(SceneStr string) (string, error) {
+func (oa *OfficialAccount) GetQrcode(sceneStr string) (string, error) {
 	ticket, err := oa.officialAccount.GetBasic().GetQRTicket(&basic.Request{
 		ExpireSeconds: 600,
 		ActionName:    "QR_STR_SCENE",
@@ -67,7 +67,7 @@ func (oa *OfficialAccount) GetQrcode(SceneStr string) (string, error) {
 				SceneStr string `json:"scene_str,omitempty"`
 				SceneID  int    `json:"scene_id,omitempty"`
 			}{
-				SceneStr: SceneStr,
+				SceneStr: sceneStr,
 				SceneID:  0,
 			},
 		},

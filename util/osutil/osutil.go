@@ -60,8 +60,8 @@ func GetOsBits() int {
 	return 32 << (^uint(0) >> 63)
 }
 
-// GetGoroutineId 获得当前 goroutine id
-func GetGoroutineId() (int, error) {
+// GetGoroutineID 获得当前 goroutine id
+func GetGoroutineID() (int, error) {
 	var buf [64]byte
 	n := runtime.Stack(buf[:], false)
 	stk := string(buf[:n])

@@ -41,9 +41,9 @@ type Rocket struct {
 	Lock      sync.Mutex                 //锁
 }
 
-func NewRocket(Cfg *RocketMqConfig) *Rocket {
+func NewRocket(cfg *RocketMqConfig) *Rocket {
 	return &Rocket{
-		Cfg:       Cfg,
+		Cfg:       cfg,
 		Consumers: make(map[*BusinessConfig]Handle),
 		Lock:      sync.Mutex{},
 	}
@@ -137,11 +137,13 @@ func (r *Rocket) GetDelayTimeLevel(t time.Duration) int {
 	return 0
 }
 func (r *Rocket) do(b *BusinessConfig, handle Handle) {
+	// ConsumeFromFirstOffset选择消费时间(首次/当前/根据时间)
+	// Clustering消费模式(集群消费:消费完其他人不能再读取/广播消费：所有人都能读)
 	c, _ := rocketmq.NewPushConsumer(
-		consumer.WithGroupName(b.GroupId),
+		consumer.WithGroupName(b.GroupID),
 		consumer.WithNsResolver(primitive.NewPassthroughResolver([]string{r.Cfg.Endpoint})),
-		consumer.WithConsumeFromWhere(consumer.ConsumeFromFirstOffset), // 选择消费时间(首次/当前/根据时间)
-		consumer.WithConsumerModel(consumer.Clustering),                // 消费模式(集群消费:消费完其他人不能再读取/广播消费：所有人都能读)
+		consumer.WithConsumeFromWhere(consumer.ConsumeFromFirstOffset),
+		consumer.WithConsumerModel(consumer.Clustering),
 	)
 	err := c.Subscribe(
 		b.Topic,
@@ -154,7 +156,7 @@ func (r *Rocket) do(b *BusinessConfig, handle Handle) {
 			for i := range msgs {
 				err := handle(string(msgs[i].Body))
 				if err != nil {
-					log.Printf("rocketmq 消息业务处理失败 topic:%v,tag:%v,group_id:%v,body:%v, err:%v", b.Topic, b.Tag, b.GroupId, string(msgs[i].Body), err)
+					log.Printf("rocketmq 消息业务处理失败 topic:%v,tag:%v,group_id:%v,body:%v, err:%v", b.Topic, b.Tag, b.GroupID, string(msgs[i].Body), err)
 					return 0, err
 				}
 			}

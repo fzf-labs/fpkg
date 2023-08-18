@@ -17,15 +17,15 @@ type BusinessConfig struct {
 	// 标签
 	Tag string `json:"tag"`
 	// 您在控制台创建的Group ID。
-	GroupId string `json:"group_id"`
+	GroupID string `json:"group_id"`
 }
 
-func NewBusiness(name string, topic string, tag string, groupId string) *BusinessConfig {
-	prefixName := topic + tag + groupId
+func NewBusiness(name, topic, tag, groupID string) *BusinessConfig {
+	prefixName := topic + tag + groupID
 	if _, ok := BusinessConfigs[prefixName]; ok {
 		panic(fmt.Sprintf("mq key %s is exsit, please change one", prefixName))
 	}
-	b := &BusinessConfig{Name: name, Topic: topic, Tag: tag, GroupId: groupId}
+	b := &BusinessConfig{Name: name, Topic: topic, Tag: tag, GroupID: groupID}
 	BusinessConfigs[prefixName] = b
 	return b
 }
@@ -39,6 +39,6 @@ func GetBusiness(key string) (*BusinessConfig, error) {
 		Name:    business.Name,
 		Topic:   business.Topic,
 		Tag:     business.Tag,
-		GroupId: business.GroupId,
+		GroupID: business.GroupID,
 	}, nil
 }

@@ -6,7 +6,7 @@ func Sum(iterator Iterator) float64 {
 	for iterator.Next() {
 		bucket := iterator.Bucket()
 		for _, p := range bucket.Points {
-			result = result + p
+			result += p
 		}
 	}
 	return result
@@ -19,8 +19,8 @@ func Avg(iterator Iterator) float64 {
 	for iterator.Next() {
 		bucket := iterator.Bucket()
 		for _, p := range bucket.Points {
-			result = result + p
-			count = count + 1
+			result += p
+			count++
 		}
 	}
 	return result / count

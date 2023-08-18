@@ -46,10 +46,10 @@ func PassWord() string {
 
 // Email 邮箱
 func Email(e string) string {
-	if !strings.Contains(string(e), "@") {
+	if !strings.Contains(e, "@") {
 		return ""
 	}
-	split := strings.Split(string(e), "@")
+	split := strings.Split(e, "@")
 	if len(split[0]) < 1 || len(split[1]) < 1 {
 		return ""
 	}

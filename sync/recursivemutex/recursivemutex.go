@@ -10,7 +10,7 @@ import (
 
 // RecursiveMutex 包装一个Mutex,实现可重入
 type RecursiveMutex struct {
-	sync.Mutex
+	mu        sync.Mutex
 	owner     int64 // 当前持有锁的goroutine id
 	recursion int32 // 这个goroutine 重入的次数
 }
@@ -22,7 +22,7 @@ func (m *RecursiveMutex) Lock() {
 		m.recursion++
 		return
 	}
-	m.Mutex.Lock()
+	m.mu.Lock()
 	// 获得锁的goroutine第一次调用，记录下它的goroutine id,调用次数加1
 	atomic.StoreInt64(&m.owner, gid)
 	m.recursion = 1
@@ -41,5 +41,5 @@ func (m *RecursiveMutex) Unlock() {
 	}
 	// 此goroutine最后一次调用，需要释放锁
 	atomic.StoreInt64(&m.owner, -1)
-	m.Mutex.Unlock()
+	m.mu.Unlock()
 }

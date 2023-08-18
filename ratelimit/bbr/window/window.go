@@ -68,7 +68,7 @@ func (w *Window) ResetBucket(offset int) {
 }
 
 // ResetBuckets empties the buckets based on the given offsets.
-func (w *Window) ResetBuckets(offset int, count int) {
+func (w *Window) ResetBuckets(offset, count int) {
 	for i := 0; i < count; i++ {
 		w.ResetBucket(offset + i)
 	}
@@ -100,7 +100,7 @@ func (w *Window) Size() int {
 }
 
 // Iterator returns the count number buckets iterator from offset.
-func (w *Window) Iterator(offset int, count int) Iterator {
+func (w *Window) Iterator(offset, count int) Iterator {
 	return Iterator{
 		count: count,
 		cur:   &w.buckets[offset%w.size],

@@ -14,7 +14,7 @@ type PyroscopeConfig struct {
 }
 
 func NewPyroscopeServer(cfg *PyroscopeConfig) error {
-	if len(cfg.Addr) == 0 {
+	if cfg.Addr == "" {
 		return errors.New("pyroscope server not set")
 	}
 	fmt.Printf("Start pyroscope server, listen addr %s\n", cfg.Addr)

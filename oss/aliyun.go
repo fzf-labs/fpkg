@@ -24,11 +24,11 @@ func (c *AliConfig) CreateBucket() (bucket *aliOssSdk.Bucket, err error) {
 	// Endpoint以杭州为例，其它Region请按实际情况填写。
 	endpoint := c.Endpoint
 	// 阿里云主账号AccessKey拥有所有API的访问权限，风险很高。强烈建议您创建并使用RAM账号进行API访问或日常运维，请登录 https://ram.console.aliyun.com 创建RAM账号。
-	accessKeyId := c.AccessKey
+	accessKeyID := c.AccessKey
 	accessKeySecret := c.SecretKey
 	bucketName := c.Bucket
 	// 创建OSSClient实例。
-	ossClient, err := aliOssSdk.New(endpoint, accessKeyId, accessKeySecret)
+	ossClient, err := aliOssSdk.New(endpoint, accessKeyID, accessKeySecret)
 	if err != nil {
 		return nil, errors.Wrapf(err, "创建 aliyun OSSClient实例失败")
 	}
@@ -40,8 +40,8 @@ func (c *AliConfig) CreateBucket() (bucket *aliOssSdk.Bucket, err error) {
 	return
 }
 
-// FileUrl 获取文件的oss中的url
-func (c *AliConfig) FileUrl(path string, isEncrypt int32, wh string) string {
+// FileURL 获取文件的oss中的url
+func (c *AliConfig) FileURL(path string, isEncrypt int32, wh string) string {
 	url := strings.Trim(c.Host, "/") + "/" + strings.Trim(path, "/")
 	if isEncrypt == 1 {
 		url += "?encrypt=1"
@@ -52,8 +52,8 @@ func (c *AliConfig) FileUrl(path string, isEncrypt int32, wh string) string {
 	return url
 }
 
-// SpliceUrl 获取文件的oss中的url
-func (c *AliConfig) SpliceUrl(path string) string {
+// SpliceURL 获取文件的oss中的url
+func (c *AliConfig) SpliceURL(path string) string {
 	if path == "" {
 		return ""
 	}
@@ -65,7 +65,7 @@ type aliOss struct {
 	bucket *aliOssSdk.Bucket
 }
 
-func NewAliOss(c AliConfig) Driver {
+func NewAliOss(c *AliConfig) Driver {
 	bucket, err := c.CreateBucket()
 	if err != nil {
 		panic(err)
@@ -76,7 +76,7 @@ func NewAliOss(c AliConfig) Driver {
 }
 
 // Put 上传
-func (c *aliOss) Put(objectName string, localFileName string) error {
+func (c *aliOss) Put(objectName, localFileName string) error {
 	err := c.bucket.PutObjectFromFile(objectName, localFileName)
 	if err != nil {
 		return errors.Wrapf(err, "put oss file fail")

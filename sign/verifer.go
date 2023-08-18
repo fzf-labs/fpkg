@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/fzf-labs/fpkg/conv"
+	"github.com/pkg/errors"
 )
 
 // Verifier define struct
@@ -27,14 +28,14 @@ func NewVerifier() *Verifier {
 }
 
 // ParseQuery 将参数字符串解析成参数列表
-func (v *Verifier) ParseQuery(requestUri string) error {
+func (v *Verifier) ParseQuery(requestURI string) error {
 	requestQuery := ""
-	idx := strings.Index(requestUri, "?")
+	idx := strings.Index(requestURI, "?")
 	if idx > 0 {
-		requestQuery = requestUri[idx+1:]
+		requestQuery = requestURI[idx+1:]
 	}
 	query, err := url.ParseQuery(requestQuery)
-	if nil != err {
+	if err != nil {
 		return err
 	}
 	v.ParseValues(query)
@@ -77,7 +78,7 @@ func (v *Verifier) MustInt64(key string) int64 {
 func (v *Verifier) MustHasKeys(keys ...string) error {
 	for _, key := range keys {
 		if _, hit := v.body[key]; !hit {
-			return fmt.Errorf("KEY_MISSED:<%s>", key)
+			return errors.New("KEY_MISSED:" + key)
 		}
 	}
 	return nil

@@ -13,8 +13,8 @@ const (
 )
 
 var (
-	// ErrCancelWithNil is an error that mapreduce was cancelled with nil.
-	ErrCancelWithNil = errors.New("mapreduce cancelled with nil")
+	// ErrCancelWithNil is an error that mapreduce was canceled with nil.
+	ErrCancelWithNil = errors.New("mapreduce canceled with nil")
 	// ErrReduceNoOutput is an error that reduce did not output a value.
 	ErrReduceNoOutput = errors.New("reduce not writing value")
 )
@@ -59,7 +59,7 @@ type (
 	}
 )
 
-// Finish runs fns parallelly, cancelled on any error.
+// Finish runs fns parallelly, canceled on any error.
 func Finish(fns ...func() error) error {
 	if len(fns) == 0 {
 		return nil
@@ -219,8 +219,7 @@ func mapReduceWithPanicChan[T, U, V any](source <-chan T, panicChan *onceChan, m
 			err = ErrReduceNoOutput
 		}
 	}
-
-	return
+	return val, err
 }
 
 // MapReduceVoid maps all elements generated from given generate,

@@ -23,7 +23,6 @@ func (d *DateGt) ZhTranslation() string {
 
 func (d *DateGt) EnTranslation() string {
 	return "{0} must be greater than the current date"
-
 }
 
 func (d *DateGt) Validate(fl validator.FieldLevel) bool {

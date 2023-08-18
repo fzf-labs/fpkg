@@ -33,6 +33,7 @@ func NewTinyLFU(size int, ttl time.Duration) *TinyLFU {
 	}
 
 	return &TinyLFU{
+		//nolint:gosec
 		rand:   rand.New(rand.NewSource(time.Now().UnixNano())),
 		lfu:    tinylfu.New(size, 100000),
 		ttl:    ttl,

@@ -6,7 +6,7 @@ import (
 )
 
 func Test_ipLocation_SearchLocation(t *testing.T) {
-	location, err := NewIpLocation("./ip2region.xdb")
+	location, err := NewIPLocation("./ip2region.xdb")
 	if err != nil {
 		return
 	}
@@ -18,7 +18,7 @@ func Test_ipLocation_SearchLocation(t *testing.T) {
 }
 
 func Test_ipLocation_SearchBatchLocation(t *testing.T) {
-	location, err := NewIpLocation("./ip2region.xdb")
+	location, err := NewIPLocation("./ip2region.xdb")
 	if err != nil {
 		return
 	}

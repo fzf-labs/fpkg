@@ -124,6 +124,5 @@ func (c *Session) readPump() {
 			slog.Error("[websocket] not support text message")
 			return
 		}
-
 	}
 }

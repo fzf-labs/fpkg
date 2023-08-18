@@ -90,7 +90,8 @@ func (s *Server) init(opts ...ServerOption) {
 	}
 
 	s.Server = &http.Server{
-		TLSConfig: s.tlsConf,
+		TLSConfig:         s.tlsConf,
+		ReadHeaderTimeout: 3 * time.Second,
 	}
 
 	http.HandleFunc(s.path, s.wsHandler)
@@ -131,10 +132,10 @@ func (s *Server) marshalMessage(messageType MessageType, message MessagePayload)
 	return buff, nil
 }
 
-func (s *Server) SendMessage(sessionId SessionID, messageType MessageType, message MessagePayload) {
-	c, ok := s.sessions[sessionId]
+func (s *Server) SendMessage(sessionID SessionID, messageType MessageType, message MessagePayload) {
+	c, ok := s.sessions[sessionID]
 	if !ok {
-		slog.Error("[websocket] session not found:", sessionId)
+		slog.Error("[websocket] session not found:", sessionID)
 		return
 	}
 
@@ -159,7 +160,7 @@ func (s *Server) Broadcast(messageType MessageType, message MessagePayload) {
 	}
 }
 
-func (s *Server) messageHandler(sessionId SessionID, buf []byte) error {
+func (s *Server) messageHandler(sessionID SessionID, buf []byte) error {
 	var msg Message
 	if err := msg.Unmarshal(buf); err != nil {
 		slog.Error("[websocket] decode message exception: %s", err)
@@ -185,7 +186,7 @@ func (s *Server) messageHandler(sessionId SessionID, buf []byte) error {
 		return err
 	}
 
-	if err := handlerData.Handler(sessionId, payload); err != nil {
+	if err := handlerData.Handler(sessionID, payload); err != nil {
 		slog.Error("[websocket] message handler exception: %s", err)
 		return err
 	}

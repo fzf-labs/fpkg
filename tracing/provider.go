@@ -42,7 +42,7 @@ type Config struct {
 	Endpoint     string
 	Sampler      float64
 	Version      string
-	InstanceId   string
+	InstanceID   string
 	Env          string
 }
 
@@ -62,7 +62,7 @@ func NewTracerProvider(cfg *Config) *traceSdk.TracerProvider {
 		traceSdk.WithResource(resource.NewSchemaless(
 			semConv.ServiceNameKey.String(cfg.ServiceName),
 			semConv.ServiceVersionKey.String(cfg.Version),
-			semConv.ServiceInstanceIDKey.String(cfg.InstanceId),
+			semConv.ServiceInstanceIDKey.String(cfg.InstanceID),
 			attribute.String("env", cfg.Env),
 		)),
 	}

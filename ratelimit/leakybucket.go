@@ -23,9 +23,9 @@ func (l *LeakyBucket) Allow() bool {
 	defer l.lock.Unlock()
 
 	now := time.Now().UnixNano() / 1e6
-	eclipse := float64(now-l.lastLeakMs) * l.rate / 1000 //先执行漏水
-	l.water = l.water - eclipse                          //计算剩余水量
-	l.water = math.Max(0, l.water)                       //桶干了
+	eclipse := float64(now-l.lastLeakMs) * l.rate / 1000 // 先执行漏水
+	l.water -= eclipse                                   // 计算剩余水量
+	l.water = math.Max(0, l.water)                       // 桶干了
 	l.lastLeakMs = now
 	if (l.water + 1) < l.capacity {
 		// 尝试加水,并且水还未满

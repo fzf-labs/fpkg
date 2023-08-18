@@ -13,7 +13,7 @@
 
 如果增加了签名验证，需要再传递几个参数：
 
-- app_id 表示App Id，用来识别调用方身份
+- app_id 表示App ID，用来识别调用方身份
 - timestamp 表示时间戳，用来验证接口的时效性
 - sign 表示签名加密串，用来验证数据的完整性，防止数据篡改
 
@@ -30,7 +30,7 @@
 signer := NewSignerMd5()
 
 // 设置签名基本参数
-signer.SetAppId("94857djfi49484")
+signer.SetAppID("94857djfi49484")
 signer.SetTimeStamp(1594294833)
 signer.SetNonceStr("xiKdApRhbuxVckJa")
 
@@ -53,21 +53,21 @@ sign.Verifier 工具类，用来校验签名参数的格式和时间戳。它与
 ### Usage
 
 ```go
-requestUri := "/restful/api/numbers?app_id=9d8a121ce581499d&nonce_str=ibuaiVcKdpRxkhJA&plate_number=豫A66666" +
+requestURI := "/restful/api/numbers?app_id=9d8a121ce581499d&nonce_str=ibuaiVcKdpRxkhJA&plate_number=豫A66666" +
 		"&time_stamp=1532585241&sign=072defd1a251dc58e4d1799e17ffe7a4"
 
 	// 第一步：创建Verifier校验类
 	verifier := NewVerifier()
 
-	// 假定从RequestUri中读取校验参数
-	if err := verifier.ParseQuery(requestUri); nil != err {
+	// 假定从RequestURI中读取校验参数
+	if err := verifier.ParseQuery(requestURI); err != nil {
 		t.Fatal(err)
 	}
 
 	// 或者使用verifier.ParseValues(Values)来解析。
 
 	// 第二步：（可选）校验是否包含签名校验必要的参数
-	if err := verifier.MustHasOtherFields("plate_number"); nil != err {
+	if err := verifier.MustHasOtherFields("plate_number"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -75,7 +75,7 @@ requestUri := "/restful/api/numbers?app_id=9d8a121ce581499d&nonce_str=ibuaiVcKdp
 
 	// 时间戳超时：5分钟
 	verifier.SetTimeout(time.Minute * 5)
-	if err := verifier.CheckTimeStamp(); nil != err {
+	if err := verifier.CheckTimeStamp(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -86,7 +86,7 @@ requestUri := "/restful/api/numbers?app_id=9d8a121ce581499d&nonce_str=ibuaiVcKdp
 	signer.SetBody(verifier.GetBodyWithoutSign())
 
 	// 第六步：从数据库读取AppID对应的SecretKey
-	// appId := verifier.GetAppId()
+	// appID := verifier.GetAppID()
 	secretKey := "123abc456"
 
 	// 使用同样的WrapBody方式

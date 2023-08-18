@@ -1,6 +1,7 @@
 package mq
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"log"
@@ -129,7 +130,7 @@ func (n *NSQ) do(b *BusinessConfig, handle Handle) {
 	q.AddHandler(nsq.HandlerFunc(func(message *nsq.Message) error {
 		err := handle(string(message.Body))
 		if err != nil {
-			log.Printf("nsq 消息业务处理失败 topic:%v,tag:%v,group_id:%v,body:%v, err:%v", b.Topic, b.Tag, b.GroupId, string(message.Body), err)
+			log.Printf("nsq 消息业务处理失败 topic:%v,tag:%v,group_id:%v,body:%v, err:%v", b.Topic, b.Tag, b.GroupID, string(message.Body), err)
 			return err
 		}
 		return nil
@@ -164,8 +165,8 @@ type NodesRsp struct {
 		RemoteAddress    string `json:"remote_address"`
 		Hostname         string `json:"hostname"`
 		BroadcastAddress string `json:"broadcast_address"`
-		TcpPort          int    `json:"tcp_port"`
-		HttpPort         int    `json:"http_port"`
+		TCPPort          int    `json:"tcp_port"`
+		HTTPPort         int    `json:"http_port"`
 		Version          string `json:"version"`
 	} `json:"producers"`
 }
@@ -184,7 +185,7 @@ func (n *NSQ) getLookupNodes(lookup string) ([]string, error) {
 	}
 	if len(rsp.Producers) > 0 {
 		for _, v := range rsp.Producers {
-			nodes = append(nodes, v.BroadcastAddress+":"+strconv.Itoa(v.TcpPort))
+			nodes = append(nodes, v.BroadcastAddress+":"+strconv.Itoa(v.TCPPort))
 		}
 	}
 	return nodes, nil
@@ -192,7 +193,7 @@ func (n *NSQ) getLookupNodes(lookup string) ([]string, error) {
 
 func (n *NSQ) httpGet(url string) ([]byte, error) {
 	client := &http.Client{Timeout: time.Second * 5}
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, err
 	}

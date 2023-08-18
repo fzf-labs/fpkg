@@ -16,6 +16,7 @@ import (
 
 var errDummy = errors.New("dummy")
 
+//nolint:gochecknoinits
 func init() {
 	log.SetOutput(io.Discard)
 }

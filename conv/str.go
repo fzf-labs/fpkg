@@ -36,7 +36,10 @@ func Bytes(any interface{}) []byte {
 		originValueAndKind := reflection.OriginValueAndKind(any)
 		switch originValueAndKind.OriginKind {
 		case reflect.Map:
-			bytes, _ := json.Marshal(any)
+			bytes, err := json.Marshal(any)
+			if err != nil {
+				return nil
+			}
 			return bytes
 
 		case reflect.Array, reflect.Slice:

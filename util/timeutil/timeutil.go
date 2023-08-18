@@ -16,8 +16,8 @@ var TimeLayout = "2006-01-02 15:04:05"
 func Carbon() carbon.Carbon {
 	return carbon.NewCarbon().SetTimezone(carbon.PRC)
 }
-func Time2Carbon(time time.Time) carbon.Carbon {
-	return carbon.Time2Carbon(time).SetTimezone(carbon.PRC)
+func Time2Carbon(t time.Time) carbon.Carbon {
+	return carbon.Time2Carbon(t).SetTimezone(carbon.PRC)
 }
 
 func NowCarbon() carbon.Carbon {
@@ -46,7 +46,6 @@ func NowMillisecondString() string {
 // NowMicrosecondString 转换为当前时间 2021-06-29 23:53:32.100000
 func NowMicrosecondString() string {
 	now := carbon.Now()
-
 	return now.ToDateTimeString() + "." + strconv.Itoa(now.Microsecond())
 }
 
@@ -74,17 +73,15 @@ func ToDateTimeStringByTimePointer(ts *time.Time) string {
 
 // StrToTime 等同于PHP的strtotime函数
 // StrToTime("2020-12-19 14:16:22")
-func StrToTime(value string) (tt time.Time, err error) {
+func StrToTime(value string) (time.Time, error) {
+	var tt time.Time
 	if value == "" {
-		err = errors.New("value is null")
-		return
+		return tt, errors.New("value is null")
 	}
-
 	l, err := time.LoadLocation("Local")
 	if err != nil {
-		return
+		return tt, errors.New("time loadLocation err")
 	}
-
 	layouts := []string{
 		"20060102",
 		"20060102150405",
@@ -120,14 +117,13 @@ func StrToTime(value string) (tt time.Time, err error) {
 		time.StampMicro,
 		time.StampNano,
 	}
-
 	for _, layout := range layouts {
 		tt, err = time.ParseInLocation(layout, value, l)
 		if err == nil {
-			return
+			return tt, nil
 		}
 	}
-	return
+	return tt, errors.New("strToTime err")
 }
 
 // StrToLocalTime 字符串转本地时间
@@ -176,7 +172,7 @@ func TimeToHuman(ts int) string {
 	}
 
 	tt := int(time.Now().Unix()) - ts
-	data := [7]map[string]interface{}{
+	data := []map[string]interface{}{
 		{"key": 31536000, "value": "年"},
 		{"key": 2592000, "value": "个月"},
 		{"key": 604800, "value": "星期"},
@@ -187,7 +183,7 @@ func TimeToHuman(ts int) string {
 	}
 	for _, v := range data {
 		var c = tt / v["key"].(int)
-		if 0 != c {
+		if c != 0 {
 			suffix := "前"
 			if c < 0 {
 				suffix = "后"
@@ -201,15 +197,15 @@ func TimeToHuman(ts int) string {
 	return res
 }
 
-// ToSqlNullTime 将time.Time转换为sql.NullTime
-func ToSqlNullTime(tt time.Time) sql.NullTime {
+// ToSQLNullTime 将time.Time转换为sql.NullTime
+func ToSQLNullTime(tt time.Time) sql.NullTime {
 	return sql.NullTime{
 		Time:  tt,
 		Valid: true,
 	}
 }
 
-func NowSqlNullTime() sql.NullTime {
+func NowSQLNullTime() sql.NullTime {
 	return sql.NullTime{
 		Time:  time.Now(),
 		Valid: true,

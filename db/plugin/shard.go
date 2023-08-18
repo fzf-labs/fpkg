@@ -9,7 +9,7 @@ import (
 )
 
 // NewShardingPlugin 按雪花算法
-func NewShardingPlugin(table string, shardingKey string, num uint) *sharding.Sharding {
+func NewShardingPlugin(table, shardingKey string, num uint) *sharding.Sharding {
 	return sharding.Register(sharding.Config{
 		ShardingKey:         shardingKey,
 		NumberOfShards:      num,
@@ -19,7 +19,7 @@ func NewShardingPlugin(table string, shardingKey string, num uint) *sharding.Sha
 
 // NewMonthShardingPlugin 按月份分表
 // 查询时必须传分表的主键,且只能取等判断
-func NewMonthShardingPlugin(table string, shardingKey string) *sharding.Sharding {
+func NewMonthShardingPlugin(table, shardingKey string) *sharding.Sharding {
 	return sharding.Register(sharding.Config{
 		ShardingKey:         shardingKey,
 		PrimaryKeyGenerator: sharding.PKCustom,
@@ -37,8 +37,8 @@ func NewMonthShardingPlugin(table string, shardingKey string) *sharding.Sharding
 			}
 			return "_" + t.Format("200601"), nil
 		},
-		PrimaryKeyGeneratorFn: func(tableIdx int64) int64 {
-			return tableIdx
+		PrimaryKeyGeneratorFn: func(tableIDx int64) int64 {
+			return tableIDx
 		},
 	}, table)
 }

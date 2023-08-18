@@ -33,7 +33,7 @@ func fsplit(str string) []int32 {
 	return ints
 }
 
-func fsort(i []int32, j []int32) bool {
+func fsort(i, j []int32) bool {
 	lenI := len(i)
 	lenJ := len(j)
 	total := lenI

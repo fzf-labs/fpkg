@@ -6,27 +6,32 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	unhealthy = "unhealthy"
+	health    = "health"
+)
+
 // GetHealthStatus 检查链接是否健康
-func GetHealthStatus(gorm *gorm.DB) string {
-	sqlDB, err := gorm.DB()
+func GetHealthStatus(gormDB *gorm.DB) string {
+	sqlDB, err := gormDB.DB()
 	if err != nil {
-		return "unhealth"
+		return unhealthy
 	}
 	// 验证与数据库的连接是否仍然存在
 	err = sqlDB.Ping()
 	if err != nil {
-		return "unhealth"
+		return unhealthy
 	}
-	err = gorm.Raw(`select 1`).Error
+	err = gormDB.Raw(`select 1`).Error
 	if err != nil {
-		return "unhealth"
+		return unhealthy
 	}
-	return "health"
+	return health
 }
 
 // GetState 获取目前数据库状态参数
-func GetState(gorm *gorm.DB) *sql.DBStats {
-	db, err := gorm.DB()
+func GetState(gormDB *gorm.DB) *sql.DBStats {
+	db, err := gormDB.DB()
 	if err != nil {
 		return nil
 	}
