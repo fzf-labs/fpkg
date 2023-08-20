@@ -13,7 +13,7 @@ import (
 )
 
 // Byte converts `any` to byte.
-func Byte(any interface{}) byte {
+func Byte(any any) byte {
 	if v, ok := any.(byte); ok {
 		return v
 	}
@@ -21,7 +21,7 @@ func Byte(any interface{}) byte {
 }
 
 // Bytes converts `any` to []byte.
-func Bytes(any interface{}) []byte {
+func Bytes(any any) []byte {
 	if any == nil {
 		return nil
 	}
@@ -64,7 +64,7 @@ func Bytes(any interface{}) []byte {
 }
 
 // Rune converts `any` to rune.
-func Rune(any interface{}) rune {
+func Rune(any any) rune {
 	if v, ok := any.(rune); ok {
 		return v
 	}
@@ -72,7 +72,7 @@ func Rune(any interface{}) rune {
 }
 
 // Runes converts `any` to []rune.
-func Runes(any interface{}) []rune {
+func Runes(any any) []rune {
 	if v, ok := any.([]rune); ok {
 		return v
 	}
@@ -81,7 +81,7 @@ func Runes(any interface{}) []rune {
 
 // String converts `any` to string.
 // It's most commonly used converting function.
-func String(any interface{}) string {
+func String(any any) string {
 	if any == nil {
 		return ""
 	}

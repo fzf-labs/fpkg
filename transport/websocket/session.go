@@ -59,7 +59,6 @@ func (c *Session) Listen() {
 }
 
 func (c *Session) closeConnect() {
-	//slog.Info(c.SessionID(), " connection closed")
 	if c.conn != nil {
 		if err := c.conn.Close(); err != nil {
 			slog.Error("[websocket] disconnect error: %s", err.Error())

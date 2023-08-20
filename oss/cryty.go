@@ -1,6 +1,7 @@
 package oss
 
 import (
+	"context"
 	"encoding/base64"
 	"io"
 	"mime/multipart"
@@ -27,14 +28,17 @@ func (c *AliConfig) EnCryptByBytes(file []byte) string {
 }
 
 func (c *AliConfig) DeCrypt(url string) (string, error) {
-	//获取远端图片
-	res, err := http.Get(url)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return "", err
 	}
-	defer res.Body.Close()
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
 	// 读取获取的[]byte数据
-	data, _ := io.ReadAll(res.Body)
+	data, _ := io.ReadAll(resp.Body)
 	imageBase64 := base64.StdEncoding.EncodeToString(data)
 	decodeString, err := base64.StdEncoding.DecodeString(imageBase64)
 	if err != nil {
@@ -46,27 +50,33 @@ func (c *AliConfig) DeCrypt(url string) (string, error) {
 }
 
 func (c *AliConfig) Base64(url string) (string, error) {
-	//获取远端图片
-	res, err := http.Get(url)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return "", err
 	}
-	defer res.Body.Close()
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
 	// 读取获取的[]byte数据
-	data, _ := io.ReadAll(res.Body)
+	data, _ := io.ReadAll(resp.Body)
 	imageBase64 := base64.StdEncoding.EncodeToString(data)
 	return "data:image/jpeg;base64," + imageBase64, nil
 }
 
 func (c *AliConfig) DeCryptToByte(url string) ([]byte, error) {
-	//获取远端图片
-	res, err := http.Get(url)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
 	// 读取获取的[]byte数据
-	data, _ := io.ReadAll(res.Body)
+	data, _ := io.ReadAll(resp.Body)
 	trim := strings.TrimLeft(string(data), c.Salt)
 	reverse := Reverse(trim)
 	decodeString, err := base64.StdEncoding.DecodeString(reverse)
@@ -86,37 +96,3 @@ func Reverse(str string) string {
 	}
 	return string(result)
 }
-
-// TODO eryue 客户端不需要缩略图也可以显示，暂时注释
-//func (c *AliConfig) Scale(w http.ResponseWriter, imageData []byte) {
-//	// 读取获取的[]byte数据
-//
-//	_ = scale(strings.NewReader(string(imageData)), w, 120, 120, 100)
-//}
-//
-//func scale(in io.Reader, out io.Writer, width, height, quality int) error {
-//	origin, fm, err := image.Decode(in)
-//	if err != nil {
-//		return err
-//	}
-//	if width == 0 || height == 0 {
-//		width = origin.Bounds().Max.X
-//		height = origin.Bounds().Max.Y
-//	}
-//	if quality == 0 {
-//		quality = 100
-//	}
-//	canvas := resize.Thumbnail(uint(width), uint(height), origin, resize.Lanczos3)
-//	//return jpeg.Encode(out, canvas, &jpeg.Options{quality})
-//	switch fm {
-//	case "jpeg":
-//		return jpeg.Encode(out, canvas, &jpeg.Options{quality})
-//	case "png":
-//		return png.Encode(out, canvas)
-//	case "gif":
-//		return gif.Encode(out, canvas, &gif.Options{})
-//	case "bmp":
-//		return bmp.Encode(out, canvas)
-//	}
-//	return nil
-//}

@@ -36,9 +36,9 @@ var DelayTime = map[int]int{
 }
 
 type Rocket struct {
-	Cfg       *RocketMqConfig            //配置
-	Consumers map[*BusinessConfig]Handle //消费者
-	Lock      sync.Mutex                 //锁
+	Cfg       *RocketMqConfig            // 配置
+	Consumers map[*BusinessConfig]Handle // 消费者
+	Lock      sync.Mutex                 // 锁
 }
 
 func NewRocket(cfg *RocketMqConfig) *Rocket {

@@ -172,7 +172,7 @@ func TimeToHuman(ts int) string {
 	}
 
 	tt := int(time.Now().Unix()) - ts
-	data := []map[string]interface{}{
+	data := []map[string]any{
 		{"key": 31536000, "value": "年"},
 		{"key": 2592000, "value": "个月"},
 		{"key": 604800, "value": "星期"},

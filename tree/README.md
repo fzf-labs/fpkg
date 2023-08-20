@@ -6,7 +6,7 @@ package tree
 type Tree struct {
 	ID    int         `json:"id"`
 	Pid   int         `json:"pid"`
-	Data  interface{} `json:"data"`
+	Data  any `json:"data"`
 	Child []Tree      `json:"child"`
 }
 

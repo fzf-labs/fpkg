@@ -1,5 +1,6 @@
 //go:build darwin
 
+//nolint:gosec
 package color
 
 import (
@@ -26,7 +27,7 @@ func Red(msg string) string {
 }
 
 // Redf 红色
-func Redf(msg string, arg interface{}) string {
+func Redf(msg string, arg any) string {
 	return fmt.Sprintf("\x1b[31m%s\x1b[0m %+v\n", msg, arg)
 }
 
@@ -41,6 +42,6 @@ func Green(msg string) string {
 }
 
 // Greenf 绿色
-func Greenf(msg string, arg interface{}) string {
+func Greenf(msg string, arg any) string {
 	return fmt.Sprintf("\x1b[32m%s\x1b[0m %+v\n", msg, arg)
 }

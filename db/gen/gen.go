@@ -50,7 +50,7 @@ func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType)
 	g.ApplyBasic(g.GenerateAllTable()...)
 	g.Execute()
 
-	//生成repo
+	// 生成repo
 	tables, err := db.Migrator().GetTables()
 	if err != nil {
 		return

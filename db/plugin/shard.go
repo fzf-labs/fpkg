@@ -23,16 +23,16 @@ func NewMonthShardingPlugin(table, shardingKey string) *sharding.Sharding {
 	return sharding.Register(sharding.Config{
 		ShardingKey:         shardingKey,
 		PrimaryKeyGenerator: sharding.PKCustom,
-		ShardingAlgorithm: func(columnValue interface{}) (suffix string, err error) {
+		ShardingAlgorithm: func(columnValue any) (suffix string, err error) {
 			var t time.Time
-			//columnValue要是time类型
+			// columnValue要是time类型
 			switch value := columnValue.(type) {
 			case time.Time:
 				t = value
 			case *time.Time:
 				t = *value
 			default:
-				//时间转换
+				// 时间转换
 				t = carbon.Parse(conv.String(columnValue)).Carbon2Time()
 			}
 			return "_" + t.Format("200601"), nil

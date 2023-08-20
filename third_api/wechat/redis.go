@@ -15,7 +15,7 @@ func NewRedisCache(redisClient *goRedis.Client) *RedisCache {
 	return &RedisCache{RedisClient: redisClient}
 }
 
-func (r *RedisCache) Get(key string) interface{} {
+func (r *RedisCache) Get(key string) any {
 	result, err := r.RedisClient.Get(context.Background(), key).Result()
 	if err != nil {
 		return nil
@@ -23,7 +23,7 @@ func (r *RedisCache) Get(key string) interface{} {
 	return result
 }
 
-func (r *RedisCache) Set(key string, val interface{}, timeout time.Duration) error {
+func (r *RedisCache) Set(key string, val any, timeout time.Duration) error {
 	return r.RedisClient.Set(context.Background(), key, val, timeout).Err()
 }
 

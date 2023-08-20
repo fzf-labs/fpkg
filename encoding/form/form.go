@@ -33,7 +33,7 @@ type codec struct {
 	decoder *form.Decoder
 }
 
-func (c codec) Marshal(v interface{}) ([]byte, error) {
+func (c codec) Marshal(v any) ([]byte, error) {
 	var vs url.Values
 	var err error
 	if m, ok := v.(proto.Message); ok {
@@ -55,7 +55,7 @@ func (c codec) Marshal(v interface{}) ([]byte, error) {
 	return []byte(vs.Encode()), nil
 }
 
-func (c codec) Unmarshal(data []byte, v interface{}) error {
+func (c codec) Unmarshal(data []byte, v any) error {
 	vs, err := url.ParseQuery(string(data))
 	if err != nil {
 		return err

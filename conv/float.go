@@ -7,7 +7,7 @@ import (
 )
 
 // Float32 converts `any` to float32.
-func Float32(any interface{}) float32 {
+func Float32(any any) float32 {
 	if any == nil {
 		return 0
 	}
@@ -25,7 +25,7 @@ func Float32(any interface{}) float32 {
 }
 
 // Float64 converts `any` to float64.
-func Float64(any interface{}) float64 {
+func Float64(any any) float64 {
 	if any == nil {
 		return 0
 	}

@@ -2,10 +2,11 @@ package mq
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"io"
 	"log"
-	"math/rand"
+	"math/big"
 	"net/http"
 	"strconv"
 	"sync"
@@ -16,9 +17,9 @@ import (
 )
 
 type NSQ struct {
-	Cfg       *NsqConfig                 //配置
-	Consumers map[*BusinessConfig]Handle //消费者
-	Lock      sync.Mutex                 //锁
+	Cfg       *NsqConfig                 // 配置
+	Consumers map[*BusinessConfig]Handle // 消费者
+	Lock      sync.Mutex                 // 锁
 	p         []*nsq.Producer
 }
 
@@ -46,12 +47,16 @@ L:
 			return nil, err
 		}
 	}
-	p := n.p[rand.Intn(len(n.p))]
-	err := p.Ping()
+	random, err := rand.Int(rand.Reader, big.NewInt(int64(len(n.p))))
+	if err != nil {
+		return nil, err
+	}
+	p := n.p[random.Int64()]
+	err = p.Ping()
 	if err != nil {
 		log.Printf("get nsq ping err:%v", err)
 		p.Stop()
-		//置空操作
+		// 置空操作
 		n.p = nil
 		goto L
 	}

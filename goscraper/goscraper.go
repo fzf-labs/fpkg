@@ -128,12 +128,10 @@ func (scraper *Scraper) getDocument() (*Document, error) {
 	req.Header.Add("User-Agent", "GoScraper")
 
 	resp, err := http.DefaultClient.Do(req)
-	if resp != nil {
-		defer resp.Body.Close()
-	}
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	if resp.Request.URL.String() != scraper.getURL() {
 		scraper.EscapedFragmentURL = nil

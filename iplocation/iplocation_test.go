@@ -3,6 +3,8 @@ package iplocation
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_ipLocation_SearchLocation(t *testing.T) {
@@ -15,6 +17,7 @@ func Test_ipLocation_SearchLocation(t *testing.T) {
 		return
 	}
 	fmt.Println(searchLocation)
+	assert.Equal(t, nil, err)
 }
 
 func Test_ipLocation_SearchBatchLocation(t *testing.T) {
@@ -27,4 +30,5 @@ func Test_ipLocation_SearchBatchLocation(t *testing.T) {
 		return
 	}
 	fmt.Println(searchLocation)
+	assert.Equal(t, nil, err)
 }

@@ -2,6 +2,8 @@ package db
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDumpMySQL(t *testing.T) {
@@ -18,4 +20,5 @@ func TestDumpMySQL(t *testing.T) {
 		return
 	}
 	DumpMySQL(gorm, "./")
+	assert.Equal(t, nil, err)
 }

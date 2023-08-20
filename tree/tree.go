@@ -6,8 +6,8 @@ import (
 
 // Tree 统一定义菜单树的数据结构，也可以自定义添加其他字段
 type Tree struct {
-	Data     interface{} `json:"data"`     //自定义对象
-	Children []Tree      `json:"children"` //子节点
+	Data     any    `json:"data"`     // 自定义对象
+	Children []Tree `json:"children"` // 子节点
 }
 
 // INode 其他的结构体想要生成菜单树，直接实现这个接口
@@ -17,7 +17,7 @@ type INode interface {
 	// GetPid 获取父id
 	GetPid() int
 	// GetData 获取附加数据
-	GetData() interface{}
+	GetData() any
 	// IsRoot 判断当前节点是否是顶层根节点
 	IsRoot() bool
 }

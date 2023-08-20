@@ -10,10 +10,10 @@ import (
 
 // LeakyBucket 单机版漏桶算法
 type LeakyBucket struct {
-	rate       float64 //固定每秒出水速率
-	capacity   float64 //桶的容量
-	water      float64 //桶中当前水量
-	lastLeakMs int64   //桶上次漏水时间戳 ms
+	rate       float64 // 固定每秒出水速率
+	capacity   float64 // 桶的容量
+	water      float64 // 桶中当前水量
+	lastLeakMs int64   // 桶上次漏水时间戳 ms
 
 	lock sync.Mutex
 }

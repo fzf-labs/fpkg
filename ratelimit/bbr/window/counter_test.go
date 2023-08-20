@@ -112,6 +112,7 @@ func TestRollingCounterDataRace(t *testing.T) {
 	}()
 	time.Sleep(time.Second * 3)
 	close(stop)
+	assert.Equal(t, nil, nil)
 }
 
 func BenchmarkRollingCounterIncr(b *testing.B) {

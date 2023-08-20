@@ -7,12 +7,12 @@ import (
 
 // SlidingWindow 单机版滑动窗口
 type SlidingWindow struct {
-	max          int           //限制值
-	slotDuration time.Duration //插槽的时间长度
-	winDuration  time.Duration //整个窗口的时间长度
-	slotNum      int           //插槽的个数
+	max          int           // 限制值
+	slotDuration time.Duration // 插槽的时间长度
+	winDuration  time.Duration // 整个窗口的时间长度
+	slotNum      int           // 插槽的个数
 	window       []*slot
-	mu           sync.Mutex //锁
+	mu           sync.Mutex // 锁
 }
 
 func NewSlidingWindow(max int, slotDuration, winDuration time.Duration) *SlidingWindow {
@@ -26,15 +26,15 @@ func NewSlidingWindow(max int, slotDuration, winDuration time.Duration) *Sliding
 
 // 时间插槽
 type slot struct {
-	begin time.Time //这个插槽的起始时间
-	count int       //计数
+	begin time.Time // 这个插槽的起始时间
+	count int       // 计数
 }
 
 // Allow 是否允许
 func (s *SlidingWindow) Allow() bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	//1.将过期的插槽移除
+	// 1.将过期的插槽移除
 	now := time.Now()
 	timeoutOffset := -1
 	for i, ws := range s.window {
@@ -46,12 +46,12 @@ func (s *SlidingWindow) Allow() bool {
 	if timeoutOffset > -1 {
 		s.window = s.window[timeoutOffset+1:]
 	}
-	//2.判断请求
+	// 2.判断请求
 	var result bool
 	if s.count() < s.max {
 		result = true
 	}
-	//3.计数
+	// .计数
 	var lastSlot *slot
 	if len(s.window) > 0 {
 		lastSlot = s.window[len(s.window)-1]
@@ -62,7 +62,7 @@ func (s *SlidingWindow) Allow() bool {
 			lastSlot.count++
 		}
 	} else {
-		//不存在插槽时
+		// 不存在插槽时
 		s.addSlot(now)
 	}
 

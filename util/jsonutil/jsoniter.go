@@ -1,18 +1,18 @@
 package jsonutil
 
 import (
-	JsonIter "github.com/json-iterator/go"
+	JSONIter "github.com/json-iterator/go"
 )
 
-var jsonIter = JsonIter.ConfigCompatibleWithStandardLibrary
+var jsonIter = JSONIter.ConfigCompatibleWithStandardLibrary
 
-// JsonIterEncode 编码
-func JsonIterEncode(v interface{}) ([]byte, error) {
+// JSONIterEncode 编码
+func JSONIterEncode(v any) ([]byte, error) {
 	return jsonIter.Marshal(v)
 }
 
-// JsonIterEncodeToString 编码到字符串
-func JsonIterEncodeToString(v interface{}) (string, error) {
+// JSONIterEncodeToString 编码到字符串
+func JSONIterEncodeToString(v any) (string, error) {
 	marshal, err := jsonIter.Marshal(v)
 	if err != nil {
 		return "", err
@@ -20,12 +20,12 @@ func JsonIterEncodeToString(v interface{}) (string, error) {
 	return string(marshal), nil
 }
 
-// JsonIterDecode 解码
-func JsonIterDecode(bts []byte, ptr interface{}) error {
+// JSONIterDecode 解码
+func JSONIterDecode(bts []byte, ptr any) error {
 	return jsonIter.Unmarshal(bts, ptr)
 }
 
-// JsonIterDecodeString 解码字符串
-func JsonIterDecodeString(str string, ptr interface{}) error {
+// JSONIterDecodeString 解码字符串
+func JSONIterDecodeString(str string, ptr any) error {
 	return jsonIter.Unmarshal([]byte(str), ptr)
 }

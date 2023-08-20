@@ -41,9 +41,7 @@ end
 redis.call("setex", KEYS[1], ttl, new_tokens)
 redis.call("setex", KEYS[2], ttl, now)
 return allowed`
-	tokenFormat     = "{%s}.tokens"
-	timestampFormat = "{%s}.ts"
-	pingInterval    = time.Millisecond * 100
+	pingInterval = time.Millisecond * 100
 )
 
 // RedisTokenBucket 控制事件在一秒钟内发生的频率。
@@ -61,9 +59,8 @@ type RedisTokenBucket struct {
 
 // NewTokenLimiter 返回一个新的令牌限制器，该令牌限制器允许事件达到速率，并允许最多突发令牌的突发。
 func NewTokenLimiter(rate, burst int, store *redis.Client, key string) *RedisTokenBucket {
-	tokenKey := fmt.Sprintf(tokenFormat, key)
-	timestampKey := fmt.Sprintf(timestampFormat, key)
-
+	tokenKey := fmt.Sprintf("{%s}.tokens", key)
+	timestampKey := fmt.Sprintf("{%s}.ts", key)
 	return &RedisTokenBucket{
 		rate:          rate,
 		burst:         burst,
@@ -89,7 +86,6 @@ func (lim *RedisTokenBucket) reserveN(now time.Time, n int) bool {
 	if atomic.LoadUint32(&lim.redisAlive) == 0 {
 		return lim.rescueLimiter.AllowN(now, n)
 	}
-
 	resp, err := lim.store.Eval(
 		context.Background(),
 		script,
@@ -112,14 +108,12 @@ func (lim *RedisTokenBucket) reserveN(now time.Time, n int) bool {
 		lim.startMonitor()
 		return lim.rescueLimiter.AllowN(now, n)
 	}
-
 	code, ok := resp.(int64)
 	if !ok {
 		fmt.Printf("fail to eval redis script: %v, use in-process limiter for rescue", resp)
 		lim.startMonitor()
 		return lim.rescueLimiter.AllowN(now, n)
 	}
-
 	// redis allowed == true
 	// Lua boolean true -> r integer reply with value of 1
 	return code == 1

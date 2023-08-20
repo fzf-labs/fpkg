@@ -36,4 +36,5 @@ func TestGenerationMysql(t *testing.T) {
 		return
 	}
 	Generation(client, DefaultPostgresDataMap, "./example/postgres/")
+	assert.Equal(t, nil, err)
 }

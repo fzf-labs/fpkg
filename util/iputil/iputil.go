@@ -1,6 +1,7 @@
 package iputil
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"math"
@@ -98,7 +99,7 @@ func isIntranet(ipStr string) bool {
 // GetLocalIP 获取本机内网IP
 func GetLocalIP() string {
 	localIP := "127.0.0.1"
-	//sync.Once 是在代码运行中需要的时候执行，且只执行一次
+	// sync.Once 是在代码运行中需要的时候执行，且只执行一次
 	var once sync.Once
 	once.Do(func() {
 		ips, _ := IntranetIP()
@@ -115,24 +116,24 @@ type IPInfo struct {
 
 // GetPublicIPByHTTP 获取公网ip
 func GetPublicIPByHTTP() (string, error) {
-	url := "http://httpbin.org/ip"
-	resp, err := http.Get(url)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://httpbin.org/ip", http.NoBody)
+	if err != nil {
+		return "", err
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
-
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
-
 	var ipInfo IPInfo
 	err = json.Unmarshal(body, &ipInfo)
 	if err != nil {
 		return "", err
 	}
-
 	return ipInfo.Origin, nil
 }
 

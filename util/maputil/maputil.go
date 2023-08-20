@@ -98,7 +98,7 @@ func Intersect[K comparable, V any](maps ...map[K]V) map[K]V {
 	return result
 }
 
-func HtmlJsonEncoder(data map[string]interface{}) (string, error) {
+func HTMLJSONEncoder(data map[string]any) (string, error) {
 	strJSON := bytes.NewBuffer([]byte{})
 	jsonEncoder := json.NewEncoder(strJSON)
 	jsonEncoder.SetEscapeHTML(false)

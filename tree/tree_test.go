@@ -3,15 +3,17 @@ package tree
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // 定义我们自己的菜单对象
 type SystemMenu struct {
-	ID       int    `json:"id"`        //id
-	FatherID int    `json:"father_id"` //上级菜单id
-	Name     string `json:"name"`      //菜单名
-	Route    string `json:"route"`     //页面路径
-	Icon     string `json:"icon"`      //图标路径
+	ID       int    `json:"id"`        // id
+	FatherID int    `json:"father_id"` // 上级菜单id
+	Name     string `json:"name"`      // 菜单名
+	Route    string `json:"route"`     // 页面路径
+	Icon     string `json:"icon"`      // 图标路径
 }
 
 func (s SystemMenu) GetID() int {
@@ -22,7 +24,7 @@ func (s SystemMenu) GetPid() int {
 	return s.FatherID
 }
 
-func (s SystemMenu) GetData() interface{} {
+func (s SystemMenu) GetData() any {
 	return s
 }
 
@@ -64,4 +66,5 @@ func TestGenerateTree(t *testing.T) {
 	respNodes := FindRelationSubNode(allMenu.ConvertToINodeArray(), device)
 
 	fmt.Println(respNodes)
+	assert.True(t, len(respNodes) > 0)
 }

@@ -79,11 +79,11 @@ func (n Nodes) Swap(i, j int) {
 	n[i], n[j] = n[j], n[i]
 }
 
-func (n *Nodes) Push(val interface{}) {
+func (n *Nodes) Push(val any) {
 	*n = append(*n, val.(*Node))
 }
 
-func (n *Nodes) Pop() interface{} {
+func (n *Nodes) Pop() any {
 	var val *Node
 	val, *n = (*n)[len((*n))-1], (*n)[:len((*n))-1]
 	return val

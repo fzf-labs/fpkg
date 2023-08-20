@@ -19,7 +19,8 @@ func GenShortID() (string, error) {
 	return shortid.Generate()
 }
 
-func KSUID() string { //2HhWuYvDuhvsOZWcVTujThVHPWf
+// KSUID 2HhWuYvDuhvsOZWcVTujThVHPWf
+func KSUID() string {
 	return ksuid.New().String()
 }
 

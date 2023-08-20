@@ -21,9 +21,9 @@ func NewRocketAli(cfg *RocketMqAliConfig) *RocketAli {
 }
 
 type RocketAli struct {
-	Cfg       *RocketMqAliConfig         //配置
-	Consumers map[*BusinessConfig]Handle //消费者
-	Lock      sync.Mutex                 //锁
+	Cfg       *RocketMqAliConfig         // 配置
+	Consumers map[*BusinessConfig]Handle // 消费者
+	Lock      sync.Mutex                 // 锁
 	once      sync.Once
 	mqClient  mq_http_sdk.MQClient
 }
@@ -40,7 +40,7 @@ func (r *RocketAli) newMQClient() mq_http_sdk.MQClient {
 }
 
 func (r *RocketAli) Publish(b *BusinessConfig, msg string) error {
-	//消息体封装
+	// 消息体封装
 	msgReq := mq_http_sdk.PublishMessageRequest{
 		MessageBody: msg,   // 消息内容
 		MessageTag:  b.Tag, // 消息标签
@@ -56,7 +56,7 @@ func (r *RocketAli) Publish(b *BusinessConfig, msg string) error {
 }
 
 func (r *RocketAli) DeferredPublish(b *BusinessConfig, msg string, t time.Duration) error {
-	//消息体封装
+	// 消息体封装
 	msgReq := mq_http_sdk.PublishMessageRequest{
 		MessageBody:      msg,   // 消息内容
 		MessageTag:       b.Tag, // 消息标签
@@ -107,51 +107,44 @@ func (r *RocketAli) do(b *BusinessConfig, handle Handle) {
 
 			select {
 			case resp := <-respChan:
-				{
-					log.Printf(b.Name+"收到消息 ----> msg=%+v", resp.Messages)
+				log.Printf(b.Name+"收到消息 ----> msg=%+v", resp.Messages)
 
-					// 处理业务逻辑
-					var handles []string
-					for k := range resp.Messages {
-						err := handle(resp.Messages[k].MessageBody)
-						if err != nil {
-							log.Printf(b.Name+"业务处理失败 msgBody=%s err=%v", resp.Messages[k].MessageBody, err)
-							continue
-						}
-						handles = append(handles, resp.Messages[k].ReceiptHandle)
+				// 处理业务逻辑
+				var handles []string
+				for k := range resp.Messages {
+					err := handle(resp.Messages[k].MessageBody)
+					if err != nil {
+						log.Printf(b.Name+"业务处理失败 msgBody=%s err=%v", resp.Messages[k].MessageBody, err)
+						continue
 					}
-
-					// NextConsumeTime前若不确认消息消费成功，则消息会重复消费
-					// 消息句柄有时间戳，同一条消息每次消费拿到的都不一样
-					ackerr := consumer.AckMessage(handles)
-					if ackerr != nil {
-						// 某些消息的句柄可能超时了会导致确认不成功
-						for _, errAckItem := range ackerr.(errors.ErrCode).Context()["Detail"].([]mq_http_sdk.ErrAckItem) {
-							log.Printf(b.Name+"消息确认失败 ErrorHandle:%s, ErrorCode:%s, ErrorMsg:%s",
-								errAckItem.ErrorHandle, errAckItem.ErrorCode, errAckItem.ErrorMsg)
-						}
-						time.Sleep(3 * time.Second)
-					} else {
-						log.Printf(b.Name+"消费成功 ----> handles=%v", handles)
-					}
-
-					endChan <- 1
+					handles = append(handles, resp.Messages[k].ReceiptHandle)
 				}
+
+				// NextConsumeTime前若不确认消息消费成功，则消息会重复消费
+				// 消息句柄有时间戳，同一条消息每次消费拿到的都不一样
+				ackerr := consumer.AckMessage(handles)
+				if ackerr != nil {
+					// 某些消息的句柄可能超时了会导致确认不成功
+					for _, errAckItem := range ackerr.(errors.ErrCode).Context()["Detail"].([]mq_http_sdk.ErrAckItem) {
+						log.Printf(b.Name+"消息确认失败 ErrorHandle:%s, ErrorCode:%s, ErrorMsg:%s",
+							errAckItem.ErrorHandle, errAckItem.ErrorCode, errAckItem.ErrorMsg)
+					}
+					time.Sleep(3 * time.Second)
+				} else {
+					log.Printf(b.Name+"消费成功 ----> handles=%v", handles)
+				}
+				endChan <- 1
 			case err := <-errChan:
-				{
-					// 没有消息
-					if strings.Contains(err.(errors.ErrCode).Error(), "MessageNotExist") {
-					} else {
-						log.Printf(b.Name+"接收消息失败 err=%v", err)
-						time.Sleep(3 * time.Second)
-					}
-					endChan <- 1
+				// 没有消息
+				if strings.Contains(err.(errors.ErrCode).Error(), "MessageNotExist") {
+				} else {
+					log.Printf(b.Name+"接收消息失败 err=%v", err)
+					time.Sleep(3 * time.Second)
 				}
+				endChan <- 1
 			case <-time.After(35 * time.Second):
-				{
-					log.Printf(b.Name + "消息消费超时")
-					endChan <- 1
-				}
+				log.Printf(b.Name + "消息消费超时")
+				endChan <- 1
 			}
 		}()
 

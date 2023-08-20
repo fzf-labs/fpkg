@@ -1,3 +1,4 @@
+//nolint:gosec
 package sliutil
 
 import (
@@ -415,7 +416,7 @@ func Flatten(slice any) any {
 
 	var result reflect.Value
 	if sv.Type().Elem().Kind() == reflect.Interface {
-		result = reflect.MakeSlice(reflect.TypeOf([]interface{}{}), 0, sv.Len())
+		result = reflect.MakeSlice(reflect.TypeOf([]any{}), 0, sv.Len())
 	} else if sv.Type().Elem().Kind() == reflect.Slice {
 		result = reflect.MakeSlice(sv.Type().Elem(), 0, sv.Len())
 	} else {
@@ -793,7 +794,7 @@ func Shuffle[T any](slice []T) []T {
 // Sort 排序
 // Sort的工作原理类似于Sort . slicetype()。然而，不像sort。SliceType返回的切片将被重新分配，以不修改输入切片。
 func Sort[T constraints.Ordered](ss []T) []T {
-	//避免分配。如果有一个或更少的元素，它已经排序。
+	// 避免分配。如果有一个或更少的元素，它已经排序。
 	if len(ss) < 2 {
 		return ss
 	}
@@ -984,7 +985,7 @@ func FunctionValue(function any) reflect.Value {
 // CheckSliceCallbackFuncSignature Check func sign :  s :[]type1{} -> func(i int, data type1) type2
 // see https://coolshell.cn/articles/21164.html#%E6%B3%9B%E5%9E%8BMap-Reduce
 func CheckSliceCallbackFuncSignature(fn reflect.Value, types ...reflect.Type) bool {
-	//Check it is a function
+	// Check it is a function
 	if fn.Kind() != reflect.Func {
 		return false
 	}
@@ -1024,7 +1025,7 @@ func sliceElemType(reflectType reflect.Type) reflect.Type {
 
 var (
 	bfPool = sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			return bytes.NewBuffer([]byte{})
 		},
 	}
@@ -1070,7 +1071,7 @@ func SplitStringToInt64(s string) ([]int64, error) {
 }
 
 // NilSliceToEmptySlice 递归地将 nil 切片设置为空切片
-func NilSliceToEmptySlice(inter interface{}) interface{} {
+func NilSliceToEmptySlice(inter any) any {
 	// original input that can't be modified
 	val := reflect.ValueOf(inter)
 

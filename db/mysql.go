@@ -81,7 +81,7 @@ func DumpMySQL(db *gorm.DB, outPath string) {
 		return
 	}
 	for _, v := range tables {
-		result := make(map[string]interface{})
+		result := make(map[string]any)
 		err := db.Raw(fmt.Sprintf("SHOW CREATE TABLE `%s`.`%s`", db.Migrator().CurrentDatabase(), v)).Scan(result).Error
 		if err != nil {
 			slog.Error("DumpMySQL sql err:", err)

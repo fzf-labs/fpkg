@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -12,7 +13,6 @@ import (
 )
 
 func TestNewMonthShardingPlugin(t *testing.T) {
-	//sqlDB, err := sql.Open("mysql", "root:123456@tcp(0.0.0.0:3306)/fgzs-single?charset=utf8mb4&loc=Asia%2FShanghai&parseTime=true")
 	sqlDB, err := sql.Open("pgx", "host=0.0.0.0 port=5432 user=postgres password=123456 dbname=fkratos_sys sslmode=disable TimeZone=Asia/Shanghai")
 	if err != nil {
 		fmt.Printf("open mysql failed! err: %+v", err)
@@ -35,10 +35,10 @@ func TestNewMonthShardingPlugin(t *testing.T) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	assert.Equal(t, nil, err)
 }
 
 func TestNewShardingPlugin(t *testing.T) {
-	//sqlDB, err := sql.Open("mysql", "root:123456@tcp(0.0.0.0:3306)/fgzs-single?charset=utf8mb4&loc=Asia%2FShanghai&parseTime=true")
 	sqlDB, err := sql.Open("pgx", "host=0.0.0.0 port=5432 user=postgres password=123456 dbname=fkratos_sys sslmode=disable TimeZone=Asia/Shanghai")
 	if err != nil {
 		fmt.Printf("open mysql failed! err: %+v", err)
@@ -61,4 +61,5 @@ func TestNewShardingPlugin(t *testing.T) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	assert.Equal(t, nil, err)
 }

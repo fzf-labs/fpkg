@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bufio"
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/csv"
 	"encoding/hex"
@@ -307,13 +308,13 @@ func ReadFileLineToSli(dir string) ([]string, error) {
 	res := make([]string, 0)
 	for {
 		line, _, err := buf.ReadLine()
-		context := string(line)
+		c := string(line)
 		if err != nil {
 			if err == io.EOF {
 				break
 			}
 		}
-		res = append(res, context)
+		res = append(res, c)
 	}
 	return res, nil
 }
@@ -340,12 +341,16 @@ func ReadFileToString(dir string) (string, error) {
 
 // ReadFileByURLToByte 读取url中的文件,并转为[]byte格式
 func ReadFileByURLToByte(url string) ([]byte, error) {
-	res, err := http.Get(url)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
-	all, err := io.ReadAll(res.Body)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	all, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -599,13 +604,13 @@ func Unzip(zipPath, dstDir string) error {
 func unzipFile(file *zip.File, dstDir string) error {
 	var decodeName string
 	if file.Flags == 0 {
-		//如果标致位是0  则是默认的本地编码   默认为gbk
+		// 如果标致位是0  则是默认的本地编码   默认为gbk
 		i := bytes.NewReader([]byte(file.Name))
 		decoder := transform.NewReader(i, simplifiedchinese.GB18030.NewDecoder())
 		content, _ := io.ReadAll(decoder)
 		decodeName = string(content)
 	} else {
-		//如果标志为是 1 << 11也就是 2048  则是utf-8编码
+		// 如果标志为是 1 << 11也就是 2048  则是utf-8编码
 		decodeName = file.Name
 	}
 	// create the directory of file
@@ -650,12 +655,15 @@ func unzipFile(file *zip.File, dstDir string) error {
 // DownloadFile 会将url下载到本地文件，它会在下载时写入，而不是将整个文件加载到内存中。
 func DownloadFile(url, filePath string) error {
 	// Get the data
-	resp, err := http.Get(url)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, http.NoBody)
+	if err != nil {
+		return err
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-
 	// Create the file
 	out, err := os.Create(filePath)
 	if err != nil {

@@ -279,9 +279,7 @@ func (s *Server) Stop(ctx context.Context) error {
 }
 
 func (s *Server) addSession(c *Session) {
-	//slog.Info("[websocket] add session: ", c.SessionID())
 	s.sessions[c.SessionID()] = c
-
 	if s.connectHandler != nil {
 		s.connectHandler(c.SessionID(), true)
 	}
@@ -290,7 +288,6 @@ func (s *Server) addSession(c *Session) {
 func (s *Server) removeSession(c *Session) {
 	for k, v := range s.sessions {
 		if c == v {
-			//slog.Info("[websocket] remove session: ", c.SessionID())
 			if s.connectHandler != nil {
 				s.connectHandler(c.SessionID(), false)
 			}

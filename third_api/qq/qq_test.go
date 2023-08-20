@@ -3,6 +3,8 @@ package qq
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAuthQq_GetUserInfo(t *testing.T) {
@@ -19,4 +21,5 @@ func TestAuthQq_GetUserInfo(t *testing.T) {
 		return
 	}
 	fmt.Println(userInfo)
+	assert.Equal(t, nil, err)
 }

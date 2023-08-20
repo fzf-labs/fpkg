@@ -9,12 +9,15 @@ import (
 
 type codec struct{}
 
-func (c codec) Marshal(v interface{}) ([]byte, error) {
-	panic("implement me")
+func (c codec) Marshal(v any) ([]byte, error) {
+	fmt.Println(v)
+	return nil, nil
 }
 
-func (c codec) Unmarshal(data []byte, v interface{}) error {
-	panic("implement me")
+func (c codec) Unmarshal(data []byte, v any) error {
+	fmt.Println(data)
+	fmt.Println(v)
+	return nil
 }
 
 func (c codec) Name() string {
@@ -24,11 +27,11 @@ func (c codec) Name() string {
 // codec2 is a Codec implementation with xml.
 type codec2 struct{}
 
-func (codec2) Marshal(v interface{}) ([]byte, error) {
+func (codec2) Marshal(v any) ([]byte, error) {
 	return xml.Marshal(v)
 }
 
-func (codec2) Unmarshal(data []byte, v interface{}) error {
+func (codec2) Unmarshal(data []byte, v any) error {
 	return xml.Unmarshal(data, v)
 }
 
@@ -38,13 +41,14 @@ func (codec2) Name() string {
 
 func TestRegisterCodec(t *testing.T) {
 	f := func() { RegisterCodec(nil) }
-	funcDidPanic, panicValue, _ := didPanic(f)
+	funcDidPanic, panicValue, stack := didPanic(f)
 	if !funcDidPanic {
 		t.Fatalf(fmt.Sprintf("func should panic\n\tPanic value:\t%#v", panicValue))
 	}
 	if panicValue != "cannot register a nil Codec" {
 		t.Fatalf("panic error got %s want cannot register a nil Codec", panicValue)
 	}
+	fmt.Println(stack)
 	f = func() {
 		RegisterCodec(codec{})
 	}
@@ -68,7 +72,7 @@ func TestRegisterCodec(t *testing.T) {
 type PanicTestFunc func()
 
 // didPanic returns true if the function passed to it panics. Otherwise, it returns false.
-func didPanic(f PanicTestFunc) (didPanic bool, message interface{}, stack string) {
+func didPanic(f PanicTestFunc) (didPanic bool, message any, stack string) {
 	func() {
 		defer func() {
 			if message = recover(); message != nil {

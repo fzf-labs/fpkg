@@ -18,14 +18,14 @@ import (
 var Validator = NewValidator()
 
 type ValidatorX struct {
-	Validator *validator.Validate      //验证器
-	Uni       *ut.UniversalTranslator  //通用翻译器
-	Trans     map[string]ut.Translator //翻译器
+	Validator *validator.Validate      // 验证器
+	Uni       *ut.UniversalTranslator  // 通用翻译器
+	Trans     map[string]ut.Translator // 翻译器
 }
 
 func NewValidator() *ValidatorX {
 	v := ValidatorX{}
-	//1.验证器
+	// 1.验证器
 	v.Validator = validator.New()
 	// 注册一个获取json tag的自定义方法
 	v.Validator.RegisterTagNameFunc(func(fld reflect.StructField) string {
@@ -35,18 +35,18 @@ func NewValidator() *ValidatorX {
 		}
 		return name
 	})
-	//2.通用翻译器
+	// 2.通用翻译器
 	zhT := zh.New() // 中文翻译器
 	enT := en.New() // 英文翻译器
 	// 第一个参数是备用（fallback）的语言环境,后面的参数是应该支持的语言环境（支持多个）,uni := ut.New(zhT, zhT) 也是可以的
 	v.Uni = ut.New(zhT, enT, zhT)
-	//3.翻译器
+	// 3.翻译器
 	enTrans, _ := v.Uni.GetTranslator("en")
 	zhTrans, _ := v.Uni.GetTranslator("zh")
 	v.Trans = make(map[string]ut.Translator)
 	v.Trans["en"] = enTrans
 	v.Trans["zh"] = zhTrans
-	//注册翻译器
+	// 注册翻译器
 	err := zhTranslations.RegisterDefaultTranslations(v.Validator, v.Trans["zh"])
 	if err != nil {
 		panic("Validator RegisterDefaultTranslations(zh) failed")
@@ -63,7 +63,7 @@ func NewValidator() *ValidatorX {
 }
 
 // Validate validate
-func (v *ValidatorX) Validate(obj interface{}, lang string) error {
+func (v *ValidatorX) Validate(obj any, lang string) error {
 	if obj == nil {
 		return nil
 	}

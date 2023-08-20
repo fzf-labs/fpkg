@@ -3,6 +3,8 @@ package db
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewGormPostgresClient(t *testing.T) {
@@ -19,11 +21,19 @@ func TestNewGormPostgresClient(t *testing.T) {
 	if err != nil {
 		return
 	}
+	assert.Equal(t, nil, err)
 }
 
 func TestDsnParse(t *testing.T) {
 	parse := PostgresDsnParse("host=0.0.0.0 port=5432 user=postgres password=123456 dbname=user sslmode=disable TimeZone=Asia/Shanghai")
 	fmt.Println(parse)
+	assert.Equal(t, &PostgresDsn{
+		Host:     "0.0.0.0",
+		Port:     5432,
+		User:     "postgres",
+		Password: "123456",
+		Dbname:   "user",
+	}, parse)
 }
 
 func TestDumpSQL(t *testing.T) {
@@ -41,4 +51,5 @@ func TestDumpSQL(t *testing.T) {
 		return
 	}
 	DumpPostgres(db, config.DataSourceName, "../sql")
+	assert.Equal(t, nil, err)
 }

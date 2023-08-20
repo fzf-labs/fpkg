@@ -131,7 +131,7 @@ func Utf8Index(str, substr string) int {
 }
 
 // JoinStringAndOther 连接字符串和其他类型
-func JoinStringAndOther(val ...interface{}) string {
+func JoinStringAndOther(val ...any) string {
 	return fmt.Sprint(val...)
 }
 
@@ -229,7 +229,7 @@ func CamelCase(s string) string {
 
 	result := ""
 	blankSpace := " "
-	regex, _ := regexp.Compile("[-_&]+")
+	regex := regexp.MustCompile("[-_&]+")
 	ss := regex.ReplaceAllString(s, blankSpace)
 	for i, v := range strings.Split(ss, blankSpace) {
 		vv := []rune(v)
@@ -270,7 +270,7 @@ func KebabCase(s string) string {
 		return ""
 	}
 
-	regex := regexp.MustCompile(`[\W|_]+`)
+	regex := regexp.MustCompile(`[\W_]+`)
 	blankSpace := " "
 	match := regex.ReplaceAllString(s, blankSpace)
 	rs := strings.Split(match, blankSpace)
@@ -292,7 +292,7 @@ func SnakeCase(s string) string {
 		return ""
 	}
 
-	regex := regexp.MustCompile(`[\W|_]+`)
+	regex := regexp.MustCompile(`[\W_]+`)
 	blankSpace := " "
 	match := regex.ReplaceAllString(s, blankSpace)
 	rs := strings.Split(match, blankSpace)

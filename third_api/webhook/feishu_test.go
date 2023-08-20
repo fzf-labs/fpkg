@@ -3,6 +3,8 @@ package webhook
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFeiShu_SendMsg(t *testing.T) {
@@ -15,4 +17,5 @@ func TestFeiShu_SendMsg(t *testing.T) {
 		return
 	}
 	fmt.Println(err)
+	assert.Equal(t, nil, err)
 }

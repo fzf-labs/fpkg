@@ -63,7 +63,7 @@ func NewJwt(redisClient *redis.Client, cfg *Config) *Jwt {
 }
 
 // GenerateToken token 生成
-func (j *Jwt) GenerateToken(payloads map[string]interface{}) (*Token, jwts.MapClaims, error) {
+func (j *Jwt) GenerateToken(payloads map[string]any) (*Token, jwts.MapClaims, error) {
 	if payloads[JwtUID] == nil {
 		return nil, nil, UIDNotRequest
 	}
@@ -102,14 +102,15 @@ func (j *Jwt) GenerateToken(payloads map[string]interface{}) (*Token, jwts.MapCl
 
 // ParseToken token 解析
 func (j *Jwt) ParseToken(tokenString string) (jwts.MapClaims, error) {
-	token, err := jwts.Parse(tokenString, func(token *jwts.Token) (interface{}, error) {
+	token, err := jwts.Parse(tokenString, func(token *jwts.Token) (any, error) {
 		return []byte(j.Cfg.AccessSecret), nil
 	})
 	if err != nil {
-		switch e := err.(type) {
-		case *jwts.ValidationError:
+		var e *jwts.ValidationError
+		switch {
+		case errors.As(err, &e):
 			switch e.Errors {
-			case jwts.ValidationErrorExpired: //过期
+			case jwts.ValidationErrorExpired: // 过期
 				return nil, TokenExpired
 			default:
 				return nil, errors.Wrap(TokenInvalid, "not jwt ValidationErrorExpired")
@@ -148,17 +149,17 @@ func (j *Jwt) RefreshToken(oldClaims jwts.MapClaims) (*Token, jwts.MapClaims, er
 			}
 		}
 	}
-	//生成新token
+	// 生成新token
 	newToken, newClaims, err := j.GenerateToken(payloads)
 	if err != nil {
 		return nil, nil, err
 	}
-	//token存入redis
+	// token存入redis
 	err = j.JwtTokenStore(newClaims)
 	if err != nil {
 		return nil, nil, err
 	}
-	//老的token写入黑名单中
+	// 老的token写入黑名单中
 	err = j.JwtBlackTokenStore(oldClaims, newToken.Token)
 	if err != nil {
 		return nil, nil, err
@@ -226,7 +227,7 @@ func (j *Jwt) JwtBlackTokenCheck(oldClaims jwts.MapClaims) (bool, *Token) {
 	if err != nil {
 		return false, nil
 	}
-	//新的token不存在
+	// 新的token不存在
 	if newToken == "" {
 		return false, nil
 	}

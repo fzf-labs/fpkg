@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewGoRedis(t *testing.T) {
@@ -20,4 +22,5 @@ func TestNewGoRedis(t *testing.T) {
 	if err != nil {
 		return
 	}
+	assert.Equal(t, nil, err)
 }

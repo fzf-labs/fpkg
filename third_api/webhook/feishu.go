@@ -30,7 +30,7 @@ func NewFeiShuByCfg(cfg *FeiShuConfig) *FeiShu {
 }
 
 func (f *FeiShu) GenSign(secret string, timestamp int64) (string, error) {
-	//timestamp + key 做sha256, 再进行base64 encode
+	// timestamp + key 做sha256, 再进行base64 encode
 	stringToSign := fmt.Sprintf("%v", timestamp) + "\n" + secret
 
 	var data []byte

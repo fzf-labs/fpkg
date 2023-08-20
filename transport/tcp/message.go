@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 )
 
-type Any interface{}
+type Any any
 type MessageType uint32
 type MessagePayload Any
 

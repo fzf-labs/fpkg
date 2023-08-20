@@ -20,10 +20,10 @@ func NewPyroscopeServer(cfg *PyroscopeConfig) error {
 	fmt.Printf("Start pyroscope server, listen addr %s\n", cfg.Addr)
 	// 仅当您使用互斥锁或块分析时才需要这两行
 	// 请阅读以下说明，了解如何设置这些费率：
-	//runtime.SetMutexProfileFraction(5)
-	//runtime.SetBlockProfileRate(5)
+	// runtime.SetMutexProfileFraction(5)
+	// runtime.SetBlockProfileRate(5)
 	_, err := pyroscope.Start(pyroscope.Config{
-		//simple.golang.app
+		// simple.golang.app
 		ApplicationName: cfg.ApplicationName,
 
 		// 将其替换为 pyroscope 服务器的地址

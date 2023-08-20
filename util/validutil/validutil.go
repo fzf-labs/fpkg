@@ -12,7 +12,7 @@ import (
 )
 
 // IsZero 检查是否是零值
-func IsZero(i ...interface{}) bool {
+func IsZero(i ...any) bool {
 	for _, j := range i {
 		v := reflect.ValueOf(j)
 		if isZero(v) {

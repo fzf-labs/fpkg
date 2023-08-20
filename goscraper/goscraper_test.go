@@ -3,6 +3,8 @@ package goscraper
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestScrape(t *testing.T) {
@@ -11,4 +13,5 @@ func TestScrape(t *testing.T) {
 		return
 	}
 	fmt.Println(scrape)
+	assert.Equal(t, nil, err)
 }

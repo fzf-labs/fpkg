@@ -63,6 +63,7 @@ func (c *Client) Connect() error {
 		slog.Error("%s [%v]", err.Error(), resp)
 		return err
 	}
+	defer resp.Body.Close()
 	c.conn = conn
 
 	go c.run()
@@ -91,7 +92,7 @@ func (c *Client) DeregisterMessageHandler(messageType MessageType) {
 	delete(c.messageHandlers, messageType)
 }
 
-func (c *Client) SendMessage(messageType int, message interface{}) error {
+func (c *Client) SendMessage(messageType int, message any) error {
 	var msg Message
 	msg.Type = MessageType(messageType)
 	msg.Body, _ = encoding.Marshal(c.codec, message)

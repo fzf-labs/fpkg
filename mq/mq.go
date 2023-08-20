@@ -30,29 +30,27 @@ type IMQ interface {
 	Listen()
 }
 
-// MqConfig
-// @Description: 消息队列
-type MqConfig struct {
-	Switch      bool
-	Use         string
-	AsynqConfig *AsynqConfig
-	//RocketMqAliConfig *RocketMqAliConfig
-	//RocketMqConfig    *RocketMqConfig
-	//NsqConfig         *NsqConfig
+// Config 消息队列
+type Config struct {
+	Switch            bool
+	Use               string
+	AsynqConfig       *AsynqConfig
+	RocketMqAliConfig *RocketMqAliConfig
+	RocketMqConfig    *RocketMqConfig
+	NsqConfig         *NsqConfig
 }
 
-func NewMq(cfg *MqConfig) IMQ {
+func NewMq(cfg *Config) IMQ {
 	switch cfg.Use {
 	case "RocketMqAli":
-		//return NewRocketAli(cfg.RocketMqAliConfig)
+		return NewRocketAli(cfg.RocketMqAliConfig)
 	case "RocketMq":
-		//return NewRocket(cfg.RocketMqConfig)
+		return NewRocket(cfg.RocketMqConfig)
 	case "Nsq":
-		//return NewNSQ(cfg.NsqConfig)
+		return NewNSQ(cfg.NsqConfig)
 	case "Asynq":
 		return NewAsynq(cfg.AsynqConfig)
 	default:
 		panic("New Mq Error")
 	}
-	return nil
 }

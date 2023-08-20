@@ -16,7 +16,7 @@ type RueidisConfig struct {
 // NewRueidis  redis客户端rueidis
 // redis > 6.0
 func NewRueidis(conf *RueidisConfig) (rueidis.Client, error) {
-	//初始化rueidis
+	// 初始化rueidis
 	client, err := rueidis.NewClient(rueidis.ClientOption{
 		InitAddress: []string{conf.Addr},
 		Password:    conf.Password,

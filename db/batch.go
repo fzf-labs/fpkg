@@ -12,22 +12,22 @@ import (
 )
 
 // MysqlBatchUpdateToSQLArray 批量更新
-func MysqlBatchUpdateToSQLArray(tableName string, dataList interface{}) ([]string, error) {
-	//dataList 的数据类型
+func MysqlBatchUpdateToSQLArray(tableName string, dataList any) ([]string, error) {
+	// dataList 的数据类型
 	kind := reflect.TypeOf(dataList).Kind()
 	if kind != reflect.Slice {
 		return nil, errors.New("please set dataList for sli")
 	}
 	fieldValue := reflect.ValueOf(dataList)
 	fieldType := reflect.TypeOf(dataList).Elem().Elem()
-	//切片的长度
+	// 切片的长度
 	sliceLength := fieldValue.Len()
-	//字段的数量
+	// 字段的数量
 	fieldNum := fieldType.NumField()
 	// 检验结构体标签是否为空和重复
 	verifyTagDuplicate := make(map[string]string)
 	for i := 0; i < fieldNum; i++ {
-		//获取json tag字段的值
+		// 获取json tag字段的值
 		fieldName := strings.TrimSpace(fieldType.Field(i).Tag.Get("json"))
 		if fieldName == "" {
 			return nil, errors.New("please set json tag for struct")
@@ -39,7 +39,7 @@ func MysqlBatchUpdateToSQLArray(tableName string, dataList interface{}) ([]strin
 			return nil, errors.New(fmt.Sprintf("the structure tag: %v  is not allow duplication", fieldName))
 		}
 	}
-	//校验是否有id字段
+	// 校验是否有id字段
 	if _, ok := verifyTagDuplicate["id"]; !ok {
 		return nil, errors.New("please set json tag: id for struct")
 	}

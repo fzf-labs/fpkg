@@ -15,7 +15,7 @@ type TokenRecursiveMutex struct {
 
 // Lock 请求锁，需要传入token
 func (m *TokenRecursiveMutex) Lock(token int64) {
-	if atomic.LoadInt64(&m.token) == token { //如果传入的token和持有锁的token一致，说明是递归调用
+	if atomic.LoadInt64(&m.token) == token { // 如果传入的token和持有锁的token一致，说明是递归调用
 		m.recursion++
 		return
 	}

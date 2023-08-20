@@ -3,6 +3,8 @@ package repo
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewTemplate(t *testing.T) {
@@ -20,4 +22,5 @@ func TestNewTemplate(t *testing.T) {
 		return
 	}
 	fmt.Println(execute)
+	assert.Equal(t, nil, err)
 }

@@ -79,7 +79,7 @@ func partition[T any](slice []T, lowIndex, highIndex int, comparator Comparator)
 	p := slice[highIndex]
 	i := lowIndex
 	for j := lowIndex; j < highIndex; j++ {
-		if comparator.Compare(slice[j], p) == -1 { //slice[j] < p
+		if comparator.Compare(slice[j], p) == -1 { // slice[j] < p
 			swap(slice, i, j)
 			i++
 		}
@@ -109,10 +109,10 @@ func sift[T any](slice []T, lowIndex, highIndex int, comparator Comparator) {
 
 	temp := slice[i]
 	for j <= highIndex {
-		if j < highIndex && comparator.Compare(slice[j], slice[j+1]) == -1 { //slice[j] < slice[j+1]
+		if j < highIndex && comparator.Compare(slice[j], slice[j+1]) == -1 { // slice[j] < slice[j+1]
 			j++
 		}
-		if comparator.Compare(temp, slice[j]) == -1 { //tmp < slice[j]
+		if comparator.Compare(temp, slice[j]) == -1 { // tmp < slice[j]
 			slice[i] = slice[j]
 			i = j
 			j = 2*i + 1
@@ -143,7 +143,7 @@ func merge[T any](slice []T, lowIndex, midIndex, highIndex int, comparator Compa
 	temp := []T{}
 
 	for i <= midIndex && j <= highIndex {
-		//slice[i] < slice[j]
+		// slice[i] < slice[j]
 		if comparator.Compare(slice[i], slice[j]) == -1 {
 			temp = append(temp, slice[i])
 			i++
@@ -172,7 +172,7 @@ func CountSort[T any](slice []T, comparator Comparator) []T {
 	for i := 0; i < size; i++ {
 		count := 0
 		for j := 0; j < size; j++ {
-			//slice[i] > slice[j]
+			// slice[i] > slice[j]
 			if comparator.Compare(slice[i], slice[j]) == 1 {
 				count++
 			}

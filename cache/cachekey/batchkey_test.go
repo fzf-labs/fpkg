@@ -41,6 +41,7 @@ func TestBatchKey_RocksCacheBatch(t *testing.T) {
 		return
 	}
 	fmt.Println(batch)
+	assert.Equal(t, nil, err)
 }
 
 func TestBatchKey_BatchKeyCacheDel(t *testing.T) {

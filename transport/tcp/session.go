@@ -61,7 +61,6 @@ func (c *Session) Listen() {
 }
 
 func (c *Session) closeConnect() {
-	//slog.Info(c.SessionID(), " connection closed")
 	if c.conn != nil {
 		if err := c.conn.Close(); err != nil {
 			slog.Error("[tcp] disconnect error: %s", err.Error())
@@ -73,7 +72,7 @@ func (c *Session) closeConnect() {
 func (c *Session) writePump() {
 	defer c.Close()
 	for msg := range c.send {
-		//var len int
+		// var len int
 		var err error
 		if _, err = c.conn.Write(msg); err != nil {
 			slog.Error("[tcp] write message error: ", err)

@@ -37,7 +37,7 @@ func NewGoRedis(cfg GoRedisConfig) (*redis.Client, error) {
 	if err := redisotel.InstrumentMetrics(client); err != nil {
 		panic(err)
 	}
-	//ping 检测一下
+	// ping 检测一下
 	_, err := client.Ping(context.Background()).Result()
 	if err != nil {
 		return nil, err

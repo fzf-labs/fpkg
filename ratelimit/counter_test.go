@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_counter_Allow(t *testing.T) {
@@ -12,9 +14,10 @@ func Test_counter_Allow(t *testing.T) {
 	for {
 		allow := counter.Allow()
 		fmt.Println(i, allow)
-		i++
 		if !allow {
-			return
+			break
 		}
+		i++
 	}
+	assert.Equal(t, 11, i)
 }

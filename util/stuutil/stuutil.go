@@ -10,7 +10,7 @@ import (
 )
 
 // StructToURLEncode 结构体转url参数
-func StructToURLEncode(u interface{}) string {
+func StructToURLEncode(u any) string {
 	var str string
 	t := reflect.TypeOf(u)
 	v := reflect.ValueOf(u)
@@ -26,7 +26,7 @@ func StructToURLEncode(u interface{}) string {
 }
 
 // StructToSliceAndMap 结构体转换为 切片key,切片值,map
-func StructToSliceAndMap(data interface{}) (sliceKey, sliceVale []string, m map[string]string) {
+func StructToSliceAndMap(data any) (sliceKey, sliceVale []string, m map[string]string) {
 	kvs := make(map[string]string)
 	var keys []string
 	var vals []string
@@ -36,10 +36,7 @@ func StructToSliceAndMap(data interface{}) (sliceKey, sliceVale []string, m map[
 	for i := 0; i < fieldNum; i++ {
 		field := t.Field(i)
 		tag := string(field.Tag)
-		reg, err := regexp.Compile(`json:"(.*?)"`)
-		if err != nil {
-			continue
-		}
+		reg := regexp.MustCompile(`json:"(.*?)"`)
 		rs := reg.FindStringSubmatch(tag)
 		if len(rs) != 2 {
 			continue

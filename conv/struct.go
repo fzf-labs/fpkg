@@ -28,7 +28,6 @@ func StructToMap(value any) (map[string]any, error) {
 		name := t.Field(i).Name
 		tag := t.Field(i).Tag.Get("json")
 		if regex.MatchString(name) && tag != "" {
-			//result[name] = v.Field(i).Interface()
 			result[tag] = v.Field(i).Interface()
 		}
 	}

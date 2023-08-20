@@ -42,7 +42,7 @@ type AuthConfig struct {
 
 // AuthQq QQ授权登录
 type AuthQq struct {
-	config *AuthConfig //配置信息
+	config *AuthConfig // 配置信息
 }
 
 // NewAuthQq QQ授权登录实例化

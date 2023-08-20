@@ -4,10 +4,12 @@ import (
 	"encoding/hex"
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRsa(t *testing.T) {
-	//rsa 密钥文件产生
+	// rsa 密钥文件产生
 	fmt.Println("-------------------------------获取RSA公私钥-----------------------------------------")
 	prvKey, pubKey := GenRsaKey()
 	fmt.Println(string(prvKey))
@@ -28,4 +30,5 @@ func TestRsa(t *testing.T) {
 	fmt.Println("公钥加密后的数据：", hex.EncodeToString(ciphertext))
 	sourceData := RsaDecrypt(ciphertext, prvKey)
 	fmt.Println("私钥解密后的数据：", string(sourceData))
+	assert.True(t, len(sourceData) > 0)
 }

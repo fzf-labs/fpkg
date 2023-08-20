@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/fzf-labs/fpkg/tracing"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewClient(t *testing.T) {
@@ -26,4 +27,5 @@ func TestNewClient(t *testing.T) {
 	fmt.Println(response.Status)
 	fmt.Println(err)
 	time.Sleep(time.Second * 10)
+	assert.Equal(t, nil, err)
 }

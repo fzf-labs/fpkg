@@ -1,14 +1,21 @@
 package iputil
 
 import (
-	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetPublicIP(t *testing.T) {
-	fmt.Println(GetPublicIP())
+	ip := GetPublicIP()
+	assert.True(t, ip != "")
 }
 
 func TestGetPublicIPByHTTP(t *testing.T) {
-	fmt.Println(GetPublicIPByHTTP())
+	ip, err := GetPublicIPByHTTP()
+	if err != nil {
+		return
+	}
+	assert.True(t, ip != "")
+	assert.Equal(t, nil, err)
 }

@@ -3,6 +3,8 @@ package conv
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSliToMap(t *testing.T) {
@@ -12,4 +14,5 @@ func TestSliToMap(t *testing.T) {
 		return s, s
 	})
 	fmt.Println(sliToMap)
+	assert.True(t, len(sliToMap) > 0)
 }

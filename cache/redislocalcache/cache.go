@@ -14,11 +14,11 @@ import (
 var defaultPubSubKey = "RedisLocalCachePubSubKeyDel"
 
 type rediser interface {
-	Set(ctx context.Context, key string, value interface{}, ttl time.Duration) *redis.StatusCmd
+	Set(ctx context.Context, key string, value any, ttl time.Duration) *redis.StatusCmd
 	Get(ctx context.Context, key string) *redis.StringCmd
 	Del(ctx context.Context, keys ...string) *redis.IntCmd
 
-	Publish(ctx context.Context, channel string, message interface{}) *redis.IntCmd
+	Publish(ctx context.Context, channel string, message any) *redis.IntCmd
 	Subscribe(ctx context.Context, channels ...string) *redis.PubSub
 }
 type CacheOption func(cache *Cache)

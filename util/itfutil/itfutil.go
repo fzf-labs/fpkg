@@ -7,7 +7,7 @@ import (
 )
 
 // ToBytes 转 bytes
-func ToBytes(key interface{}) ([]byte, error) {
+func ToBytes(key any) ([]byte, error) {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	err := enc.Encode(key)
@@ -19,7 +19,7 @@ func ToBytes(key interface{}) ([]byte, error) {
 
 // IsEmpty 检查给定的“值”是否为空。
 // 如果 `value` 位于：0、nil、false、""、len(slicemapchan) == 0，则返回 true，否则返回 false。
-func IsEmpty(value interface{}) bool {
+func IsEmpty(value any) bool {
 	if value == nil {
 		return true
 	}
@@ -66,7 +66,7 @@ func IsEmpty(value interface{}) bool {
 		return len(value) == 0
 	case []float64:
 		return len(value) == 0
-	case map[string]interface{}:
+	case map[string]any:
 		return len(value) == 0
 	default:
 		// Finally using reflect.
@@ -124,7 +124,7 @@ func IsEmpty(value interface{}) bool {
 
 // IsNil 检查给定的“值”是否为零。
 // 如果给定的 value 是也指向指针的 pinter 类型，则参数 traceSource 用于跟踪源变量。如果 traceSource 为真时源为 nil，则返回 nil。请注意，它可能会使用反射功能，这会稍微影响性能。
-func IsNil(value interface{}, traceSource ...bool) bool {
+func IsNil(value any, traceSource ...bool) bool {
 	if value == nil {
 		return true
 	}

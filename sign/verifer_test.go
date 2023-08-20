@@ -23,9 +23,9 @@ func TestVerify_ParseQuery(t *testing.T) {
 	}
 
 	// 第三步：检查时间戳是否超时。
-	//if err := verifier.CheckTimeStamp(); err != nil {
-	//	t.Fatal(err)
-	//}
+	if err := verifier.CheckTimeStamp(); err != nil {
+		t.Fatal(err)
+	}
 
 	// 第四步，创建Sign来重现客户端的签名信息：
 	signer := NewSignerMd5()

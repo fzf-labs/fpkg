@@ -10,7 +10,7 @@ type OriginValueAndKindOutput struct {
 }
 
 // OriginValueAndKind 检索并返回原始反映值和种类。
-func OriginValueAndKind(value interface{}) (out OriginValueAndKindOutput) {
+func OriginValueAndKind(value any) (out OriginValueAndKindOutput) {
 	if v, ok := value.(reflect.Value); ok {
 		out.InputValue = v
 	} else {
@@ -34,7 +34,7 @@ type OriginTypeAndKindOutput struct {
 }
 
 // OriginTypeAndKind 检索并返回原始反射类型和种类。
-func OriginTypeAndKind(value interface{}) (out OriginTypeAndKindOutput) {
+func OriginTypeAndKind(value any) (out OriginTypeAndKindOutput) {
 	if value == nil {
 		return
 	}
@@ -58,7 +58,7 @@ func OriginTypeAndKind(value interface{}) (out OriginTypeAndKindOutput) {
 }
 
 // ValueToInterface 将反射值转换为其接口类型。
-func ValueToInterface(v reflect.Value) (value interface{}, ok bool) {
+func ValueToInterface(v reflect.Value) (value any, ok bool) {
 	if v.IsValid() && v.CanInterface() {
 		return v.Interface(), true
 	}

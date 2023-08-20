@@ -21,13 +21,13 @@ func NewSinglyLink[T any]() *SinglyLink[T] {
 
 // InsertAtHead 插入节点到头部
 func (l *SinglyLink[T]) InsertAtHead(value T) {
-	//创建新节点
+	// 创建新节点
 	newNode := NewLinkNode(value).Next
-	//新链表的下一个节点为原链表的头节点
+	// 新链表的下一个节点为原链表的头节点
 	newNode.Next = l.Head
-	//链表的头节点为新节点
+	// 链表的头节点为新节点
 	l.Head = newNode
-	//链表长度加1
+	// 链表长度加1
 	l.length++
 }
 
@@ -44,7 +44,7 @@ func (l *SinglyLink[T]) InsertAtTail(value T) {
 	newNode := NewLinkNode(value)
 	newNode.Next = nil
 	current.Next = newNode
-	//链表长度加1
+	// 链表长度加1
 	l.length++
 }
 

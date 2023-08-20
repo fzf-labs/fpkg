@@ -31,7 +31,7 @@ func (c *Counter) Allow() bool {
 
 	if c.count > c.rate-1 {
 		now := time.Now()
-		//已经超过时间周期了
+		// 已经超过时间周期了
 		if now.Sub(c.begin) >= c.cycle {
 			c.begin = now
 			c.count = 0

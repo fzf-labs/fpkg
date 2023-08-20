@@ -6,10 +6,10 @@ import (
 )
 
 type Validation interface {
-	Tag() string                           //标签
-	ZhTranslation() string                 //中文翻译
-	EnTranslation() string                 //英语翻译
-	Validate(fl validator.FieldLevel) bool //验证函数
+	Tag() string                           // 标签
+	ZhTranslation() string                 // 中文翻译
+	EnTranslation() string                 // 英语翻译
+	Validate(fl validator.FieldLevel) bool // 验证函数
 }
 
 func (v *ValidatorX) RegisterValidate(validations ...Validation) error {

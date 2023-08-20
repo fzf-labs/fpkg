@@ -3,6 +3,8 @@ package validatorx
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewValidator(t *testing.T) {
@@ -18,6 +20,6 @@ func TestNewValidator(t *testing.T) {
 		Info:    "12312",
 	}
 	err := validator.Validate(man, "zh")
-
 	fmt.Println(err)
+	assert.Equal(t, nil, err)
 }

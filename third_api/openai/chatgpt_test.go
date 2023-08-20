@@ -3,6 +3,8 @@ package openai
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestChatGPT_Completions(t *testing.T) {
@@ -12,6 +14,7 @@ func TestChatGPT_Completions(t *testing.T) {
 		return
 	}
 	fmt.Println(completions)
+	assert.Equal(t, nil, err)
 }
 
 func TestChatGPT_ChatCompletions(t *testing.T) {
@@ -27,4 +30,5 @@ func TestChatGPT_ChatCompletions(t *testing.T) {
 		return
 	}
 	fmt.Println(completions)
+	assert.Equal(t, nil, err)
 }

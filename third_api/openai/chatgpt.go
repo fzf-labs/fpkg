@@ -17,15 +17,15 @@ func NewChatGPT(apiKey string) *ChatGPT {
 }
 
 type CompletionsReq struct {
-	Model       string      `json:"model"`
-	Prompt      string      `json:"prompt"`
-	MaxTokens   int         `json:"max_tokens"`
-	Temperature float32     `json:"temperature"`
-	TopP        int         `json:"top_p"`
-	N           int         `json:"n"`
-	Stream      bool        `json:"stream"`
-	Logprobs    interface{} `json:"logprobs"`
-	Stop        string      `json:"stop"`
+	Model       string  `json:"model"`
+	Prompt      string  `json:"prompt"`
+	MaxTokens   int     `json:"max_tokens"`
+	Temperature float32 `json:"temperature"`
+	TopP        int     `json:"top_p"`
+	N           int     `json:"n"`
+	Stream      bool    `json:"stream"`
+	Logprobs    any     `json:"logprobs"`
+	Stop        string  `json:"stop"`
 }
 
 type CompletionsResp struct {
@@ -34,10 +34,10 @@ type CompletionsResp struct {
 	Created int    `json:"created"`
 	Model   string `json:"model"`
 	Choices []struct {
-		Text         string      `json:"text"`
-		Index        int         `json:"index"`
-		Logprobs     interface{} `json:"logprobs"`
-		FinishReason string      `json:"finish_reason"`
+		Text         string `json:"text"`
+		Index        int    `json:"index"`
+		Logprobs     any    `json:"logprobs"`
+		FinishReason string `json:"finish_reason"`
 	} `json:"choices"`
 	Usage struct {
 		PromptTokens     int `json:"prompt_tokens"`

@@ -45,10 +45,10 @@ func GetFmtTime(ms int64) (res string) {
 }
 
 type CPUInfo struct {
-	VendorID string `json:"vendorID"` //CPU制造商ID
-	CPUModel string `json:"cpuModel"` //cpu具体型号
-	CoreNum  string `json:"coreNum"`  //核心数
-	Percent  string `json:"percent"`  //百分比
+	VendorID string `json:"vendorID"` // CPU制造商ID
+	CPUModel string `json:"cpuModel"` // CPU具体型号
+	CoreNum  string `json:"coreNum"`  // 核心数
+	Percent  string `json:"percent"`  // 百分比
 }
 
 // GetCPUInfo 获取CPU信息
@@ -80,10 +80,10 @@ func GetCPUInfo() (*CPUInfo, error) {
 }
 
 type MemoryInfo struct {
-	Total string `json:"total"` //总占用
-	Used  string `json:"used"`  //已使用
-	Free  string `json:"free"`  //可用的
-	Usage string `json:"usage"` //使用占比
+	Total string `json:"total"` // 总占用
+	Used  string `json:"used"`  // 已使用
+	Free  string `json:"free"`  // 可用的
+	Usage string `json:"usage"` // 使用占比
 }
 
 // GetMemInfo 获取内存信息
@@ -101,13 +101,13 @@ func GetMemInfo() (*MemoryInfo, error) {
 }
 
 type DiskInfo struct {
-	DirName     string `json:"dirName"`     //盘符路径
-	SysTypeName string `json:"sysTypeName"` //文件系统
-	TypeName    string `json:"typeName"`    //盘符类型
-	Total       string `json:"total"`       //总占用
-	Used        string `json:"used"`        //已使用
-	Free        string `json:"free"`        //可用的
-	Usage       string `json:"usage"`       //使用占比
+	DirName     string `json:"dirName"`     // 盘符路径
+	SysTypeName string `json:"sysTypeName"` // 文件系统
+	TypeName    string `json:"typeName"`    // 盘符类型
+	Total       string `json:"total"`       // 总占用
+	Used        string `json:"used"`        // 已使用
+	Free        string `json:"free"`        // 可用的
+	Usage       string `json:"usage"`       // 使用占比
 }
 
 // GetDiskInfo 获取磁盘信息
@@ -137,18 +137,18 @@ func GetDiskInfo() ([]DiskInfo, error) {
 }
 
 type SysInfo struct {
-	ComputerName string `json:"computerName"` //服务器名称
-	LocalIP      string `json:"localIP"`      //内网ip
-	PublicIP     string `json:"publicIP"`     //外网ip
-	Os           string `json:"os"`           //系统类型
-	Arch         string `json:"arch"`         //系统架构
+	ComputerName string `json:"computerName"` // 服务器名称
+	LocalIP      string `json:"localIP"`      // 内网ip
+	PublicIP     string `json:"publicIP"`     // 外网ip
+	Os           string `json:"os"`           // 系统类型
+	Arch         string `json:"arch"`         // 系统架构
 
-	GoVersion        string `json:"goVersion"`        //golang 版本
-	NpmVersion       string `json:"npmVersion"`       //npm 版本
-	NodeVersion      string `json:"nodeVersion"`      //node 版本
-	ProjectPath      string `json:"projectPath"`      //项目地址
-	ProjectStartTime string `json:"projectStartTime"` //项目启动时间
-	ProjectRunTime   string `json:"projectRunTime"`   //项目运行时间
+	GoVersion        string `json:"goVersion"`        // golang 版本
+	NpmVersion       string `json:"npmVersion"`       // npm 版本
+	NodeVersion      string `json:"nodeVersion"`      // node 版本
+	ProjectPath      string `json:"projectPath"`      // 项目地址
+	ProjectStartTime string `json:"projectStartTime"` // 项目启动时间
+	ProjectRunTime   string `json:"projectRunTime"`   // 项目运行时间
 
 }
 

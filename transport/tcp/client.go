@@ -50,15 +50,7 @@ func (c *Client) init(opts ...ClientOption) {
 	for _, o := range opts {
 		o(c)
 	}
-
 	addr := c.url
-
-	//prefix := "tcp://"
-	//if !strings.HasPrefix(addr, "tcp://") {
-	//	prefix = "tcp://"
-	//}
-	//addr = prefix + addr
-
 	c.endpoint, _ = url.Parse(addr)
 }
 
@@ -66,19 +58,14 @@ func (c *Client) Connect() error {
 	if c.endpoint == nil {
 		return errors.New("endpoint is nil")
 	}
-
 	slog.Info("[tcp] connecting to %s", c.endpoint.String())
-
 	conn, err := net.Dial("tcp", c.endpoint.String())
 	if err != nil {
 		slog.Error("[tcp] cant connect to server: %s", err.Error())
 		return err
 	}
-
 	c.conn = conn
-
 	go c.run()
-
 	return nil
 }
 
@@ -110,7 +97,7 @@ func (c *Client) SendRawData(message []byte) error {
 	return nil
 }
 
-func (c *Client) SendMessage(messageType int, message interface{}) error {
+func (c *Client) SendMessage(messageType int, message any) error {
 	var msg Message
 	msg.Type = MessageType(messageType)
 	msg.Body, _ = encoding.Marshal(c.codec, message)

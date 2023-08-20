@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/fzf-labs/fpkg/cache/redis"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLockKey_AutoLock(t *testing.T) {
@@ -30,6 +31,7 @@ func TestLockKey_AutoLock(t *testing.T) {
 	if err != nil {
 		return
 	}
+	assert.Equal(t, nil, err)
 }
 
 func TestLockKey_AutoLockRetry(t *testing.T) {
@@ -53,4 +55,5 @@ func TestLockKey_AutoLockRetry(t *testing.T) {
 	if err != nil {
 		return
 	}
+	assert.Equal(t, nil, err)
 }

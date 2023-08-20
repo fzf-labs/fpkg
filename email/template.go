@@ -123,7 +123,7 @@ func (w *Website) NotifyMailData(jumpURL, greeting, intro, outro string) (subjec
 }
 
 // getEmailHTMLContent 获取邮件模板
-func getEmailHTMLContent(tplPath string, mailData interface{}) string {
+func getEmailHTMLContent(tplPath string, mailData any) string {
 	b, err := os.ReadFile(tplPath)
 	if err != nil {
 		fmt.Printf("[util.email] read file err: %v", err)

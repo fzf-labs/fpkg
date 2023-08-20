@@ -181,7 +181,6 @@ func UnZip(zipFile, destPath string) error {
 		return err
 	}
 	defer zipReader.Close()
-
 	for _, f := range zipReader.File {
 		path := filepath.Join(destPath, f.Name)
 		if f.FileInfo().IsDir() {
@@ -189,26 +188,25 @@ func UnZip(zipFile, destPath string) error {
 			if err != nil {
 				return err
 			}
-		} else {
-			if err2 := os.MkdirAll(filepath.Dir(path), os.ModePerm); err2 != nil {
-				return err2
-			}
-			inFile, err2 := f.Open()
-			if err2 != nil {
-				return err2
-			}
-			defer inFile.Close()
-
-			outFile, err2 := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-			if err2 != nil {
-				return err2
-			}
-			defer outFile.Close()
-
-			_, err2 = io.Copy(outFile, inFile)
-			if err2 != nil {
-				return err2
-			}
+			continue
+		}
+		if err2 := os.MkdirAll(filepath.Dir(path), os.ModePerm); err2 != nil {
+			return err2
+		}
+		inFile, err2 := f.Open()
+		if err2 != nil {
+			return err2
+		}
+		outFile, err2 := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+		if err2 != nil {
+			inFile.Close() // 关闭输入文件
+			return err2
+		}
+		_, err2 = io.Copy(outFile, inFile)
+		outFile.Close() // 关闭输出文件
+		inFile.Close()  // 关闭输入文件
+		if err2 != nil {
+			return err2
 		}
 	}
 	return nil

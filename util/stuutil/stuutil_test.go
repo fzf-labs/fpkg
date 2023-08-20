@@ -23,7 +23,7 @@ func TestStructToURLEncode(t *testing.T) {
 
 func TestStructToSliceAndMap(t *testing.T) {
 	type args struct {
-		data interface{}
+		data any
 	}
 	tests := []struct {
 		name          string

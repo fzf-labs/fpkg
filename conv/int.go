@@ -7,7 +7,7 @@ import (
 )
 
 // Int converts `any` to int.
-func Int(any interface{}) int {
+func Int(any any) int {
 	if any == nil {
 		return 0
 	}
@@ -18,7 +18,7 @@ func Int(any interface{}) int {
 }
 
 // Int8 converts `any` to int8.
-func Int8(any interface{}) int8 {
+func Int8(any any) int8 {
 	if any == nil {
 		return 0
 	}
@@ -29,7 +29,7 @@ func Int8(any interface{}) int8 {
 }
 
 // Int16 converts `any` to int16.
-func Int16(any interface{}) int16 {
+func Int16(any any) int16 {
 	if any == nil {
 		return 0
 	}
@@ -40,7 +40,7 @@ func Int16(any interface{}) int16 {
 }
 
 // Int32 converts `any` to int32.
-func Int32(any interface{}) int32 {
+func Int32(any any) int32 {
 	if any == nil {
 		return 0
 	}
@@ -51,7 +51,7 @@ func Int32(any interface{}) int32 {
 }
 
 // Int64 converts `any` to int64.
-func Int64(any interface{}) int64 {
+func Int64(any any) int64 {
 	if any == nil {
 		return 0
 	}
