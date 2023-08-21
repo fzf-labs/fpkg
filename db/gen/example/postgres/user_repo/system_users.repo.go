@@ -24,8 +24,9 @@ var (
 	// 缓存管理器
 	cacheKeySystemUsersManage = cachekey.NewKeyManage("SystemUsersRepo")
 	// 只针对唯一索引做缓存
-	CacheSystemUsersByID                         = cacheKeySystemUsersManage.AddKey("CacheSystemUsersByID", time.Hour*24, "CacheSystemUsersByID")
-	CacheSystemUsersByUsernameUpdateTimeTenantID = cacheKeySystemUsersManage.AddKey("CacheSystemUsersByUsernameUpdateTimeTenantID", time.Hour*24, "CacheSystemUsersByUsernameUpdateTimeTenantID")
+	CacheSystemUsersByUsername = cacheKeySystemUsersManage.AddKey("CacheSystemUsersByUsername", time.Hour*24, "CacheSystemUsersByUsername")
+	CacheSystemUsersByID       = cacheKeySystemUsersManage.AddKey("CacheSystemUsersByID", time.Hour*24, "CacheSystemUsersByID")
+	CacheSystemUsersByMobile   = cacheKeySystemUsersManage.AddKey("CacheSystemUsersByMobile", time.Hour*24, "CacheSystemUsersByMobile")
 )
 
 type (
@@ -34,6 +35,14 @@ type (
 		CreateOne(ctx context.Context, data *user_model.SystemUsers) error
 		// UpdateOne 更新一条数据
 		UpdateOne(ctx context.Context, data *user_model.SystemUsers) error
+		// DeleteOneCacheByUsername 根据username删除一条数据并清理缓存
+		DeleteOneCacheByUsername(ctx context.Context, username string) error
+		// DeleteMultiCacheByUsernames 根据Usernames删除多条数据并清理缓存
+		DeleteMultiCacheByUsernames(ctx context.Context, usernames []string) error
+		// DeleteOneByUsername 根据username删除一条数据
+		DeleteOneByUsername(ctx context.Context, username string) error
+		// DeleteMultiByUsernames 根据Usernames删除多条数据
+		DeleteMultiByUsernames(ctx context.Context, usernames []string) error
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
 		DeleteOneCacheByID(ctx context.Context, ID int64) error
 		// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
@@ -42,12 +51,24 @@ type (
 		DeleteOneByID(ctx context.Context, ID int64) error
 		// DeleteMultiByIDS 根据IDS删除多条数据
 		DeleteMultiByIDS(ctx context.Context, IDS []int64) error
-		// DeleteOneCacheByUsernameUpdateTimeTenantID 根据UsernameUpdateTimeTenantID删除一条数据并清理缓存
-		DeleteOneCacheByUsernameUpdateTimeTenantID(ctx context.Context, username string, updateTime time.Time, tenantID int64) error
-		// DeleteOneByUsernameUpdateTimeTenantID 根据UsernameUpdateTimeTenantID删除一条数据
-		DeleteOneByUsernameUpdateTimeTenantID(ctx context.Context, username string, updateTime time.Time, tenantID int64) error
+		// DeleteOneCacheByMobile 根据mobile删除一条数据并清理缓存
+		DeleteOneCacheByMobile(ctx context.Context, mobile string) error
+		// DeleteMultiCacheByMobiles 根据Mobiles删除多条数据并清理缓存
+		DeleteMultiCacheByMobiles(ctx context.Context, mobiles []string) error
+		// DeleteOneByMobile 根据mobile删除一条数据
+		DeleteOneByMobile(ctx context.Context, mobile string) error
+		// DeleteMultiByMobiles 根据Mobiles删除多条数据
+		DeleteMultiByMobiles(ctx context.Context, mobiles []string) error
 		// DeleteUniqueIndexCache 删除唯一索引存在的缓存
 		DeleteUniqueIndexCache(ctx context.Context, data []*user_model.SystemUsers) error
+		// FindOneCacheByUsername 根据username查询一条数据并设置缓存
+		FindOneCacheByUsername(ctx context.Context, username string) (*user_model.SystemUsers, error)
+		// FindMultiCacheByUsernames 根据usernames查询多条数据并设置缓存
+		FindMultiCacheByUsernames(ctx context.Context, usernames []string) ([]*user_model.SystemUsers, error)
+		// FindOneByUsername 根据username查询一条数据
+		FindOneByUsername(ctx context.Context, username string) (*user_model.SystemUsers, error)
+		// FindMultiByUsernames 根据usernames查询多条数据
+		FindMultiByUsernames(ctx context.Context, usernames []string) ([]*user_model.SystemUsers, error)
 		// FindOneCacheByID 根据ID查询一条数据并设置缓存
 		FindOneCacheByID(ctx context.Context, ID int64) (*user_model.SystemUsers, error)
 		// FindMultiCacheByIDS 根据IDS查询多条数据并设置缓存
@@ -56,10 +77,20 @@ type (
 		FindOneByID(ctx context.Context, ID int64) (*user_model.SystemUsers, error)
 		// FindMultiByIDS 根据IDS查询多条数据
 		FindMultiByIDS(ctx context.Context, IDS []int64) ([]*user_model.SystemUsers, error)
-		// FindOneCacheByUsernameUpdateTimeTenantID 根据UsernameUpdateTimeTenantID查询一条数据并设置缓存
-		FindOneCacheByUsernameUpdateTimeTenantID(ctx context.Context, username string, updateTime time.Time, tenantID int64) (*user_model.SystemUsers, error)
-		// FindOneByUsernameUpdateTimeTenantID 根据UsernameUpdateTimeTenantID查询一条数据
-		FindOneByUsernameUpdateTimeTenantID(ctx context.Context, username string, updateTime time.Time, tenantID int64) (*user_model.SystemUsers, error)
+		// FindOneCacheByMobile 根据mobile查询一条数据并设置缓存
+		FindOneCacheByMobile(ctx context.Context, mobile string) (*user_model.SystemUsers, error)
+		// FindMultiCacheByMobiles 根据mobiles查询多条数据并设置缓存
+		FindMultiCacheByMobiles(ctx context.Context, mobiles []string) ([]*user_model.SystemUsers, error)
+		// FindOneByMobile 根据mobile查询一条数据
+		FindOneByMobile(ctx context.Context, mobile string) (*user_model.SystemUsers, error)
+		// FindMultiByMobiles 根据mobiles查询多条数据
+		FindMultiByMobiles(ctx context.Context, mobiles []string) ([]*user_model.SystemUsers, error)
+		// FindMultiByEmail 根据email查询多条数据
+		FindMultiByEmail(ctx context.Context, email string) ([]*user_model.SystemUsers, error)
+		// FindMultiByEmails 根据emails查询多条数据
+		FindMultiByEmails(ctx context.Context, emails []string) ([]*user_model.SystemUsers, error)
+		// FindMultiByDeptIDStatus 根据DeptIDStatus查询多条数据
+		FindMultiByDeptIDStatus(ctx context.Context, deptID int64, status int16) ([]*user_model.SystemUsers, error)
 	}
 
 	SystemUsersRepo struct {
@@ -93,6 +124,68 @@ func (r *SystemUsersRepo) UpdateOne(ctx context.Context, data *user_model.System
 		return err
 	}
 	err = r.DeleteUniqueIndexCache(ctx, []*user_model.SystemUsers{data})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteOneCacheByUsername 根据username删除一条数据并清理缓存
+func (r *SystemUsersRepo) DeleteOneCacheByUsername(ctx context.Context, username string) error {
+	dao := user_dao.Use(r.db).SystemUsers
+	first, err := dao.WithContext(ctx).Where(dao.Username.Eq(username)).First()
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	if first == nil {
+		return nil
+	}
+	_, err = dao.WithContext(ctx).Where(dao.Username.Eq(username)).Delete()
+	if err != nil {
+		return err
+	}
+	err = r.DeleteUniqueIndexCache(ctx, []*user_model.SystemUsers{first})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteMultiCacheByUsernames 根据usernames删除多条数据并清理缓存
+func (r *SystemUsersRepo) DeleteMultiCacheByUsernames(ctx context.Context, usernames []string) error {
+	dao := user_dao.Use(r.db).SystemUsers
+	list, err := dao.WithContext(ctx).Where(dao.Username.In(usernames...)).Find()
+	if err != nil {
+		return err
+	}
+	if len(list) == 0 {
+		return nil
+	}
+	_, err = dao.WithContext(ctx).Where(dao.Username.In(usernames...)).Delete()
+	if err != nil {
+		return err
+	}
+	err = r.DeleteUniqueIndexCache(ctx, list)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteOneByUsername 根据username删除一条数据
+func (r *SystemUsersRepo) DeleteOneByUsername(ctx context.Context, username string) error {
+	dao := user_dao.Use(r.db).SystemUsers
+	_, err := dao.WithContext(ctx).Where(dao.Username.Eq(username)).Delete()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteMultiByUsernames 根据usernames删除多条数据
+func (r *SystemUsersRepo) DeleteMultiByUsernames(ctx context.Context, usernames []string) error {
+	dao := user_dao.Use(r.db).SystemUsers
+	_, err := dao.WithContext(ctx).Where(dao.Username.In(usernames...)).Delete()
 	if err != nil {
 		return err
 	}
@@ -161,17 +254,17 @@ func (r *SystemUsersRepo) DeleteMultiByIDS(ctx context.Context, IDS []int64) err
 	return nil
 }
 
-// DeleteOneCacheByUsernameUpdateTimeTenantID 根据username删除一条数据并清理缓存
-func (r *SystemUsersRepo) DeleteOneCacheByUsernameUpdateTimeTenantID(ctx context.Context, username string, updateTime time.Time, tenantID int64) error {
+// DeleteOneCacheByMobile 根据mobile删除一条数据并清理缓存
+func (r *SystemUsersRepo) DeleteOneCacheByMobile(ctx context.Context, mobile string) error {
 	dao := user_dao.Use(r.db).SystemUsers
-	first, err := dao.WithContext(ctx).Where(dao.Username.Eq(username), dao.UpdateTime.Eq(updateTime), dao.TenantID.Eq(tenantID)).First()
+	first, err := dao.WithContext(ctx).Where(dao.Mobile.Eq(mobile)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 	if first == nil {
 		return nil
 	}
-	_, err = dao.WithContext(ctx).Where(dao.Username.Eq(username), dao.UpdateTime.Eq(updateTime), dao.TenantID.Eq(tenantID)).Delete()
+	_, err = dao.WithContext(ctx).Where(dao.Mobile.Eq(mobile)).Delete()
 	if err != nil {
 		return err
 	}
@@ -180,38 +273,156 @@ func (r *SystemUsersRepo) DeleteOneCacheByUsernameUpdateTimeTenantID(ctx context
 		return err
 	}
 	return nil
-
 }
 
-// DeleteOneByUsernameUpdateTimeTenantID 根据username删除一条数据
-func (r *SystemUsersRepo) DeleteOneByUsernameUpdateTimeTenantID(ctx context.Context, username string, updateTime time.Time, tenantID int64) error {
+// DeleteMultiCacheByMobiles 根据mobiles删除多条数据并清理缓存
+func (r *SystemUsersRepo) DeleteMultiCacheByMobiles(ctx context.Context, mobiles []string) error {
 	dao := user_dao.Use(r.db).SystemUsers
-	_, err := dao.WithContext(ctx).Where(dao.Username.Eq(username), dao.UpdateTime.Eq(updateTime), dao.TenantID.Eq(tenantID)).Delete()
+	list, err := dao.WithContext(ctx).Where(dao.Mobile.In(mobiles...)).Find()
+	if err != nil {
+		return err
+	}
+	if len(list) == 0 {
+		return nil
+	}
+	_, err = dao.WithContext(ctx).Where(dao.Mobile.In(mobiles...)).Delete()
+	if err != nil {
+		return err
+	}
+	err = r.DeleteUniqueIndexCache(ctx, list)
 	if err != nil {
 		return err
 	}
 	return nil
+}
 
+// DeleteOneByMobile 根据mobile删除一条数据
+func (r *SystemUsersRepo) DeleteOneByMobile(ctx context.Context, mobile string) error {
+	dao := user_dao.Use(r.db).SystemUsers
+	_, err := dao.WithContext(ctx).Where(dao.Mobile.Eq(mobile)).Delete()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteMultiByMobiles 根据mobiles删除多条数据
+func (r *SystemUsersRepo) DeleteMultiByMobiles(ctx context.Context, mobiles []string) error {
+	dao := user_dao.Use(r.db).SystemUsers
+	_, err := dao.WithContext(ctx).Where(dao.Mobile.In(mobiles...)).Delete()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // DeleteUniqueIndexCache 删除唯一索引存在的缓存
 func (r *SystemUsersRepo) DeleteUniqueIndexCache(ctx context.Context, data []*user_model.SystemUsers) error {
 	var err error
+	cacheSystemUsersByUsername := CacheSystemUsersByUsername.NewSingleKey(r.rockscache)
 	cacheSystemUsersByID := CacheSystemUsersByID.NewSingleKey(r.rockscache)
-	cacheSystemUsersByUsernameUpdateTimeTenantID := CacheSystemUsersByUsernameUpdateTimeTenantID.NewSingleKey(r.rockscache)
+	cacheSystemUsersByMobile := CacheSystemUsersByMobile.NewSingleKey(r.rockscache)
 
 	for _, v := range data {
+		err = cacheSystemUsersByUsername.SingleCacheDel(ctx, cacheSystemUsersByUsername.BuildKey(v.Username))
+		if err != nil {
+			return err
+		}
 		err = cacheSystemUsersByID.SingleCacheDel(ctx, cacheSystemUsersByID.BuildKey(v.ID))
 		if err != nil {
 			return err
 		}
-		err = cacheSystemUsersByUsernameUpdateTimeTenantID.SingleCacheDel(ctx, cacheSystemUsersByUsernameUpdateTimeTenantID.BuildKey(v.Username, v.UpdateTime, v.TenantID))
+		err = cacheSystemUsersByMobile.SingleCacheDel(ctx, cacheSystemUsersByMobile.BuildKey(v.Mobile))
 		if err != nil {
 			return err
 		}
 
 	}
 	return nil
+}
+
+// FindOneCacheByUsername 根据username查询一条数据并设置缓存
+func (r *SystemUsersRepo) FindOneCacheByUsername(ctx context.Context, username string) (*user_model.SystemUsers, error) {
+	resp := new(user_model.SystemUsers)
+	cache := CacheSystemUsersByUsername.NewSingleKey(r.rockscache)
+	cacheValue, err := cache.SingleCache(ctx, conv.String(username), func() (string, error) {
+		dao := user_dao.Use(r.db).SystemUsers
+		result, err := dao.WithContext(ctx).Where(dao.Username.Eq(username)).First()
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", err
+		}
+		marshal, err := json.Marshal(result)
+		if err != nil {
+			return "", err
+		}
+		return string(marshal), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal([]byte(cacheValue), resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+// FindMultiCacheByUsernames 根据usernames查询多条数据并设置缓存
+func (r *SystemUsersRepo) FindMultiCacheByUsernames(ctx context.Context, usernames []string) ([]*user_model.SystemUsers, error) {
+	resp := make([]*user_model.SystemUsers, 0)
+	cacheKey := CacheSystemUsersByUsername.NewBatchKey(r.rockscache)
+	batchKeys := make([]string, 0)
+	for _, v := range usernames {
+		batchKeys = append(batchKeys, conv.String(v))
+	}
+	cacheValue, err := cacheKey.BatchKeyCache(ctx, batchKeys, func() (map[string]string, error) {
+		dao := user_dao.Use(r.db).SystemUsers
+		result, err := dao.WithContext(ctx).Where(dao.Username.In(usernames...)).Find()
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+		value := make(map[string]string)
+		for _, v := range result {
+			marshal, err := json.Marshal(v)
+			if err != nil {
+				return nil, err
+			}
+			value[conv.String(v.Username)] = string(marshal)
+		}
+		return value, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range cacheValue {
+		tmp := new(user_model.SystemUsers)
+		err := json.Unmarshal([]byte(v), tmp)
+		if err != nil {
+			return nil, err
+		}
+		resp = append(resp, tmp)
+	}
+	return resp, nil
+}
+
+// FindOneByUsername 根据username查询一条数据
+func (r *SystemUsersRepo) FindOneByUsername(ctx context.Context, username string) (*user_model.SystemUsers, error) {
+	dao := user_dao.Use(r.db).SystemUsers
+	result, err := dao.WithContext(ctx).Where(dao.Username.Eq(username)).First()
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	return result, nil
+}
+
+// FindMultiByUsernames 根据usernames查询多条数据
+func (r *SystemUsersRepo) FindMultiByUsernames(ctx context.Context, usernames []string) ([]*user_model.SystemUsers, error) {
+	dao := user_dao.Use(r.db).SystemUsers
+	result, err := dao.WithContext(ctx).Where(dao.Username.In(usernames...)).Find()
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 // FindOneCacheByID 根据ID查询一条数据并设置缓存
@@ -298,13 +509,13 @@ func (r *SystemUsersRepo) FindMultiByIDS(ctx context.Context, IDS []int64) ([]*u
 	return result, nil
 }
 
-// FindOneCacheByUsernameUpdateTimeTenantID 根据UsernameUpdateTimeTenantID查询一条数据并设置缓存
-func (r *SystemUsersRepo) FindOneCacheByUsernameUpdateTimeTenantID(ctx context.Context, username string, updateTime time.Time, tenantID int64) (*user_model.SystemUsers, error) {
+// FindOneCacheByMobile 根据mobile查询一条数据并设置缓存
+func (r *SystemUsersRepo) FindOneCacheByMobile(ctx context.Context, mobile string) (*user_model.SystemUsers, error) {
 	resp := new(user_model.SystemUsers)
-	cache := CacheSystemUsersByUsernameUpdateTimeTenantID.NewSingleKey(r.rockscache)
-	cacheValue, err := cache.SingleCache(ctx, cache.BuildKey(username, updateTime, tenantID), func() (string, error) {
+	cache := CacheSystemUsersByMobile.NewSingleKey(r.rockscache)
+	cacheValue, err := cache.SingleCache(ctx, conv.String(mobile), func() (string, error) {
 		dao := user_dao.Use(r.db).SystemUsers
-		result, err := dao.WithContext(ctx).Where(dao.Username.Eq(username), dao.UpdateTime.Eq(updateTime), dao.TenantID.Eq(tenantID)).First()
+		result, err := dao.WithContext(ctx).Where(dao.Mobile.Eq(mobile)).First()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", err
 		}
@@ -324,10 +535,88 @@ func (r *SystemUsersRepo) FindOneCacheByUsernameUpdateTimeTenantID(ctx context.C
 	return resp, nil
 }
 
-// FindOneByUsernameUpdateTimeTenantID 根据UsernameUpdateTimeTenantID查询一条数据
-func (r *SystemUsersRepo) FindOneByUsernameUpdateTimeTenantID(ctx context.Context, username string, updateTime time.Time, tenantID int64) (*user_model.SystemUsers, error) {
+// FindMultiCacheByMobiles 根据mobiles查询多条数据并设置缓存
+func (r *SystemUsersRepo) FindMultiCacheByMobiles(ctx context.Context, mobiles []string) ([]*user_model.SystemUsers, error) {
+	resp := make([]*user_model.SystemUsers, 0)
+	cacheKey := CacheSystemUsersByMobile.NewBatchKey(r.rockscache)
+	batchKeys := make([]string, 0)
+	for _, v := range mobiles {
+		batchKeys = append(batchKeys, conv.String(v))
+	}
+	cacheValue, err := cacheKey.BatchKeyCache(ctx, batchKeys, func() (map[string]string, error) {
+		dao := user_dao.Use(r.db).SystemUsers
+		result, err := dao.WithContext(ctx).Where(dao.Mobile.In(mobiles...)).Find()
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+		value := make(map[string]string)
+		for _, v := range result {
+			marshal, err := json.Marshal(v)
+			if err != nil {
+				return nil, err
+			}
+			value[conv.String(v.Mobile)] = string(marshal)
+		}
+		return value, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range cacheValue {
+		tmp := new(user_model.SystemUsers)
+		err := json.Unmarshal([]byte(v), tmp)
+		if err != nil {
+			return nil, err
+		}
+		resp = append(resp, tmp)
+	}
+	return resp, nil
+}
+
+// FindOneByMobile 根据mobile查询一条数据
+func (r *SystemUsersRepo) FindOneByMobile(ctx context.Context, mobile string) (*user_model.SystemUsers, error) {
 	dao := user_dao.Use(r.db).SystemUsers
-	result, err := dao.WithContext(ctx).Where(dao.Username.Eq(username), dao.UpdateTime.Eq(updateTime), dao.TenantID.Eq(tenantID)).First()
+	result, err := dao.WithContext(ctx).Where(dao.Mobile.Eq(mobile)).First()
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	return result, nil
+}
+
+// FindMultiByMobiles 根据mobiles查询多条数据
+func (r *SystemUsersRepo) FindMultiByMobiles(ctx context.Context, mobiles []string) ([]*user_model.SystemUsers, error) {
+	dao := user_dao.Use(r.db).SystemUsers
+	result, err := dao.WithContext(ctx).Where(dao.Mobile.In(mobiles...)).Find()
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// FindMultiByEmail 根据email查询多条数据
+func (r *SystemUsersRepo) FindMultiByEmail(ctx context.Context, email string) ([]*user_model.SystemUsers, error) {
+	dao := user_dao.Use(r.db).SystemUsers
+	result, err := dao.WithContext(ctx).Where(dao.Email.Eq(email)).Find()
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// FindMultiByEmails 根据emails查询多条数据
+func (r *SystemUsersRepo) FindMultiByEmails(ctx context.Context, emails []string) ([]*user_model.SystemUsers, error) {
+	dao := user_dao.Use(r.db).SystemUsers
+	result, err := dao.WithContext(ctx).Where(dao.Email.In(emails...)).Find()
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// FindMultiByDeptIDStatus 根据DeptIDStatus查询多条数据
+func (r *SystemUsersRepo) FindMultiByDeptIDStatus(ctx context.Context, deptID int64, status int16) ([]*user_model.SystemUsers, error) {
+	dao := user_dao.Use(r.db).SystemUsers
+	result, err := dao.WithContext(ctx).Where(dao.DeptID.Eq(deptID), dao.Status.Eq(status)).Find()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}

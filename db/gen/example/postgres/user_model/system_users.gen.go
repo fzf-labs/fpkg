@@ -18,8 +18,8 @@ type SystemUsers struct {
 	Password   string       `gorm:"column:password;not null;comment:密码" json:"password"`        // 密码
 	Nickname   string       `gorm:"column:nickname;not null;comment:用户昵称" json:"nickname"`      // 用户昵称
 	Remark     string       `gorm:"column:remark;comment:备注" json:"remark"`                     // 备注
-	DeptID     int64        `gorm:"column:dept_id;comment:部门ID" json:"deptID"`                  // 部门ID
-	PostIDs    string       `gorm:"column:post_ids;comment:岗位编号数组" json:"postIDs"`              // 岗位编号数组
+	DeptID     int64        `gorm:"column:dept_id;comment:部门ID" json:"deptId"`                  // 部门ID
+	PostIds    string       `gorm:"column:post_ids;comment:岗位编号数组" json:"postIds"`              // 岗位编号数组
 	Email      string       `gorm:"column:email;comment:用户邮箱" json:"email"`                     // 用户邮箱
 	Mobile     string       `gorm:"column:mobile;comment:手机号码" json:"mobile"`                   // 手机号码
 	Sex        int16        `gorm:"column:sex;comment:用户性别" json:"sex"`                         // 用户性别
@@ -32,7 +32,7 @@ type SystemUsers struct {
 	Updater    string       `gorm:"column:updater;comment:更新者" json:"updater"`                  // 更新者
 	UpdateTime time.Time    `gorm:"column:update_time;not null;comment:更新时间" json:"updateTime"` // 更新时间
 	Deleted    int16        `gorm:"column:deleted;not null;comment:是否删除" json:"deleted"`        // 是否删除
-	TenantID   int64        `gorm:"column:tenant_id;not null;comment:租户编号" json:"tenantID"`     // 租户编号
+	TenantID   int64        `gorm:"column:tenant_id;not null;comment:租户编号" json:"tenantId"`     // 租户编号
 }
 
 // TableName SystemUsers's table name
