@@ -10,7 +10,7 @@ import (
 func TestGenerationPostgres(t *testing.T) {
 	client, err := db.NewGormPostgresClient(&db.GormPostgresClientConfig{
 		DataSourceName:  "host=0.0.0.0 port=5432 user=postgres password=123456 dbname=user sslmode=disable TimeZone=Asia/Shanghai",
-		MaxIDleConn:     0,
+		MaxIdleConn:     0,
 		MaxOpenConn:     0,
 		ConnMaxLifeTime: 0,
 		ShowLog:         false,
@@ -26,7 +26,7 @@ func TestGenerationPostgres(t *testing.T) {
 func TestGenerationMysql(t *testing.T) {
 	client, err := db.NewGormMysqlClient(&db.GormMysqlClientConfig{
 		DataSourceName:  "",
-		MaxIDleConn:     0,
+		MaxIdleConn:     0,
 		MaxOpenConn:     0,
 		ConnMaxLifeTime: 0,
 		ShowLog:         false,
