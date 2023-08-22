@@ -48,7 +48,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 	var findFunc string
 	var delFunc string
 	var err error
-	lowerDbName := r.gorm.Migrator().CurrentDatabase()
+	lowerDBName := r.gorm.Migrator().CurrentDatabase()
 	upperTableName := r.UpperName(table)
 	lowerTableName := r.LowerName(table)
 	indexes, err := r.gorm.Migrator().GetIndexes(table)
@@ -59,7 +59,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 		return indexes[i].Name() > indexes[j].Name()
 	})
 	pkgTpl, err := NewTemplate("Pkg").Parse(Pkg).Execute(map[string]any{
-		"lowerDbName": lowerDbName,
+		"lowerDBName": lowerDBName,
 	})
 	if err != nil {
 		return err
@@ -68,13 +68,13 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 		"FillDaoPkgPath":   FillModelPkgPath(r.daoPath),
 		"FillModelPkgPath": FillModelPkgPath(r.modelPath),
 		"relativePath":     r.relativePath,
-		"lowerDbName":      lowerDbName,
+		"lowerDBName":      lowerDBName,
 	})
 	if err != nil {
 		return err
 	}
 	interfaceCreateOneTpl, err := NewTemplate("InterfaceCreateOne").Parse(InterfaceCreateOne).Execute(map[string]any{
-		"lowerDbName":    lowerDbName,
+		"lowerDBName":    lowerDBName,
 		"upperTableName": upperTableName,
 		"lowerTableName": lowerTableName,
 	})
@@ -82,7 +82,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 		return err
 	}
 	createOneTpl, err := NewTemplate("CreateOne").Parse(CreateOne).Execute(map[string]any{
-		"lowerDbName":    lowerDbName,
+		"lowerDBName":    lowerDBName,
 		"upperTableName": upperTableName,
 		"lowerTableName": lowerTableName,
 	})
@@ -90,7 +90,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 		return err
 	}
 	interfaceUpdateOneTpl, err := NewTemplate("InterfaceUpdateOne").Parse(InterfaceUpdateOne).Execute(map[string]any{
-		"lowerDbName":    lowerDbName,
+		"lowerDBName":    lowerDBName,
 		"upperTableName": upperTableName,
 		"lowerTableName": lowerTableName,
 	})
@@ -98,7 +98,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 		return err
 	}
 	updateOneTpl, err := NewTemplate("UpdateOne").Parse(UpdateOne).Execute(map[string]any{
-		"lowerDbName":    lowerDbName,
+		"lowerDBName":    lowerDBName,
 		"upperTableName": upperTableName,
 		"lowerTableName": lowerTableName,
 	})
@@ -164,7 +164,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 			}
 			if unique {
 				interfaceFindOneCacheByFields, err2 := NewTemplate("InterfaceFindOneCacheByFields").Parse(InterfaceFindOneCacheByFields).Execute(map[string]any{
-					"lowerDbName":       lowerDbName,
+					"lowerDBName":       lowerDBName,
 					"upperTableName":    upperTableName,
 					"lowerTableName":    lowerTableName,
 					"upperFields":       upperFields,
@@ -175,7 +175,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				}
 				findMethods += fmt.Sprintln(interfaceFindOneCacheByFields.String())
 				findOneCacheByFields, err2 := NewTemplate("FindOneCacheByFields").Parse(FindOneCacheByFields).Execute(map[string]any{
-					"lowerDbName":       lowerDbName,
+					"lowerDBName":       lowerDBName,
 					"upperTableName":    upperTableName,
 					"lowerTableName":    lowerTableName,
 					"upperFields":       upperFields,
@@ -188,7 +188,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				}
 				findFunc += fmt.Sprintln(findOneCacheByFields.String())
 				interfaceFindOneByFields, err2 := NewTemplate("InterfaceFindOneByFields").Parse(InterfaceFindOneByFields).Execute(map[string]any{
-					"lowerDbName":       lowerDbName,
+					"lowerDBName":       lowerDBName,
 					"upperTableName":    upperTableName,
 					"lowerTableName":    lowerTableName,
 					"upperFields":       upperFields,
@@ -199,7 +199,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				}
 				findMethods += fmt.Sprintln(interfaceFindOneByFields.String())
 				findOneByFields, err2 := NewTemplate("FindOneByFields").Parse(FindOneByFields).Execute(map[string]any{
-					"lowerDbName":       lowerDbName,
+					"lowerDBName":       lowerDBName,
 					"upperTableName":    upperTableName,
 					"lowerTableName":    lowerTableName,
 					"upperFields":       upperFields,
@@ -212,7 +212,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				}
 				findFunc += fmt.Sprintln(findOneByFields.String())
 				interfaceDeleteOneCacheByFields, err2 := NewTemplate("InterfaceDeleteOneCacheByFields").Parse(InterfaceDeleteOneCacheByFields).Execute(map[string]any{
-					"lowerDbName":       lowerDbName,
+					"lowerDBName":       lowerDBName,
 					"upperTableName":    upperTableName,
 					"lowerTableName":    lowerTableName,
 					"upperField":        r.UpperName(index.Columns()[0]),
@@ -226,7 +226,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					return err2
 				}
 				deleteOneCacheByFields, err2 := NewTemplate("DeleteOneCacheByFields").Parse(DeleteOneCacheByFields).Execute(map[string]any{
-					"lowerDbName":       lowerDbName,
+					"lowerDBName":       lowerDBName,
 					"upperTableName":    upperTableName,
 					"lowerTableName":    lowerTableName,
 					"upperField":        r.UpperName(index.Columns()[0]),
@@ -243,7 +243,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				delMethods += fmt.Sprintln(interfaceDeleteOneCacheByFields.String())
 				delFunc += fmt.Sprintln(deleteOneCacheByFields.String())
 				interfaceDeleteOneByFields, err2 := NewTemplate("InterfaceDeleteOneByFields").Parse(InterfaceDeleteOneByFields).Execute(map[string]any{
-					"lowerDbName":       lowerDbName,
+					"lowerDBName":       lowerDBName,
 					"upperTableName":    upperTableName,
 					"lowerTableName":    lowerTableName,
 					"upperField":        r.UpperName(index.Columns()[0]),
@@ -257,7 +257,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					return err2
 				}
 				deleteOneByFields, err2 := NewTemplate("DeleteOneByFields").Parse(DeleteOneByFields).Execute(map[string]any{
-					"lowerDbName":       lowerDbName,
+					"lowerDBName":       lowerDBName,
 					"upperTableName":    upperTableName,
 					"lowerTableName":    lowerTableName,
 					"upperField":        r.UpperName(index.Columns()[0]),
@@ -275,7 +275,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				delFunc += fmt.Sprintln(deleteOneByFields.String())
 			} else {
 				interfaceFindMultiByFields, err2 := NewTemplate("InterfaceFindMultiByFields").Parse(InterfaceFindMultiByFields).Execute(map[string]any{
-					"lowerDbName":       lowerDbName,
+					"lowerDBName":       lowerDBName,
 					"upperTableName":    upperTableName,
 					"lowerTableName":    lowerTableName,
 					"upperFields":       upperFields,
@@ -286,7 +286,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				}
 				findMethods += fmt.Sprintln(interfaceFindMultiByFields.String())
 				findMultiByFields, err2 := NewTemplate("FindMultiByFields").Parse(FindMultiByFields).Execute(map[string]any{
-					"lowerDbName":       lowerDbName,
+					"lowerDBName":       lowerDBName,
 					"upperTableName":    upperTableName,
 					"lowerTableName":    lowerTableName,
 					"upperFields":       upperFields,
@@ -301,7 +301,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 		} else {
 			if unique {
 				interfaceFindOneCacheByField, err2 := NewTemplate("InterfaceFindOneCacheByField").Parse(InterfaceFindOneCacheByField).Execute(map[string]any{
-					"lowerDbName":    lowerDbName,
+					"lowerDBName":    lowerDBName,
 					"upperTableName": upperTableName,
 					"lowerTableName": lowerTableName,
 					"upperField":     r.UpperName(index.Columns()[0]),
@@ -312,7 +312,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					return err2
 				}
 				findOneCacheByField, err2 := NewTemplate("FindOneCacheByField").Parse(FindOneCacheByField).Execute(map[string]any{
-					"lowerDbName":    lowerDbName,
+					"lowerDBName":    lowerDBName,
 					"upperTableName": upperTableName,
 					"lowerTableName": lowerTableName,
 					"upperField":     r.UpperName(index.Columns()[0]),
@@ -326,7 +326,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				findFunc += fmt.Sprintln(findOneCacheByField.String())
 
 				interfaceFindMultiCacheByFieldPlural, err2 := NewTemplate("InterfaceFindMultiCacheByFieldPlural").Parse(InterfaceFindMultiCacheByFieldPlural).Execute(map[string]any{
-					"lowerDbName":      lowerDbName,
+					"lowerDBName":      lowerDBName,
 					"upperTableName":   upperTableName,
 					"lowerTableName":   lowerTableName,
 					"upperField":       r.UpperName(index.Columns()[0]),
@@ -339,7 +339,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					return err2
 				}
 				findMultiCacheByFieldPlural, err2 := NewTemplate("FindMultiCacheByFieldPlural").Parse(FindMultiCacheByFieldPlural).Execute(map[string]any{
-					"lowerDbName":      lowerDbName,
+					"lowerDBName":      lowerDBName,
 					"upperTableName":   upperTableName,
 					"lowerTableName":   lowerTableName,
 					"upperField":       r.UpperName(index.Columns()[0]),
@@ -355,7 +355,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				findFunc += fmt.Sprintln(findMultiCacheByFieldPlural.String())
 
 				interfaceDeleteOneCacheByField, err2 := NewTemplate("InterfaceDeleteOneCacheByField").Parse(InterfaceDeleteOneCacheByField).Execute(map[string]any{
-					"lowerDbName":    lowerDbName,
+					"lowerDBName":    lowerDBName,
 					"upperTableName": upperTableName,
 					"lowerTableName": lowerTableName,
 					"upperField":     r.UpperName(index.Columns()[0]),
@@ -366,7 +366,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					return err2
 				}
 				deleteOneCacheByField, err2 := NewTemplate("DeleteOneCacheByField").Parse(DeleteOneCacheByField).Execute(map[string]any{
-					"lowerDbName":    lowerDbName,
+					"lowerDBName":    lowerDBName,
 					"upperTableName": upperTableName,
 					"lowerTableName": lowerTableName,
 					"upperField":     r.UpperName(index.Columns()[0]),
@@ -379,7 +379,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				delMethods += fmt.Sprintln(interfaceDeleteOneCacheByField.String())
 				delFunc += fmt.Sprintln(deleteOneCacheByField.String())
 				interfaceDeleteMultiCacheByFieldPlural, err2 := NewTemplate("InterfaceDeleteMultiCacheByFieldPlural").Parse(InterfaceDeleteMultiCacheByFieldPlural).Execute(map[string]any{
-					"lowerDbName":      lowerDbName,
+					"lowerDBName":      lowerDBName,
 					"upperTableName":   upperTableName,
 					"lowerTableName":   lowerTableName,
 					"upperField":       r.UpperName(index.Columns()[0]),
@@ -392,7 +392,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					return err2
 				}
 				deleteMultiCacheByFieldPlural, err2 := NewTemplate("DeleteMultiCacheByFieldPlural").Parse(DeleteMultiCacheByFieldPlural).Execute(map[string]any{
-					"lowerDbName":      lowerDbName,
+					"lowerDBName":      lowerDBName,
 					"upperTableName":   upperTableName,
 					"lowerTableName":   lowerTableName,
 					"upperField":       r.UpperName(index.Columns()[0]),
@@ -408,7 +408,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				delFunc += fmt.Sprintln(deleteMultiCacheByFieldPlural.String())
 
 				interfaceFindOneByField, err2 := NewTemplate("InterfaceFindOneByField").Parse(InterfaceFindOneByField).Execute(map[string]any{
-					"lowerDbName":    lowerDbName,
+					"lowerDBName":    lowerDBName,
 					"upperTableName": upperTableName,
 					"lowerTableName": lowerTableName,
 					"upperField":     r.UpperName(index.Columns()[0]),
@@ -419,7 +419,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					return err2
 				}
 				findOneByField, err2 := NewTemplate("FindOneByField").Parse(FindOneByField).Execute(map[string]any{
-					"lowerDbName":    lowerDbName,
+					"lowerDBName":    lowerDBName,
 					"upperTableName": upperTableName,
 					"lowerTableName": lowerTableName,
 					"upperField":     r.UpperName(index.Columns()[0]),
@@ -433,7 +433,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				findFunc += fmt.Sprintln(findOneByField.String())
 
 				interfaceFindMultiByFieldPlural, err2 := NewTemplate("InterfaceFindMultiByFieldPlural").Parse(InterfaceFindMultiByFieldPlural).Execute(map[string]any{
-					"lowerDbName":      lowerDbName,
+					"lowerDBName":      lowerDBName,
 					"upperTableName":   upperTableName,
 					"lowerTableName":   lowerTableName,
 					"upperField":       r.UpperName(index.Columns()[0]),
@@ -446,7 +446,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					return err2
 				}
 				findMultiByFieldPlural, err2 := NewTemplate("FindMultiByFieldPlural").Parse(FindMultiByFieldPlural).Execute(map[string]any{
-					"lowerDbName":      lowerDbName,
+					"lowerDBName":      lowerDBName,
 					"upperTableName":   upperTableName,
 					"lowerTableName":   lowerTableName,
 					"upperField":       r.UpperName(index.Columns()[0]),
@@ -462,7 +462,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				findFunc += fmt.Sprintln(findMultiByFieldPlural.String())
 
 				interfaceDeleteOneByField, err2 := NewTemplate("InterfaceDeleteOneByField").Parse(InterfaceDeleteOneByField).Execute(map[string]any{
-					"lowerDbName":    lowerDbName,
+					"lowerDBName":    lowerDBName,
 					"upperTableName": upperTableName,
 					"lowerTableName": lowerTableName,
 					"upperField":     r.UpperName(index.Columns()[0]),
@@ -473,7 +473,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					return err2
 				}
 				deleteOneByField, err2 := NewTemplate("DeleteOneByField").Parse(DeleteOneByField).Execute(map[string]any{
-					"lowerDbName":    lowerDbName,
+					"lowerDBName":    lowerDBName,
 					"upperTableName": upperTableName,
 					"lowerTableName": lowerTableName,
 					"upperField":     r.UpperName(index.Columns()[0]),
@@ -486,7 +486,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				delMethods += fmt.Sprintln(interfaceDeleteOneByField.String())
 				delFunc += fmt.Sprintln(deleteOneByField.String())
 				interfaceDeleteMultiByFieldPlural, err2 := NewTemplate("InterfaceDeleteMultiByFieldPlural").Parse(InterfaceDeleteMultiByFieldPlural).Execute(map[string]any{
-					"lowerDbName":      lowerDbName,
+					"lowerDBName":      lowerDBName,
 					"upperTableName":   upperTableName,
 					"lowerTableName":   lowerTableName,
 					"upperField":       r.UpperName(index.Columns()[0]),
@@ -499,7 +499,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					return err2
 				}
 				deleteMultiByFieldPlural, err2 := NewTemplate("DeleteMultiByFieldPlural").Parse(DeleteMultiByFieldPlural).Execute(map[string]any{
-					"lowerDbName":      lowerDbName,
+					"lowerDBName":      lowerDBName,
 					"upperTableName":   upperTableName,
 					"lowerTableName":   lowerTableName,
 					"upperField":       r.UpperName(index.Columns()[0]),
@@ -515,7 +515,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				delFunc += fmt.Sprintln(deleteMultiByFieldPlural.String())
 			} else {
 				interfaceFindMultiByField, err2 := NewTemplate("InterfaceFindMultiByField").Parse(InterfaceFindMultiByField).Execute(map[string]any{
-					"lowerDbName":    lowerDbName,
+					"lowerDBName":    lowerDBName,
 					"upperTableName": upperTableName,
 					"lowerTableName": lowerTableName,
 					"upperField":     r.UpperName(index.Columns()[0]),
@@ -526,7 +526,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					return err2
 				}
 				findMultiByField, err2 := NewTemplate("FindMultiByField").Parse(FindMultiByField).Execute(map[string]any{
-					"lowerDbName":    lowerDbName,
+					"lowerDBName":    lowerDBName,
 					"upperTableName": upperTableName,
 					"lowerTableName": lowerTableName,
 					"upperField":     r.UpperName(index.Columns()[0]),
@@ -540,7 +540,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				findFunc += fmt.Sprintln(findMultiByField.String())
 
 				interfaceFindMultiByFieldPlural, err2 := NewTemplate("InterfaceFindMultiByFieldPlural").Parse(InterfaceFindMultiByFieldPlural).Execute(map[string]any{
-					"lowerDbName":      lowerDbName,
+					"lowerDBName":      lowerDBName,
 					"upperTableName":   upperTableName,
 					"lowerTableName":   lowerTableName,
 					"upperFieldPlural": inflection.Plural(r.UpperName(index.Columns()[0])),
@@ -551,7 +551,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					return err2
 				}
 				findMultiByFieldPlural, err2 := NewTemplate("FindMultiByFieldPlural").Parse(FindMultiByFieldPlural).Execute(map[string]any{
-					"lowerDbName":      lowerDbName,
+					"lowerDBName":      lowerDBName,
 					"upperField":       r.UpperName(index.Columns()[0]),
 					"upperTableName":   upperTableName,
 					"lowerTableName":   lowerTableName,
@@ -568,7 +568,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 		}
 	}
 	varTpl, err := NewTemplate("Var").Parse(Var).Execute(map[string]any{
-		"lowerDbName":    lowerDbName,
+		"lowerDBName":    lowerDBName,
 		"upperTableName": upperTableName,
 		"lowerTableName": lowerTableName,
 		"cacheKeys":      cacheKeys,
@@ -577,7 +577,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 		return err
 	}
 	newTpl, err := NewTemplate("New").Parse(New).Execute(map[string]any{
-		"lowerDbName":    lowerDbName,
+		"lowerDBName":    lowerDBName,
 		"upperTableName": upperTableName,
 		"lowerTableName": lowerTableName,
 	})
@@ -585,7 +585,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 		return err
 	}
 	interfaceDeleteUniqueIndexCacheTpl, err := NewTemplate("InterfaceDeleteUniqueIndexCache").Parse(InterfaceDeleteUniqueIndexCache).Execute(map[string]any{
-		"lowerDbName":    lowerDbName,
+		"lowerDBName":    lowerDBName,
 		"upperTableName": upperTableName,
 		"lowerTableName": lowerTableName,
 		"singleCache":    varSingleCache,
@@ -595,7 +595,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 		return err
 	}
 	deleteUniqueIndexCacheTpl, err := NewTemplate("DeleteUniqueIndexCache").Parse(DeleteUniqueIndexCache).Execute(map[string]any{
-		"lowerDbName":    lowerDbName,
+		"lowerDBName":    lowerDBName,
 		"upperTableName": upperTableName,
 		"lowerTableName": lowerTableName,
 		"singleCache":    varSingleCache,
@@ -613,7 +613,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 	methods += delMethods
 	methods += findMethods
 	typesTpl, err := NewTemplate("Types").Parse(Types).Execute(map[string]any{
-		"lowerDbName":    lowerDbName,
+		"lowerDBName":    lowerDBName,
 		"upperTableName": upperTableName,
 		"lowerTableName": lowerTableName,
 		"methods":        methods,

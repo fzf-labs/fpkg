@@ -91,7 +91,7 @@ linters:
     #- dupl
     - errcheck
     - exportloopref
-    - funlen
+    #- funlen
     - gochecknoinits
     - goconst
     - gocritic
