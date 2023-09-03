@@ -39,7 +39,7 @@ require (
 	github.com/pyroscope-io/client v0.7.2
 	github.com/redis/go-redis/extra/redisotel/v9 v9.0.5
 	github.com/redis/go-redis/v9 v9.0.5
-	github.com/redis/rueidis v1.0.15
+	github.com/redis/rueidis v1.0.16
 	github.com/segmentio/ksuid v1.0.4
 	github.com/shirou/gopsutil/v3 v3.23.7
 	github.com/silenceper/wechat/v2 v2.1.5

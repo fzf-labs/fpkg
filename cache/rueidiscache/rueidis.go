@@ -1,4 +1,4 @@
-package rueidis
+package rueidiscache
 
 import (
 	"github.com/redis/rueidis"
@@ -7,21 +7,11 @@ import (
 	"github.com/redis/rueidis/rueidisotel"
 )
 
-type RueidisConfig struct {
-	Addr     string `json:"addr"`
-	Password string `json:"password"`
-	DB       int    `json:"db"`
-}
-
 // NewRueidis  redis客户端rueidis
 // redis > 6.0
-func NewRueidis(conf *RueidisConfig) (rueidis.Client, error) {
+func NewRueidis(clientOption rueidis.ClientOption) (rueidis.Client, error) {
 	// 初始化rueidis
-	client, err := rueidis.NewClient(rueidis.ClientOption{
-		InitAddress: []string{conf.Addr},
-		Password:    conf.Password,
-		SelectDB:    conf.DB,
-	})
+	client, err := rueidis.NewClient(clientOption)
 	if err != nil {
 		return nil, err
 	}
@@ -37,12 +27,8 @@ func NewRueidisAdapter(client rueidis.Client) (rueidiscompat.Cmdable, error) {
 
 // NewRueidisAside 缓存和数据一起存储
 // redis > 7.0
-func NewRueidisAside(conf *RueidisConfig) (rueidisaside.CacheAsideClient, error) {
+func NewRueidisAside(clientOption rueidis.ClientOption) (rueidisaside.CacheAsideClient, error) {
 	return rueidisaside.NewClient(rueidisaside.ClientOption{
-		ClientOption: rueidis.ClientOption{
-			InitAddress: []string{conf.Addr},
-			Password:    conf.Password,
-			SelectDB:    conf.DB,
-		},
+		ClientOption: clientOption,
 	})
 }

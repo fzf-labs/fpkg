@@ -3,6 +3,8 @@ package repo
 import (
 	"os"
 	"strings"
+
+	"golang.org/x/tools/go/packages"
 )
 
 // SafeString converts the input string into a safe naming style in golang
@@ -46,4 +48,18 @@ func MkdirIfNotExist(dir string) error {
 	}
 
 	return nil
+}
+
+func FillModelPkgPath(filePath string) string {
+	pkg, err := packages.Load(&packages.Config{
+		Mode: packages.NeedName,
+		Dir:  filePath,
+	})
+	if err != nil {
+		return ""
+	}
+	if len(pkg) == 0 {
+		return ""
+	}
+	return pkg[0].PkgPath
 }

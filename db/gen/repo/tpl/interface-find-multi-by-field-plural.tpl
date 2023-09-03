@@ -1,2 +1,2 @@
 // FindMultiBy{{.upperFieldPlural}} 根据{{.lowerFieldPlural}}查询多条数据
-FindMultiBy{{.upperFieldPlural}}(ctx context.Context, {{.lowerFieldPlural}} []{{.dataType}}) ([]*{{.lowerDbName}}_model.{{.upperTableName}}, error)
+FindMultiBy{{.upperFieldPlural}}(ctx context.Context, {{.lowerFieldPlural}} []{{.dataType}}) ([]*{{.lowerDBName}}_model.{{.upperTableName}}, error)

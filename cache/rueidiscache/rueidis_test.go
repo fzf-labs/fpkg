@@ -1,4 +1,4 @@
-package rueidis
+package rueidiscache
 
 import (
 	"context"
@@ -6,14 +6,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/redis/rueidis"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewRueiis(t *testing.T) {
-	client, err := NewRueidis(&RueidisConfig{
-		Addr:     "127.0.0.1:6379",
-		Password: "123456",
-		DB:       0,
+	client, err := NewRueidis(rueidis.ClientOption{
+		Username:    "",
+		Password:    "123456",
+		InitAddress: []string{"127.0.0.1:6379"},
+		SelectDB:    0,
 	})
 	if err != nil {
 		return
@@ -37,10 +39,11 @@ func TestNewRueiis(t *testing.T) {
 }
 
 func TestNewRueidisAside(t *testing.T) {
-	client, err := NewRueidisAside(&RueidisConfig{
-		Addr:     "127.0.0.1:6379",
-		Password: "123456",
-		DB:       0,
+	client, err := NewRueidisAside(rueidis.ClientOption{
+		Username:    "",
+		Password:    "123456",
+		InitAddress: []string{"127.0.0.1:6379"},
+		SelectDB:    0,
 	})
 	if err != nil {
 		return

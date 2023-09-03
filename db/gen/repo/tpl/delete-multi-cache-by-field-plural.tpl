@@ -1,6 +1,6 @@
 // DeleteMultiCacheBy{{.upperFieldPlural}} 根据{{.lowerFieldPlural}}删除多条数据并清理缓存
 func (r *{{.upperTableName}}Repo) DeleteMultiCacheBy{{.upperFieldPlural}}(ctx context.Context, {{.lowerFieldPlural}} []{{.dataType}}) error {
-	dao := {{.lowerDbName}}_dao.Use(r.db).{{.upperTableName}}
+	dao := {{.lowerDBName}}_dao.Use(r.db).{{.upperTableName}}
 	list, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.In({{.lowerFieldPlural}}...)).Find()
 	if err != nil {
 		return err

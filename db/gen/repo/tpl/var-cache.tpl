@@ -1,1 +1,1 @@
-	Cache{{.upperTableName}}By{{.cacheField}}          = cacheKey{{.upperTableName}}Manage.AddKey("Cache{{.upperTableName}}By{{.cacheField}}", time.Hour * 24, "Cache{{.upperTableName}}By{{.cacheField}}")
+	cache{{.upperTableName}}By{{.cacheField}}Prefix = "DBCache:{{.lowerDBName}}:{{.upperTableName}}By{{.cacheField}}"

@@ -1,3 +1,4 @@
+//nolint:all
 package repo
 
 import (
@@ -9,7 +10,6 @@ import (
 	"unicode"
 
 	"github.com/jinzhu/inflection"
-	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/imports"
 	"gorm.io/gorm"
 )
@@ -51,6 +51,10 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 	lowerDBName := r.gorm.Migrator().CurrentDatabase()
 	upperTableName := r.UpperName(table)
 	lowerTableName := r.LowerName(table)
+	daoPkgPath := FillModelPkgPath(r.daoPath)
+	modelPkgPath := FillModelPkgPath(r.modelPath)
+
+	// 查询当前db的索引
 	indexes, err := r.gorm.Migrator().GetIndexes(table)
 	if err != nil {
 		return err
@@ -65,10 +69,10 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 		return err
 	}
 	importTpl, err := NewTemplate("Import").Parse(Import).Execute(map[string]any{
-		"FillDaoPkgPath":   FillModelPkgPath(r.daoPath),
-		"FillModelPkgPath": FillModelPkgPath(r.modelPath),
-		"relativePath":     r.relativePath,
-		"lowerDBName":      lowerDBName,
+		"daoPkgPath":   daoPkgPath,
+		"modelPkgPath": modelPkgPath,
+		"relativePath": r.relativePath,
+		"lowerDBName":  lowerDBName,
 	})
 	if err != nil {
 		return err
@@ -123,6 +127,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 				cacheFieldsJoinSli = append(cacheFieldsJoinSli, fmt.Sprintf("v.%s", r.UpperName(column)))
 			}
 			varCacheTpl, err2 := NewTemplate("VarCache").Parse(VarCache).Execute(map[string]any{
+				"lowerDBName":    lowerDBName,
 				"upperTableName": upperTableName,
 				"cacheField":     cacheField,
 			})
@@ -150,6 +155,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 		}
 
 		if len(index.Columns()) > 1 {
+			var lowerFieldsJoin string
 			var upperFields string
 			var fieldAndDataTypes string
 			var fieldsJoin string
@@ -158,6 +164,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 			}
 			var whereFields string
 			for _, v := range index.Columns() {
+				lowerFieldsJoin += fmt.Sprintf("%s,", r.LowerName(v))
 				upperFields += r.UpperName(v)
 				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerName(v), columnNameToDataType[v])
 				whereFields += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperName(v), r.LowerName(v))
@@ -182,6 +189,7 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]str
 					"fieldsJoin":        fieldsJoin,
 					"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
 					"whereFields":       strings.Trim(whereFields, ","),
+					"lowerFieldsJoin":   strings.Trim(lowerFieldsJoin, ","),
 				})
 				if err2 != nil {
 					return err2
@@ -659,19 +667,6 @@ func (r *Repo) output(fileName string, content []byte) error {
 	return os.WriteFile(fileName, result, 0600)
 }
 
-func FillModelPkgPath(filePath string) string {
-	pkg, err := packages.Load(&packages.Config{
-		Mode: packages.NeedName,
-		Dir:  filePath,
-	})
-	if err != nil {
-		return ""
-	}
-	if len(pkg) == 0 {
-		return ""
-	}
-	return pkg[0].PkgPath
-}
 func (r *Repo) UpperName(s string) string {
 	return r.gorm.NamingStrategy.SchemaName(s)
 }
@@ -695,4 +690,12 @@ func (r *Repo) LowerName(s string) string {
 		return string(unicode.ToLower(f)) + string(rs[1:])
 	}
 	return s
+}
+
+func (r *Repo) Template(tpl string, params map[string]any) (string, error) {
+	execute, err := NewTemplate(tpl).Parse(tpl).Execute(params)
+	if err != nil {
+		return "", err
+	}
+	return execute.String(), nil
 }

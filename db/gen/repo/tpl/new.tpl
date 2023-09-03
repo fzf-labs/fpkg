@@ -1,6 +1,6 @@
-func New{{.upperTableName}}Repo(db *gorm.DB,rockscache *rockscache.Client) *{{.upperTableName}}Repo {
+func New{{.upperTableName}}Repo(db *gorm.DB,cache I{{.upperTableName}}Cache) *{{.upperTableName}}Repo {
 	return &{{.upperTableName}}Repo{
-		db:         db,
-		rockscache: rockscache,
+		db: db,
+		cache:  cache,
 	}
 }
