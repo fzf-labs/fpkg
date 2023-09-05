@@ -28,7 +28,7 @@ func (r *{{.upperTableName}}Repo) FindMultiCacheBy{{.upperFieldPlural}}(ctx cont
 		return nil, err
 	}
 	for _, v := range cacheValue {
-		tmp := new(user_model.UserDemo)
+		tmp := new({{.lowerDBName}}_model.{{.upperTableName}})
 		err := json.Unmarshal([]byte(v), tmp)
 		if err != nil {
 			return nil, err
