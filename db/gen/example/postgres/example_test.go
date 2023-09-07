@@ -7,7 +7,7 @@ import (
 
 	"github.com/fzf-labs/fpkg/cache/rueidiscache"
 	"github.com/fzf-labs/fpkg/db"
-	"github.com/fzf-labs/fpkg/db/gen/cache"
+	rueidiscache2 "github.com/fzf-labs/fpkg/db/gen/cache/rueidiscache"
 	"github.com/fzf-labs/fpkg/db/gen/example/postgres/user_repo"
 	"github.com/redis/rueidis"
 )
@@ -34,7 +34,7 @@ func Test_main(t *testing.T) {
 		return
 	}
 	ctx := context.Background()
-	rueidisCache := cache.NewRueidisCache(client)
+	rueidisCache := rueidiscache2.NewRueidisCache(client)
 	repo := user_repo.NewUserDemoRepo(db, rueidisCache)
 	result, err := repo.FindOneCacheByID(ctx, 1)
 	if err != nil {

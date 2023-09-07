@@ -6,6 +6,4 @@ func (r *{{.upperTableName}}Repo) DeleteOneBy{{.upperFields}}(ctx context.Contex
 		return err
 	}
 	return nil
-
-
 }

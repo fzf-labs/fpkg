@@ -17,26 +17,50 @@ import (
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:           db,
-		DataTypeDemo: newDataTypeDemo(db, opts...),
-		UserDemo:     newUserDemo(db, opts...),
+		db:            db,
+		DataTypeDemo:  newDataTypeDemo(db, opts...),
+		SysAPI:        newSysAPI(db, opts...),
+		SysAdmin:      newSysAdmin(db, opts...),
+		SysDept:       newSysDept(db, opts...),
+		SysDict:       newSysDict(db, opts...),
+		SysJob:        newSysJob(db, opts...),
+		SysLog:        newSysLog(db, opts...),
+		SysPermission: newSysPermission(db, opts...),
+		SysRole:       newSysRole(db, opts...),
+		UserDemo:      newUserDemo(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
-	DataTypeDemo dataTypeDemo
-	UserDemo     userDemo
+	DataTypeDemo  dataTypeDemo
+	SysAPI        sysAPI
+	SysAdmin      sysAdmin
+	SysDept       sysDept
+	SysDict       sysDict
+	SysJob        sysJob
+	SysLog        sysLog
+	SysPermission sysPermission
+	SysRole       sysRole
+	UserDemo      userDemo
 }
 
 func (q *Query) Available() bool { return q.db != nil }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:           db,
-		DataTypeDemo: q.DataTypeDemo.clone(db),
-		UserDemo:     q.UserDemo.clone(db),
+		db:            db,
+		DataTypeDemo:  q.DataTypeDemo.clone(db),
+		SysAPI:        q.SysAPI.clone(db),
+		SysAdmin:      q.SysAdmin.clone(db),
+		SysDept:       q.SysDept.clone(db),
+		SysDict:       q.SysDict.clone(db),
+		SysJob:        q.SysJob.clone(db),
+		SysLog:        q.SysLog.clone(db),
+		SysPermission: q.SysPermission.clone(db),
+		SysRole:       q.SysRole.clone(db),
+		UserDemo:      q.UserDemo.clone(db),
 	}
 }
 
@@ -50,21 +74,45 @@ func (q *Query) WriteDB() *Query {
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:           db,
-		DataTypeDemo: q.DataTypeDemo.replaceDB(db),
-		UserDemo:     q.UserDemo.replaceDB(db),
+		db:            db,
+		DataTypeDemo:  q.DataTypeDemo.replaceDB(db),
+		SysAPI:        q.SysAPI.replaceDB(db),
+		SysAdmin:      q.SysAdmin.replaceDB(db),
+		SysDept:       q.SysDept.replaceDB(db),
+		SysDict:       q.SysDict.replaceDB(db),
+		SysJob:        q.SysJob.replaceDB(db),
+		SysLog:        q.SysLog.replaceDB(db),
+		SysPermission: q.SysPermission.replaceDB(db),
+		SysRole:       q.SysRole.replaceDB(db),
+		UserDemo:      q.UserDemo.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
-	DataTypeDemo *dataTypeDemoDo
-	UserDemo     *userDemoDo
+	DataTypeDemo  *dataTypeDemoDo
+	SysAPI        *sysAPIDo
+	SysAdmin      *sysAdminDo
+	SysDept       *sysDeptDo
+	SysDict       *sysDictDo
+	SysJob        *sysJobDo
+	SysLog        *sysLogDo
+	SysPermission *sysPermissionDo
+	SysRole       *sysRoleDo
+	UserDemo      *userDemoDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		DataTypeDemo: q.DataTypeDemo.WithContext(ctx),
-		UserDemo:     q.UserDemo.WithContext(ctx),
+		DataTypeDemo:  q.DataTypeDemo.WithContext(ctx),
+		SysAPI:        q.SysAPI.WithContext(ctx),
+		SysAdmin:      q.SysAdmin.WithContext(ctx),
+		SysDept:       q.SysDept.WithContext(ctx),
+		SysDict:       q.SysDict.WithContext(ctx),
+		SysJob:        q.SysJob.WithContext(ctx),
+		SysLog:        q.SysLog.WithContext(ctx),
+		SysPermission: q.SysPermission.WithContext(ctx),
+		SysRole:       q.SysRole.WithContext(ctx),
+		UserDemo:      q.UserDemo.WithContext(ctx),
 	}
 }
 

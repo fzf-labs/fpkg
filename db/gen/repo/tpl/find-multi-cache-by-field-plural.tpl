@@ -2,17 +2,24 @@
 func (r *{{.upperTableName}}Repo) FindMultiCacheBy{{.upperFieldPlural}}(ctx context.Context, {{.lowerFieldPlural}} []{{.dataType}}) ([]*{{.lowerDBName}}_model.{{.upperTableName}}, error) {
 	resp := make([]*{{.lowerDBName}}_model.{{.upperTableName}}, 0)
 	keys := make([]string, 0)
+	keyToParam := make(map[string]{{.dataType}})
 	for _, v := range {{.lowerFieldPlural}} {
-		keys = append(keys, r.cache.Key(ctx, cache{{.upperTableName}}By{{.upperField}}Prefix, v))
+	    key := r.cache.Key(ctx, cache{{.upperTableName}}By{{.upperField}}Prefix, v)
+		keys = append(keys,key)
+		keyToParam[key] = v
 	}
-	cacheValue, err := r.cache.Take(ctx, keys, func() (map[string]string, error) {
+	cacheValue, err := r.cache.FetchBatch(ctx, keys, func(miss []string) (map[string]string, error) {
+        params := make([]{{.dataType}},0)
+        for _, v := range miss {
+            params = append(params, keyToParam[v])
+        }
 		dao := {{.lowerDBName}}_dao.Use(r.db).{{.upperTableName}}
-		result, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.In({{.lowerFieldPlural}}...)).Find()
+		result, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.In(params...)).Find()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
 		}
 		value := make(map[string]string)
-		for _, v := range keys {
+		for _, v := range miss {
 			value[v] = ""
 		}
 		for _, v := range result {

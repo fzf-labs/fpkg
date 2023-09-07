@@ -14,26 +14,30 @@ import (
 	"gorm.io/gorm"
 )
 
-var _ IDataTypeDemoRepo = (*DataTypeDemoRepo)(nil)
+var _ ISysAPIRepo = (*SysAPIRepo)(nil)
 
 var (
-	cacheDataTypeDemoByIDPrefix = "DBCache:user:DataTypeDemoByID"
+	cacheSysAPIByIDPrefix = "DBCache:user:SysAPIByID"
 )
 
 type (
-	IDataTypeDemoRepo interface {
+	ISysAPIRepo interface {
 		// CreateOne 创建一条数据
-		CreateOne(ctx context.Context, data *user_model.DataTypeDemo) error
+		CreateOne(ctx context.Context, data *user_model.SysAPI) error
 		// UpdateOne 更新一条数据
-		UpdateOne(ctx context.Context, data *user_model.DataTypeDemo) error
+		UpdateOne(ctx context.Context, data *user_model.SysAPI) error
 		// FindOneCacheByID 根据ID查询一条数据并设置缓存
-		FindOneCacheByID(ctx context.Context, ID string) (*user_model.DataTypeDemo, error)
+		FindOneCacheByID(ctx context.Context, ID string) (*user_model.SysAPI, error)
 		// FindOneByID 根据ID查询一条数据
-		FindOneByID(ctx context.Context, ID string) (*user_model.DataTypeDemo, error)
+		FindOneByID(ctx context.Context, ID string) (*user_model.SysAPI, error)
 		// FindMultiCacheByIDS 根据IDS查询多条数据并设置缓存
-		FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*user_model.DataTypeDemo, error)
+		FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*user_model.SysAPI, error)
 		// FindMultiByIDS 根据IDS查询多条数据
-		FindMultiByIDS(ctx context.Context, IDS []string) ([]*user_model.DataTypeDemo, error)
+		FindMultiByIDS(ctx context.Context, IDS []string) ([]*user_model.SysAPI, error)
+		// FindMultiByPermissionID 根据permissionID查询多条数据
+		FindMultiByPermissionID(ctx context.Context, permissionID string) ([]*user_model.SysAPI, error)
+		// FindMultiByPermissionIDS 根据permissionIDS查询多条数据
+		FindMultiByPermissionIDS(ctx context.Context, permissionIDS []string) ([]*user_model.SysAPI, error)
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
 		DeleteOneCacheByID(ctx context.Context, ID string) error
 		// DeleteOneByID 根据ID删除一条数据
@@ -43,31 +47,31 @@ type (
 		// DeleteMultiByIDS 根据IDS删除多条数据
 		DeleteMultiByIDS(ctx context.Context, IDS []string) error
 		// DeleteUniqueIndexCache 删除唯一索引存在的缓存
-		DeleteUniqueIndexCache(ctx context.Context, data []*user_model.DataTypeDemo) error
+		DeleteUniqueIndexCache(ctx context.Context, data []*user_model.SysAPI) error
 	}
-	IDataTypeDemoCache interface {
+	ISysAPICache interface {
 		Key(ctx context.Context, fields ...any) string
 		Fetch(ctx context.Context, key string, KvFn func() (string, error)) (string, error)
 		FetchBatch(ctx context.Context, keys []string, KvFn func(miss []string) (map[string]string, error)) (map[string]string, error)
 		Del(ctx context.Context, key string) error
 		DelBatch(ctx context.Context, keys []string) error
 	}
-	DataTypeDemoRepo struct {
+	SysAPIRepo struct {
 		db    *gorm.DB
-		cache IDataTypeDemoCache
+		cache ISysAPICache
 	}
 )
 
-func NewDataTypeDemoRepo(db *gorm.DB, cache IDataTypeDemoCache) *DataTypeDemoRepo {
-	return &DataTypeDemoRepo{
+func NewSysAPIRepo(db *gorm.DB, cache ISysAPICache) *SysAPIRepo {
+	return &SysAPIRepo{
 		db:    db,
 		cache: cache,
 	}
 }
 
 // CreateOne 创建一条数据
-func (r *DataTypeDemoRepo) CreateOne(ctx context.Context, data *user_model.DataTypeDemo) error {
-	dao := user_dao.Use(r.db).DataTypeDemo
+func (r *SysAPIRepo) CreateOne(ctx context.Context, data *user_model.SysAPI) error {
+	dao := user_dao.Use(r.db).SysAPI
 	err := dao.WithContext(ctx).Create(data)
 	if err != nil {
 		return err
@@ -76,13 +80,13 @@ func (r *DataTypeDemoRepo) CreateOne(ctx context.Context, data *user_model.DataT
 }
 
 // UpdateOne 更新一条数据
-func (r *DataTypeDemoRepo) UpdateOne(ctx context.Context, data *user_model.DataTypeDemo) error {
-	dao := user_dao.Use(r.db).DataTypeDemo
+func (r *SysAPIRepo) UpdateOne(ctx context.Context, data *user_model.SysAPI) error {
+	dao := user_dao.Use(r.db).SysAPI
 	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Updates(data)
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, []*user_model.DataTypeDemo{data})
+	err = r.DeleteUniqueIndexCache(ctx, []*user_model.SysAPI{data})
 	if err != nil {
 		return err
 	}
@@ -90,8 +94,8 @@ func (r *DataTypeDemoRepo) UpdateOne(ctx context.Context, data *user_model.DataT
 }
 
 // DeleteOneCacheByID 根据ID删除一条数据并清理缓存
-func (r *DataTypeDemoRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
-	dao := user_dao.Use(r.db).DataTypeDemo
+func (r *SysAPIRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
+	dao := user_dao.Use(r.db).SysAPI
 	first, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
@@ -103,7 +107,7 @@ func (r *DataTypeDemoRepo) DeleteOneCacheByID(ctx context.Context, ID string) er
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, []*user_model.DataTypeDemo{first})
+	err = r.DeleteUniqueIndexCache(ctx, []*user_model.SysAPI{first})
 	if err != nil {
 		return err
 	}
@@ -111,8 +115,8 @@ func (r *DataTypeDemoRepo) DeleteOneCacheByID(ctx context.Context, ID string) er
 }
 
 // DeleteOneByID 根据ID删除一条数据
-func (r *DataTypeDemoRepo) DeleteOneByID(ctx context.Context, ID string) error {
-	dao := user_dao.Use(r.db).DataTypeDemo
+func (r *SysAPIRepo) DeleteOneByID(ctx context.Context, ID string) error {
+	dao := user_dao.Use(r.db).SysAPI
 	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
 	if err != nil {
 		return err
@@ -121,8 +125,8 @@ func (r *DataTypeDemoRepo) DeleteOneByID(ctx context.Context, ID string) error {
 }
 
 // DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
-func (r *DataTypeDemoRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) error {
-	dao := user_dao.Use(r.db).DataTypeDemo
+func (r *SysAPIRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) error {
+	dao := user_dao.Use(r.db).SysAPI
 	list, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
 	if err != nil {
 		return err
@@ -142,8 +146,8 @@ func (r *DataTypeDemoRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []stri
 }
 
 // DeleteMultiByIDS 根据IDS删除多条数据
-func (r *DataTypeDemoRepo) DeleteMultiByIDS(ctx context.Context, IDS []string) error {
-	dao := user_dao.Use(r.db).DataTypeDemo
+func (r *SysAPIRepo) DeleteMultiByIDS(ctx context.Context, IDS []string) error {
+	dao := user_dao.Use(r.db).SysAPI
 	_, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
 	if err != nil {
 		return err
@@ -152,10 +156,10 @@ func (r *DataTypeDemoRepo) DeleteMultiByIDS(ctx context.Context, IDS []string) e
 }
 
 // DeleteUniqueIndexCache 删除唯一索引存在的缓存
-func (r *DataTypeDemoRepo) DeleteUniqueIndexCache(ctx context.Context, data []*user_model.DataTypeDemo) error {
+func (r *SysAPIRepo) DeleteUniqueIndexCache(ctx context.Context, data []*user_model.SysAPI) error {
 	keys := make([]string, 0)
 	for _, v := range data {
-		keys = append(keys, r.cache.Key(ctx, cacheDataTypeDemoByIDPrefix, v.ID))
+		keys = append(keys, r.cache.Key(ctx, cacheSysAPIByIDPrefix, v.ID))
 
 	}
 	err := r.cache.DelBatch(ctx, keys)
@@ -166,11 +170,11 @@ func (r *DataTypeDemoRepo) DeleteUniqueIndexCache(ctx context.Context, data []*u
 }
 
 // FindOneCacheByID 根据ID查询一条数据并设置缓存
-func (r *DataTypeDemoRepo) FindOneCacheByID(ctx context.Context, ID string) (*user_model.DataTypeDemo, error) {
-	resp := new(user_model.DataTypeDemo)
-	key := r.cache.Key(ctx, cacheDataTypeDemoByIDPrefix, ID)
+func (r *SysAPIRepo) FindOneCacheByID(ctx context.Context, ID string) (*user_model.SysAPI, error) {
+	resp := new(user_model.SysAPI)
+	key := r.cache.Key(ctx, cacheSysAPIByIDPrefix, ID)
 	cacheValue, err := r.cache.Fetch(ctx, key, func() (string, error) {
-		dao := user_dao.Use(r.db).DataTypeDemo
+		dao := user_dao.Use(r.db).SysAPI
 		result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", err
@@ -192,8 +196,8 @@ func (r *DataTypeDemoRepo) FindOneCacheByID(ctx context.Context, ID string) (*us
 }
 
 // FindOneByID 根据ID查询一条数据
-func (r *DataTypeDemoRepo) FindOneByID(ctx context.Context, ID string) (*user_model.DataTypeDemo, error) {
-	dao := user_dao.Use(r.db).DataTypeDemo
+func (r *SysAPIRepo) FindOneByID(ctx context.Context, ID string) (*user_model.SysAPI, error) {
+	dao := user_dao.Use(r.db).SysAPI
 	result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
@@ -202,12 +206,12 @@ func (r *DataTypeDemoRepo) FindOneByID(ctx context.Context, ID string) (*user_mo
 }
 
 // FindMultiCacheByIDS 根据IDS查询多条数据并设置缓存
-func (r *DataTypeDemoRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*user_model.DataTypeDemo, error) {
-	resp := make([]*user_model.DataTypeDemo, 0)
+func (r *SysAPIRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*user_model.SysAPI, error) {
+	resp := make([]*user_model.SysAPI, 0)
 	keys := make([]string, 0)
 	keyToParam := make(map[string]string)
 	for _, v := range IDS {
-		key := r.cache.Key(ctx, cacheDataTypeDemoByIDPrefix, v)
+		key := r.cache.Key(ctx, cacheSysAPIByIDPrefix, v)
 		keys = append(keys, key)
 		keyToParam[key] = v
 	}
@@ -216,7 +220,7 @@ func (r *DataTypeDemoRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string
 		for _, v := range miss {
 			params = append(params, keyToParam[v])
 		}
-		dao := user_dao.Use(r.db).DataTypeDemo
+		dao := user_dao.Use(r.db).SysAPI
 		result, err := dao.WithContext(ctx).Where(dao.ID.In(params...)).Find()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
@@ -230,7 +234,7 @@ func (r *DataTypeDemoRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string
 			if err != nil {
 				return nil, err
 			}
-			value[r.cache.Key(ctx, cacheDataTypeDemoByIDPrefix, v.ID)] = string(marshal)
+			value[r.cache.Key(ctx, cacheSysAPIByIDPrefix, v.ID)] = string(marshal)
 		}
 		return value, nil
 	})
@@ -238,7 +242,7 @@ func (r *DataTypeDemoRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string
 		return nil, err
 	}
 	for _, v := range cacheValue {
-		tmp := new(user_model.DataTypeDemo)
+		tmp := new(user_model.SysAPI)
 		err := json.Unmarshal([]byte(v), tmp)
 		if err != nil {
 			return nil, err
@@ -249,9 +253,29 @@ func (r *DataTypeDemoRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string
 }
 
 // FindMultiByIDS 根据IDS查询多条数据
-func (r *DataTypeDemoRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([]*user_model.DataTypeDemo, error) {
-	dao := user_dao.Use(r.db).DataTypeDemo
+func (r *SysAPIRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([]*user_model.SysAPI, error) {
+	dao := user_dao.Use(r.db).SysAPI
 	result, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// FindMultiByPermissionID 根据permissionID查询多条数据
+func (r *SysAPIRepo) FindMultiByPermissionID(ctx context.Context, permissionID string) ([]*user_model.SysAPI, error) {
+	dao := user_dao.Use(r.db).SysAPI
+	result, err := dao.WithContext(ctx).Where(dao.PermissionID.Eq(permissionID)).Find()
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// FindMultiByPermissionIDS 根据permissionIDS查询多条数据
+func (r *SysAPIRepo) FindMultiByPermissionIDS(ctx context.Context, permissionIDS []string) ([]*user_model.SysAPI, error) {
+	dao := user_dao.Use(r.db).SysAPI
+	result, err := dao.WithContext(ctx).Where(dao.PermissionID.In(permissionIDS...)).Find()
 	if err != nil {
 		return nil, err
 	}

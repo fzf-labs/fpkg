@@ -2,9 +2,9 @@
 func (r *{{.upperTableName}}Repo) DeleteUniqueIndexCache(ctx context.Context, data []*{{.lowerDBName}}_model.{{.upperTableName}}) error {
 	keys := make([]string, 0)
 	for _, v := range data {
-	  {{.singleCacheDel}}
+	  {{.varCacheDelKeys}}
 	}
-	err := r.cache.Del(ctx, keys)
+	err := r.cache.DelBatch(ctx, keys)
 	if err != nil {
 		return err
 	}

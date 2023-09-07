@@ -16,11 +16,8 @@ var Var string
 //go:embed tpl/var-cache.tpl
 var VarCache string
 
-//go:embed tpl/var-single-cache.tpl
-var VarSingleCache string
-
-//go:embed tpl/var-single-cache-del.tpl
-var VarSingleCacheDel string
+//go:embed tpl/var-cache-del-key.tpl
+var VarCacheDelKey string
 
 //go:embed tpl/types.tpl
 var Types string
