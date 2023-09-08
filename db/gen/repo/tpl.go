@@ -31,6 +31,12 @@ var InterfaceCreateOne string
 //go:embed tpl/create-one.tpl
 var CreateOne string
 
+//go:embed tpl/interface-create-batch.tpl
+var InterfaceCreateBatch string
+
+//go:embed tpl/create-batch.tpl
+var CreateBatch string
+
 //go:embed tpl/interface-delete-multi-by-field-plural.tpl
 var InterfaceDeleteMultiByFieldPlural string
 

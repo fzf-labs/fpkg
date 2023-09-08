@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fzf-labs/fpkg/cache/redis"
+	"github.com/fzf-labs/fpkg/cache/gorediscache"
 	"github.com/fzf-labs/fpkg/cache/rockscache"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,7 +22,7 @@ func TestBatchKey_RocksCacheBatch(t *testing.T) {
 		"e": "5",
 		"f": "6",
 	}
-	newGoRedis, err := redis.NewGoRedis(redis.GoRedisConfig{
+	newGoRedis, err := gorediscache.NewGoRedis(gorediscache.GoRedisConfig{
 		Addr:     "127.0.0.1:6379",
 		Password: "123456",
 		DB:       0,
@@ -47,7 +47,7 @@ func TestBatchKey_RocksCacheBatch(t *testing.T) {
 func TestBatchKey_BatchKeyCacheDel(t *testing.T) {
 	keyManage := NewKeyManage("test")
 	key := keyManage.AddKey("batch", time.Hour, "批量测试")
-	newGoRedis, err := redis.NewGoRedis(redis.GoRedisConfig{
+	newGoRedis, err := gorediscache.NewGoRedis(gorediscache.GoRedisConfig{
 		Addr:     "127.0.0.1:6379",
 		Password: "123456",
 		DB:       0,

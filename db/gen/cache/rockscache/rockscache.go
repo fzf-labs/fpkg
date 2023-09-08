@@ -9,8 +9,27 @@ import (
 	"github.com/fzf-labs/fpkg/conv"
 )
 
-func NewRocksCache(client *rockscache.Client, opts ...RocksCacheOption) *RocksCache {
+type RocksCache struct {
+	name   string
+	client *rockscache.Client
+	ttl    time.Duration
+}
+
+type CacheOption func(cache *RocksCache)
+
+func WithName(name string) CacheOption {
+	return func(r *RocksCache) {
+		r.name = name
+	}
+}
+func WithTTL(ttl time.Duration) CacheOption {
+	return func(r *RocksCache) {
+		r.ttl = ttl
+	}
+}
+func NewRocksCache(client *rockscache.Client, opts ...CacheOption) *RocksCache {
 	r := &RocksCache{
+		name:   "GormCache",
 		client: client,
 		ttl:    time.Hour * 24,
 	}
@@ -22,21 +41,9 @@ func NewRocksCache(client *rockscache.Client, opts ...RocksCacheOption) *RocksCa
 	return r
 }
 
-type RocksCache struct {
-	client *rockscache.Client
-	ttl    time.Duration
-}
-
-type RocksCacheOption func(cache *RocksCache)
-
-func WithTTL(ttl time.Duration) RocksCacheOption {
-	return func(r *RocksCache) {
-		r.ttl = ttl
-	}
-}
-
 func (r *RocksCache) Key(ctx context.Context, keys ...any) string {
 	keyStr := make([]string, 0)
+	keyStr = append(keyStr, r.name)
 	for _, v := range keys {
 		keyStr = append(keyStr, conv.String(v))
 	}

@@ -24,6 +24,8 @@ type (
 	ISysAPIRepo interface {
 		// CreateOne 创建一条数据
 		CreateOne(ctx context.Context, data *user_model.SysAPI) error
+		// CreateBatch 批量创建数据
+		CreateBatch(ctx context.Context, data []*user_model.SysAPI, batchSize int) error
 		// UpdateOne 更新一条数据
 		UpdateOne(ctx context.Context, data *user_model.SysAPI) error
 		// FindOneCacheByID 根据ID查询一条数据并设置缓存
@@ -73,6 +75,16 @@ func NewSysAPIRepo(db *gorm.DB, cache ISysAPICache) *SysAPIRepo {
 func (r *SysAPIRepo) CreateOne(ctx context.Context, data *user_model.SysAPI) error {
 	dao := user_dao.Use(r.db).SysAPI
 	err := dao.WithContext(ctx).Create(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateBatch 批量创建数据
+func (r *SysAPIRepo) CreateBatch(ctx context.Context, data []*user_model.SysAPI, batchSize int) error {
+	dao := user_dao.Use(r.db).SysAPI
+	err := dao.WithContext(ctx).CreateInBatches(data, batchSize)
 	if err != nil {
 		return err
 	}

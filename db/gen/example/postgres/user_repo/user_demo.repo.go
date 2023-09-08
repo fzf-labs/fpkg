@@ -26,6 +26,8 @@ type (
 	IUserDemoRepo interface {
 		// CreateOne 创建一条数据
 		CreateOne(ctx context.Context, data *user_model.UserDemo) error
+		// CreateBatch 批量创建数据
+		CreateBatch(ctx context.Context, data []*user_model.UserDemo, batchSize int) error
 		// UpdateOne 更新一条数据
 		UpdateOne(ctx context.Context, data *user_model.UserDemo) error
 		// FindMultiByUsername 根据username查询多条数据
@@ -101,6 +103,16 @@ func NewUserDemoRepo(db *gorm.DB, cache IUserDemoCache) *UserDemoRepo {
 func (r *UserDemoRepo) CreateOne(ctx context.Context, data *user_model.UserDemo) error {
 	dao := user_dao.Use(r.db).UserDemo
 	err := dao.WithContext(ctx).Create(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateBatch 批量创建数据
+func (r *UserDemoRepo) CreateBatch(ctx context.Context, data []*user_model.UserDemo, batchSize int) error {
+	dao := user_dao.Use(r.db).UserDemo
+	err := dao.WithContext(ctx).CreateInBatches(data, batchSize)
 	if err != nil {
 		return err
 	}

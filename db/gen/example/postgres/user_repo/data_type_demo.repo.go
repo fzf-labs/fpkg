@@ -24,6 +24,8 @@ type (
 	IDataTypeDemoRepo interface {
 		// CreateOne 创建一条数据
 		CreateOne(ctx context.Context, data *user_model.DataTypeDemo) error
+		// CreateBatch 批量创建数据
+		CreateBatch(ctx context.Context, data []*user_model.DataTypeDemo, batchSize int) error
 		// UpdateOne 更新一条数据
 		UpdateOne(ctx context.Context, data *user_model.DataTypeDemo) error
 		// FindOneCacheByID 根据ID查询一条数据并设置缓存
@@ -69,6 +71,16 @@ func NewDataTypeDemoRepo(db *gorm.DB, cache IDataTypeDemoCache) *DataTypeDemoRep
 func (r *DataTypeDemoRepo) CreateOne(ctx context.Context, data *user_model.DataTypeDemo) error {
 	dao := user_dao.Use(r.db).DataTypeDemo
 	err := dao.WithContext(ctx).Create(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateBatch 批量创建数据
+func (r *DataTypeDemoRepo) CreateBatch(ctx context.Context, data []*user_model.DataTypeDemo, batchSize int) error {
+	dao := user_dao.Use(r.db).DataTypeDemo
+	err := dao.WithContext(ctx).CreateInBatches(data, batchSize)
 	if err != nil {
 		return err
 	}

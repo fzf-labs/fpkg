@@ -24,6 +24,8 @@ type (
 	ISysDeptRepo interface {
 		// CreateOne 创建一条数据
 		CreateOne(ctx context.Context, data *user_model.SysDept) error
+		// CreateBatch 批量创建数据
+		CreateBatch(ctx context.Context, data []*user_model.SysDept, batchSize int) error
 		// UpdateOne 更新一条数据
 		UpdateOne(ctx context.Context, data *user_model.SysDept) error
 		// FindOneCacheByID 根据ID查询一条数据并设置缓存
@@ -69,6 +71,16 @@ func NewSysDeptRepo(db *gorm.DB, cache ISysDeptCache) *SysDeptRepo {
 func (r *SysDeptRepo) CreateOne(ctx context.Context, data *user_model.SysDept) error {
 	dao := user_dao.Use(r.db).SysDept
 	err := dao.WithContext(ctx).Create(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateBatch 批量创建数据
+func (r *SysDeptRepo) CreateBatch(ctx context.Context, data []*user_model.SysDept, batchSize int) error {
+	dao := user_dao.Use(r.db).SysDept
+	err := dao.WithContext(ctx).CreateInBatches(data, batchSize)
 	if err != nil {
 		return err
 	}

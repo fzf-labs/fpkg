@@ -25,6 +25,8 @@ type (
 	ISysAdminRepo interface {
 		// CreateOne 创建一条数据
 		CreateOne(ctx context.Context, data *user_model.SysAdmin) error
+		// CreateBatch 批量创建数据
+		CreateBatch(ctx context.Context, data []*user_model.SysAdmin, batchSize int) error
 		// UpdateOne 更新一条数据
 		UpdateOne(ctx context.Context, data *user_model.SysAdmin) error
 		// FindOneCacheByUsername 根据username查询一条数据并设置缓存
@@ -86,6 +88,16 @@ func NewSysAdminRepo(db *gorm.DB, cache ISysAdminCache) *SysAdminRepo {
 func (r *SysAdminRepo) CreateOne(ctx context.Context, data *user_model.SysAdmin) error {
 	dao := user_dao.Use(r.db).SysAdmin
 	err := dao.WithContext(ctx).Create(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateBatch 批量创建数据
+func (r *SysAdminRepo) CreateBatch(ctx context.Context, data []*user_model.SysAdmin, batchSize int) error {
+	dao := user_dao.Use(r.db).SysAdmin
+	err := dao.WithContext(ctx).CreateInBatches(data, batchSize)
 	if err != nil {
 		return err
 	}

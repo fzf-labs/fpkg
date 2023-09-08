@@ -24,6 +24,8 @@ type (
 	ISysPermissionRepo interface {
 		// CreateOne 创建一条数据
 		CreateOne(ctx context.Context, data *user_model.SysPermission) error
+		// CreateBatch 批量创建数据
+		CreateBatch(ctx context.Context, data []*user_model.SysPermission, batchSize int) error
 		// UpdateOne 更新一条数据
 		UpdateOne(ctx context.Context, data *user_model.SysPermission) error
 		// FindOneCacheByID 根据ID查询一条数据并设置缓存
@@ -69,6 +71,16 @@ func NewSysPermissionRepo(db *gorm.DB, cache ISysPermissionCache) *SysPermission
 func (r *SysPermissionRepo) CreateOne(ctx context.Context, data *user_model.SysPermission) error {
 	dao := user_dao.Use(r.db).SysPermission
 	err := dao.WithContext(ctx).Create(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateBatch 批量创建数据
+func (r *SysPermissionRepo) CreateBatch(ctx context.Context, data []*user_model.SysPermission, batchSize int) error {
+	dao := user_dao.Use(r.db).SysPermission
+	err := dao.WithContext(ctx).CreateInBatches(data, batchSize)
 	if err != nil {
 		return err
 	}

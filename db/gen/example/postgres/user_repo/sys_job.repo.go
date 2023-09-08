@@ -24,6 +24,8 @@ type (
 	ISysJobRepo interface {
 		// CreateOne 创建一条数据
 		CreateOne(ctx context.Context, data *user_model.SysJob) error
+		// CreateBatch 批量创建数据
+		CreateBatch(ctx context.Context, data []*user_model.SysJob, batchSize int) error
 		// UpdateOne 更新一条数据
 		UpdateOne(ctx context.Context, data *user_model.SysJob) error
 		// FindOneCacheByID 根据ID查询一条数据并设置缓存
@@ -69,6 +71,16 @@ func NewSysJobRepo(db *gorm.DB, cache ISysJobCache) *SysJobRepo {
 func (r *SysJobRepo) CreateOne(ctx context.Context, data *user_model.SysJob) error {
 	dao := user_dao.Use(r.db).SysJob
 	err := dao.WithContext(ctx).Create(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateBatch 批量创建数据
+func (r *SysJobRepo) CreateBatch(ctx context.Context, data []*user_model.SysJob, batchSize int) error {
+	dao := user_dao.Use(r.db).SysJob
+	err := dao.WithContext(ctx).CreateInBatches(data, batchSize)
 	if err != nil {
 		return err
 	}

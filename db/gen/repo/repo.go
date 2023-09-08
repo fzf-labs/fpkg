@@ -205,14 +205,24 @@ func (r *GenerationRepo) generateVar() (string, error) {
 
 // generateCreateMethods
 func (r *GenerationRepo) generateCreateMethods() (string, error) {
-	tpl, err := NewTemplate("InterfaceCreateOne").Parse(InterfaceCreateOne).Execute(map[string]any{
+	var createMethods string
+	interfaceCreateOne, err := NewTemplate("InterfaceCreateOne").Parse(InterfaceCreateOne).Execute(map[string]any{
 		"lowerDBName":    r.lowerDBName,
 		"upperTableName": r.upperTableName,
 	})
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintln(tpl.String()), nil
+	createMethods += fmt.Sprintln(interfaceCreateOne.String())
+	interfaceCreateBatch, err := NewTemplate("InterfaceCreateBatch").Parse(InterfaceCreateBatch).Execute(map[string]any{
+		"lowerDBName":    r.lowerDBName,
+		"upperTableName": r.upperTableName,
+	})
+	if err != nil {
+		return "", err
+	}
+	createMethods += fmt.Sprintln(interfaceCreateBatch.String())
+	return createMethods, nil
 }
 
 // generateUpdateMethods
@@ -536,6 +546,7 @@ func (r *GenerationRepo) generateNew() (string, error) {
 
 // generateCreateFunc
 func (r *GenerationRepo) generateCreateFunc() (string, error) {
+	var createFunc string
 	createOneTpl, err := NewTemplate("CreateOne").Parse(CreateOne).Execute(map[string]any{
 		"lowerDBName":    r.lowerDBName,
 		"upperTableName": r.upperTableName,
@@ -544,7 +555,16 @@ func (r *GenerationRepo) generateCreateFunc() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return createOneTpl.String(), nil
+	createFunc += fmt.Sprintln(createOneTpl.String())
+	createBatchTpl, err := NewTemplate("CreateBatch").Parse(CreateBatch).Execute(map[string]any{
+		"lowerDBName":    r.lowerDBName,
+		"upperTableName": r.upperTableName,
+	})
+	if err != nil {
+		return "", err
+	}
+	createFunc += fmt.Sprintln(createBatchTpl.String())
+	return createFunc, nil
 }
 
 // generateReadFunc
