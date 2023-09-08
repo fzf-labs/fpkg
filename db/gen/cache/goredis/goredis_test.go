@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/fzf-labs/fpkg/cache/gorediscache"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGoRedisCache_Fetch(t *testing.T) {
@@ -26,6 +27,7 @@ func TestGoRedisCache_Fetch(t *testing.T) {
 	})
 	fmt.Println(fetch)
 	fmt.Println(err)
+	assert.Equal(t, nil, err)
 }
 
 func TestGoRedisCache_FetchBatch(t *testing.T) {
@@ -56,4 +58,5 @@ func TestGoRedisCache_FetchBatch(t *testing.T) {
 	})
 	fmt.Println(fetch)
 	fmt.Println(err)
+	assert.Equal(t, nil, err)
 }

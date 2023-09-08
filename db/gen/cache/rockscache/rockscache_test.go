@@ -7,6 +7,7 @@ import (
 
 	"github.com/fzf-labs/fpkg/cache/gorediscache"
 	"github.com/fzf-labs/fpkg/cache/rockscache"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRocksCache_Fetch(t *testing.T) {
@@ -30,6 +31,7 @@ func TestRocksCache_Fetch(t *testing.T) {
 	})
 	fmt.Println(fetch)
 	fmt.Println(err)
+	assert.Equal(t, nil, err)
 }
 
 func TestRocksCache_FetchBatch(t *testing.T) {
@@ -60,4 +62,5 @@ func TestRocksCache_FetchBatch(t *testing.T) {
 	})
 	fmt.Println(take)
 	fmt.Println(err)
+	assert.Equal(t, nil, err)
 }

@@ -6,10 +6,11 @@ import (
 	"testing"
 
 	"github.com/redis/rueidis"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLocker_AutoLock(t *testing.T) {
-	client, err := NewRueidis(rueidis.ClientOption{
+	client, err := NewRueidis(&rueidis.ClientOption{
 		Username:    "",
 		Password:    "123456",
 		InitAddress: []string{"127.0.0.1:6379"},
@@ -27,4 +28,5 @@ func TestLocker_AutoLock(t *testing.T) {
 	if err != nil {
 		return
 	}
+	assert.Equal(t, nil, err)
 }

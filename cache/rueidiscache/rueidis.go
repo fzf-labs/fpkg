@@ -9,9 +9,9 @@ import (
 
 // NewRueidis  redis客户端rueidis
 // redis > 6.0
-func NewRueidis(clientOption rueidis.ClientOption) (rueidis.Client, error) {
+func NewRueidis(clientOption *rueidis.ClientOption) (rueidis.Client, error) {
 	// 初始化rueidis
-	client, err := rueidis.NewClient(clientOption)
+	client, err := rueidis.NewClient(*clientOption)
 	if err != nil {
 		return nil, err
 	}
@@ -27,8 +27,8 @@ func NewRueidisAdapter(client rueidis.Client) (rueidiscompat.Cmdable, error) {
 
 // NewRueidisAside 缓存和数据一起存储
 // redis > 7.0
-func NewRueidisAside(clientOption rueidis.ClientOption) (rueidisaside.CacheAsideClient, error) {
+func NewRueidisAside(clientOption *rueidis.ClientOption) (rueidisaside.CacheAsideClient, error) {
 	return rueidisaside.NewClient(rueidisaside.ClientOption{
-		ClientOption: clientOption,
+		ClientOption: *clientOption,
 	})
 }

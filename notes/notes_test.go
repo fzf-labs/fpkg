@@ -1,10 +1,12 @@
 package notes
 
 import (
-	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNoteOne(t *testing.T) {
-	fmt.Println(NoteOne())
+	one := NoteOne()
+	assert.True(t, true, len(one) > 0)
 }

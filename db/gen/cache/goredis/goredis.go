@@ -1,3 +1,4 @@
+//nolint:gosec
 package goredis
 
 import (
@@ -44,7 +45,7 @@ func WithTTL(ttl time.Duration) CacheOption {
 		r.ttl = ttl
 	}
 }
-func (r *GoRedisCache) Key(ctx context.Context, keys ...any) string {
+func (r *GoRedisCache) Key(keys ...any) string {
 	keyStr := make([]string, 0)
 	keyStr = append(keyStr, r.name)
 	for _, v := range keys {
@@ -56,14 +57,14 @@ func (r *GoRedisCache) Key(ctx context.Context, keys ...any) string {
 func (r *GoRedisCache) TTL(ttl time.Duration) time.Duration {
 	return ttl - time.Duration(rand.Float64()*0.1*float64(ttl))
 }
-func (r *GoRedisCache) Fetch(ctx context.Context, key string, KvFn func() (string, error)) (string, error) {
-	do, err, _ := r.sf.Do(key, func() (interface{}, error) {
+func (r *GoRedisCache) Fetch(ctx context.Context, key string, fn func() (string, error)) (string, error) {
+	do, err, _ := r.sf.Do(key, func() (any, error) {
 		result, err := r.client.Get(ctx, key).Result()
 		if err != nil && err != redis.Nil {
 			return "", err
 		}
 		if result == "" && err == redis.Nil {
-			result, err = KvFn()
+			result, err = fn()
 			if err != nil {
 				return "", err
 			}
@@ -80,7 +81,7 @@ func (r *GoRedisCache) Fetch(ctx context.Context, key string, KvFn func() (strin
 	return do.(string), nil
 }
 
-func (r *GoRedisCache) FetchBatch(ctx context.Context, keys []string, KvFn func(miss []string) (map[string]string, error)) (map[string]string, error) {
+func (r *GoRedisCache) FetchBatch(ctx context.Context, keys []string, fn func(miss []string) (map[string]string, error)) (map[string]string, error) {
 	resp := make(map[string]string)
 	miss := make([]string, 0)
 	pipelined, err := r.client.Pipelined(ctx, func(p redis.Pipeliner) error {
@@ -102,14 +103,14 @@ func (r *GoRedisCache) FetchBatch(ctx context.Context, keys []string, KvFn func(
 		resp[keys[k]] = cmder.(*redis.StringCmd).Val()
 	}
 	if len(miss) > 0 {
-		dbValue, err := KvFn(miss)
+		dbValue, err := fn(miss)
 		if err != nil {
 			return nil, err
 		}
 		_, err = r.client.Pipelined(ctx, func(p redis.Pipeliner) error {
 			for _, v := range miss {
 				resp[v] = dbValue[v]
-				err := p.Set(ctx, v, dbValue[v], r.TTL(r.ttl)).Err()
+				err = p.Set(ctx, v, dbValue[v], r.TTL(r.ttl)).Err()
 				if err != nil {
 					return err
 				}

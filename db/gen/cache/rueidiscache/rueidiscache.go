@@ -1,3 +1,4 @@
+//nolint:gosec
 package rueidiscache
 
 import (
@@ -46,7 +47,7 @@ func NewRueidisCache(client rueidis.Client, opts ...CacheOption) *RueidisCache {
 	return r
 }
 
-func (r *RueidisCache) Key(ctx context.Context, keys ...any) string {
+func (r *RueidisCache) Key(keys ...any) string {
 	keyStr := make([]string, 0)
 	keyStr = append(keyStr, r.name)
 	for _, v := range keys {
@@ -59,8 +60,8 @@ func (r *RueidisCache) TTL(ttl time.Duration) time.Duration {
 	return ttl - time.Duration(rand.Float64()*0.1*float64(ttl))
 }
 
-func (r *RueidisCache) Fetch(ctx context.Context, key string, KvFn func() (string, error)) (string, error) {
-	do, err, _ := r.sf.Do(key, func() (interface{}, error) {
+func (r *RueidisCache) Fetch(ctx context.Context, key string, fn func() (string, error)) (string, error) {
+	do, err, _ := r.sf.Do(key, func() (any, error) {
 		cacheValue := r.client.DoCache(ctx, r.client.B().Get().Key(key).Cache(), r.TTL(r.ttl))
 		if cacheValue.Error() != nil && !rueidis.IsRedisNil(cacheValue.Error()) {
 			return "", cacheValue.Error()
@@ -72,7 +73,7 @@ func (r *RueidisCache) Fetch(ctx context.Context, key string, KvFn func() (strin
 			}
 			return resp, nil
 		}
-		resp, err := KvFn()
+		resp, err := fn()
 		if err != nil {
 			return "", err
 		}
@@ -88,7 +89,7 @@ func (r *RueidisCache) Fetch(ctx context.Context, key string, KvFn func() (strin
 	return do.(string), nil
 }
 
-func (r *RueidisCache) FetchBatch(ctx context.Context, keys []string, KvFn func(miss []string) (map[string]string, error)) (map[string]string, error) {
+func (r *RueidisCache) FetchBatch(ctx context.Context, keys []string, fn func(miss []string) (map[string]string, error)) (map[string]string, error) {
 	resp := make(map[string]string)
 	commands := make([]rueidis.CacheableTTL, 0)
 	for _, v := range keys {
@@ -104,7 +105,7 @@ func (r *RueidisCache) FetchBatch(ctx context.Context, keys []string, KvFn func(
 		resp[keys[k]] = toString
 	}
 	if len(miss) > 0 {
-		dbValue, err := KvFn(miss)
+		dbValue, err := fn(miss)
 		if err != nil {
 			return nil, err
 		}

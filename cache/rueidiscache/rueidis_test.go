@@ -11,7 +11,7 @@ import (
 )
 
 func TestNewRueiis(t *testing.T) {
-	client, err := NewRueidis(rueidis.ClientOption{
+	client, err := NewRueidis(&rueidis.ClientOption{
 		Username:    "",
 		Password:    "123456",
 		InitAddress: []string{"127.0.0.1:6379"},
@@ -39,7 +39,7 @@ func TestNewRueiis(t *testing.T) {
 }
 
 func TestNewRueidisAside(t *testing.T) {
-	client, err := NewRueidisAside(rueidis.ClientOption{
+	client, err := NewRueidisAside(&rueidis.ClientOption{
 		Username:    "",
 		Password:    "123456",
 		InitAddress: []string{"127.0.0.1:6379"},

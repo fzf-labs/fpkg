@@ -26,7 +26,7 @@ func (l *Locker) AutoLock(ctx context.Context, key string, do func() error) erro
 		return err
 	}
 	defer locker.Close()
-	ctx, cancel, err := locker.WithContext(ctx, key)
+	_, cancel, err := locker.WithContext(ctx, key)
 	if err != nil {
 		return err
 	}

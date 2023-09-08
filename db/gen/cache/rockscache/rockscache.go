@@ -41,7 +41,7 @@ func NewRocksCache(client *rockscache.Client, opts ...CacheOption) *RocksCache {
 	return r
 }
 
-func (r *RocksCache) Key(ctx context.Context, keys ...any) string {
+func (r *RocksCache) Key(keys ...any) string {
 	keyStr := make([]string, 0)
 	keyStr = append(keyStr, r.name)
 	for _, v := range keys {
@@ -50,18 +50,18 @@ func (r *RocksCache) Key(ctx context.Context, keys ...any) string {
 	return strings.Join(keyStr, ":")
 }
 
-func (r *RocksCache) Fetch(ctx context.Context, key string, KvFn func() (string, error)) (string, error) {
-	return r.client.Fetch2(ctx, key, r.ttl, KvFn)
+func (r *RocksCache) Fetch(ctx context.Context, key string, fn func() (string, error)) (string, error) {
+	return r.client.Fetch2(ctx, key, r.ttl, fn)
 }
 
-func (r *RocksCache) FetchBatch(ctx context.Context, keys []string, KvFn func(miss []string) (map[string]string, error)) (map[string]string, error) {
+func (r *RocksCache) FetchBatch(ctx context.Context, keys []string, fn func(miss []string) (map[string]string, error)) (map[string]string, error) {
 	resp, err := r.client.FetchBatch2(ctx, keys, r.ttl, func(idx []int) (map[int]string, error) {
 		result := make(map[int]string)
 		miss := make([]string, 0)
 		for _, v := range idx {
 			miss = append(miss, keys[v])
 		}
-		dbValue, err := KvFn(miss)
+		dbValue, err := fn(miss)
 		if err != nil {
 			return nil, err
 		}

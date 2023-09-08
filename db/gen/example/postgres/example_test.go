@@ -10,10 +10,11 @@ import (
 	rueidiscache2 "github.com/fzf-labs/fpkg/db/gen/cache/rueidiscache"
 	"github.com/fzf-labs/fpkg/db/gen/example/postgres/user_repo"
 	"github.com/redis/rueidis"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_main(t *testing.T) {
-	db, err := db.NewGormPostgresClient(&db.GormPostgresClientConfig{
+	gormPostgresClient, err := db.NewGormPostgresClient(&db.GormPostgresClientConfig{
 		DataSourceName:  "host=0.0.0.0 port=5432 user=postgres password=123456 dbname=user sslmode=disable TimeZone=Asia/Shanghai",
 		MaxIdleConn:     0,
 		MaxOpenConn:     0,
@@ -24,7 +25,7 @@ func Test_main(t *testing.T) {
 	if err != nil {
 		return
 	}
-	client, err := rueidiscache.NewRueidis(rueidis.ClientOption{
+	client, err := rueidiscache.NewRueidis(&rueidis.ClientOption{
 		Username:    "",
 		Password:    "123456",
 		InitAddress: []string{"127.0.0.1:6379"},
@@ -35,10 +36,11 @@ func Test_main(t *testing.T) {
 	}
 	ctx := context.Background()
 	rueidisCache := rueidiscache2.NewRueidisCache(client)
-	repo := user_repo.NewUserDemoRepo(db, rueidisCache)
+	repo := user_repo.NewUserDemoRepo(gormPostgresClient, rueidisCache)
 	result, err := repo.FindOneCacheByID(ctx, 1)
 	if err != nil {
 		return
 	}
 	fmt.Println(result)
+	assert.Equal(t, nil, err)
 }
