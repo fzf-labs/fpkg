@@ -7,8 +7,8 @@ import (
 
 	"github.com/fzf-labs/fpkg/cache/rueidiscache"
 	"github.com/fzf-labs/fpkg/db"
-	rueidiscache2 "github.com/fzf-labs/fpkg/db/gen/cache/rueidiscache"
-	"github.com/fzf-labs/fpkg/db/gen/example/postgres/user_repo"
+	rueidiscache2 "github.com/fzf-labs/fpkg/db/gen/cache/rueidisdbcache"
+	"github.com/fzf-labs/fpkg/db/gen/example/postgres/gorm_gen_repo"
 	"github.com/redis/rueidis"
 	"github.com/stretchr/testify/assert"
 )
@@ -36,7 +36,7 @@ func Test_main(t *testing.T) {
 	}
 	ctx := context.Background()
 	rueidisCache := rueidiscache2.NewRueidisCache(client)
-	repo := user_repo.NewUserDemoRepo(gormPostgresClient, rueidisCache)
+	repo := gorm_gen_repo.NewUserDemoRepo(gormPostgresClient, rueidisCache)
 	result, err := repo.FindOneCacheByID(ctx, 1)
 	if err != nil {
 		return

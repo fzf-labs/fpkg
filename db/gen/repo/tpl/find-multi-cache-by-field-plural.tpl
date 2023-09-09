@@ -4,7 +4,7 @@ func (r *{{.upperTableName}}Repo) FindMultiCacheBy{{.upperFieldPlural}}(ctx cont
 	keys := make([]string, 0)
 	keyToParam := make(map[string]{{.dataType}})
 	for _, v := range {{.lowerFieldPlural}} {
-	    key := r.cache.Key(ctx, cache{{.upperTableName}}By{{.upperField}}Prefix, v)
+	    key := r.cache.Key( cache{{.upperTableName}}By{{.upperField}}Prefix, v)
 		keys = append(keys,key)
 		keyToParam[key] = v
 	}
@@ -27,7 +27,7 @@ func (r *{{.upperTableName}}Repo) FindMultiCacheBy{{.upperFieldPlural}}(ctx cont
 			if err != nil {
 				return nil, err
 			}
-			value[r.cache.Key(ctx, cache{{.upperTableName}}By{{.upperField}}Prefix, v.{{.upperField}})] = string(marshal)
+			value[r.cache.Key( cache{{.upperTableName}}By{{.upperField}}Prefix, v.{{.upperField}})] = string(marshal)
 		}
 		return value, nil
 	})

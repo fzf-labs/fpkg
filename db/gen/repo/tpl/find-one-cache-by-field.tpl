@@ -1,7 +1,7 @@
 // FindOneCacheBy{{.upperField}} 根据{{.lowerField}}查询一条数据并设置缓存
 func (r *{{.upperTableName}}Repo) FindOneCacheBy{{.upperField}}(ctx context.Context, {{.lowerField}} {{.dataType}}) (*{{.lowerDBName}}_model.{{.upperTableName}}, error) {
 	resp := new({{.lowerDBName}}_model.{{.upperTableName}})
-	key := r.cache.Key(ctx, cache{{.upperTableName}}By{{.upperField}}Prefix, {{.lowerField}})
+	key := r.cache.Key( cache{{.upperTableName}}By{{.upperField}}Prefix, {{.lowerField}})
 	cacheValue, err := r.cache.Fetch(ctx, key, func() (string, error) {
 		dao := {{.lowerDBName}}_dao.Use(r.db).{{.upperTableName}}
 		result, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.Eq({{.lowerField}})).First()

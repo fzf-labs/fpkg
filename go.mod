@@ -58,11 +58,13 @@ require (
 	golang.org/x/crypto v0.12.0
 	golang.org/x/exp v0.0.0-20230811145659-89c5cff77bcb
 	golang.org/x/net v0.14.0
+	golang.org/x/sync v0.3.0
 	golang.org/x/text v0.12.0
 	golang.org/x/time v0.3.0
 	golang.org/x/tools v0.12.0
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v3 v3.0.1
+	gorm.io/datatypes v1.2.0
 	gorm.io/driver/mysql v1.5.1
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/gen v0.3.23
@@ -155,12 +157,10 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
 	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/mail.v2 v2.3.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
-	gorm.io/datatypes v1.2.0 // indirect
 	gorm.io/hints v1.1.2 // indirect
 	mosn.io/api v0.0.0-20210204052134-5b9a826795fd // indirect
 	mosn.io/pkg v0.0.0-20211217101631-d914102d1baf // indirect
