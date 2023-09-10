@@ -3,6 +3,7 @@ package gen
 import (
 	"fmt"
 	"strings"
+	"sync"
 	"unicode"
 
 	"github.com/fzf-labs/fpkg/db/gen/repo"
@@ -49,30 +50,36 @@ func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType)
 	// 从数据库中生成所有表
 	g.ApplyBasic(g.GenerateAllTable()...)
 	g.Execute()
-
 	// 生成repo
-	tables, err := db.Migrator().GetTables()
-	if err != nil {
-		return
-	}
 	generationRepo := repo.NewGenerationRepo(db, daoPath, modelPath, repoPath)
-	err = generationRepo.MkdirPath()
+	err := generationRepo.MkdirPath()
 	if err != nil {
 		slog.Error("repo MkdirPath err:", err)
 		return
 	}
-	for _, tableName := range tables {
-		columnNameToDataType := make(map[string]string)
-		queryStructMeta := g.GenerateModel(tableName)
-		for _, v := range queryStructMeta.Fields {
-			columnNameToDataType[v.ColumnName] = v.Type
-		}
-		err = generationRepo.GenerationTable(tableName, columnNameToDataType)
-		if err != nil {
-			slog.Error("repo GenerationTable err:", err)
-			return
-		}
+	tables, err := db.Migrator().GetTables()
+	if err != nil {
+		slog.Error("repo GetTables err:", err)
+		return
 	}
+	var wg sync.WaitGroup
+	wg.Add(len(tables))
+	for i := 0; i < len(tables); i++ {
+		go func(taskID int) {
+			defer wg.Done()
+			columnNameToDataType := make(map[string]string)
+			queryStructMeta := g.GenerateModel(tables[taskID])
+			for _, v := range queryStructMeta.Fields {
+				columnNameToDataType[v.ColumnName] = v.Type
+			}
+			err = generationRepo.GenerationTable(tables[taskID], columnNameToDataType)
+			if err != nil {
+				slog.Error("repo GenerationTable err:", err)
+				return
+			}
+		}(i)
+	}
+	wg.Wait()
 }
 
 // DefaultMySQLDataMap 默认mysql字段类型映射
