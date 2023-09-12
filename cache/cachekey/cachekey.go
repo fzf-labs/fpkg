@@ -37,7 +37,7 @@ func (p *KeyManage) AddKey(prefix string, expirationTime time.Duration, remark s
 
 // Document 导出MD文档
 func (p *KeyManage) Document() string {
-	str := `|ServerName|PrefixName|TTL(s)|Remark` + "\n" + `|--|--|--|--|` + "\n"
+	str := `|ServerName|PrefixName|ttl(s)|Remark` + "\n" + `|--|--|--|--|` + "\n"
 
 	if len(p.List) > 0 {
 		for _, m := range p.List {
@@ -69,4 +69,14 @@ func (p *KeyPrefix) Keys(keys []string) []string {
 		}
 	}
 	return result
+}
+
+// TTL 获取缓存key的过期时间time.Duration
+func (p *KeyPrefix) TTL() time.Duration {
+	return p.ExpirationTime
+}
+
+// TTLSecond 获取缓存key的过期时间 Second
+func (p *KeyPrefix) TTLSecond() int {
+	return int(p.ExpirationTime / time.Second)
 }

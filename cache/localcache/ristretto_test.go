@@ -3,6 +3,8 @@ package localcache
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewRistretto(t *testing.T) {
@@ -25,4 +27,5 @@ func TestNewRistretto(t *testing.T) {
 
 	// del value from cache
 	cache.Del("key")
+	assert.Equal(t, nil, err)
 }
