@@ -27,7 +27,7 @@ func WithTTL(ttl time.Duration) CacheOption {
 		r.ttl = ttl
 	}
 }
-func NewRocksCache(client *rockscache.Client, opts ...CacheOption) *Cache {
+func NewRocksDBCache(client *rockscache.Client, opts ...CacheOption) *Cache {
 	r := &Cache{
 		name:   "GormCache",
 		client: client,

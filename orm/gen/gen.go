@@ -64,20 +64,21 @@ func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType)
 	}
 	var wg sync.WaitGroup
 	wg.Add(len(tables))
-	for i := 0; i < len(tables); i++ {
-		go func(taskID int) {
+	for _, v := range tables {
+		t := v
+		go func(table string) {
 			defer wg.Done()
 			columnNameToDataType := make(map[string]string)
-			queryStructMeta := g.GenerateModel(tables[taskID])
+			queryStructMeta := g.GenerateModel(table)
 			for _, v := range queryStructMeta.Fields {
 				columnNameToDataType[v.ColumnName] = v.Type
 			}
-			err = generationRepo.GenerationTable(tables[taskID], columnNameToDataType)
+			err = generationRepo.GenerationTable(table, columnNameToDataType)
 			if err != nil {
 				slog.Error("repo GenerationTable err:", err)
 				return
 			}
-		}(i)
+		}(t)
 	}
 	wg.Wait()
 }

@@ -21,7 +21,7 @@ func TestRocksCache_Fetch(t *testing.T) {
 		return
 	}
 	rocksCacheClient := rockscache.NewWeakRocksCacheClient(goRedis)
-	cache := NewRocksCache(rocksCacheClient)
+	cache := NewRocksDBCache(rocksCacheClient)
 
 	ctx := context.Background()
 
@@ -45,7 +45,7 @@ func TestRocksCache_FetchBatch(t *testing.T) {
 		return
 	}
 	rocksCacheClient := rockscache.NewWeakRocksCacheClient(goRedis)
-	cache := NewRocksCache(rocksCacheClient)
+	cache := NewRocksDBCache(rocksCacheClient)
 	ctx := context.Background()
 	keys := []string{
 		"RocksCache_FetchBatch_a",

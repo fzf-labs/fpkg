@@ -11,6 +11,7 @@ require (
 	github.com/bsm/redislock v0.9.4
 	github.com/bytedance/sonic v1.10.0
 	github.com/casbin/casbin/v2 v2.73.1
+	github.com/dgraph-io/ristretto v0.1.1
 	github.com/dtm-labs/rockscache v0.1.1
 	github.com/gabriel-vasile/mimetype v1.4.2
 	github.com/go-gorm/caches/v2 v2.0.1
@@ -88,6 +89,7 @@ require (
 	github.com/chenzhuoyu/iasm v0.9.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
@@ -101,6 +103,7 @@ require (
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/gogap/stack v0.0.0-20150131034635-fef68dddd4f8 // indirect
 	github.com/golang-jwt/jwt/v4 v4.4.2 // indirect
+	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect

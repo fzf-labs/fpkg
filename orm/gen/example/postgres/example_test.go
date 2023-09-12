@@ -35,7 +35,7 @@ func Test_main(t *testing.T) {
 		return
 	}
 	ctx := context.Background()
-	rueidisCache := rueidiscache2.NewRueidisCache(client)
+	rueidisCache := rueidiscache2.NewRueidisDBCache(client)
 	repo := gorm_gen_repo.NewUserDemoRepo(gormPostgresClient, rueidisCache)
 	result, err := repo.FindOneCacheByID(ctx, 1)
 	if err != nil {

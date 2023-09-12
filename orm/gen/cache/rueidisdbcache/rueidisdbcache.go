@@ -33,7 +33,7 @@ func WithTTL(ttl time.Duration) CacheOption {
 	}
 }
 
-func NewRueidisCache(client rueidis.Client, opts ...CacheOption) *Cache {
+func NewRueidisDBCache(client rueidis.Client, opts ...CacheOption) *Cache {
 	r := &Cache{
 		name:   "GormCache",
 		client: client,

@@ -19,7 +19,7 @@ type Cache struct {
 	sf     singleflight.Group
 }
 
-func NewGoRedisCache(client *redis.Client, opts ...CacheOption) *Cache {
+func NewGoRedisDBCache(client *redis.Client, opts ...CacheOption) *Cache {
 	r := &Cache{
 		name:   "GormCache",
 		client: client,

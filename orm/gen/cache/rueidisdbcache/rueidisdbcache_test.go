@@ -21,7 +21,7 @@ func TestRueidisCache_Take(t *testing.T) {
 		return
 	}
 	ctx := context.Background()
-	rueidisCache := NewRueidisCache(client)
+	rueidisCache := NewRueidisDBCache(client)
 	take, err := rueidisCache.Fetch(ctx, "take_test", func() (string, error) {
 		return "take", nil
 	})
@@ -41,7 +41,7 @@ func TestRueidisCache_TakeBatch(t *testing.T) {
 		return
 	}
 	ctx := context.Background()
-	rueidisCache := NewRueidisCache(client)
+	rueidisCache := NewRueidisDBCache(client)
 	keys := []string{
 		"a",
 		"b",
@@ -72,7 +72,7 @@ func TestRueidisCache_Del(t *testing.T) {
 		return
 	}
 	ctx := context.Background()
-	rueidisCache := NewRueidisCache(client)
+	rueidisCache := NewRueidisDBCache(client)
 	err = rueidisCache.Del(ctx, "a")
 	if err != nil {
 		return
@@ -91,7 +91,7 @@ func TestRueidisCache_DelBatch(t *testing.T) {
 		return
 	}
 	ctx := context.Background()
-	rueidisCache := NewRueidisCache(client)
+	rueidisCache := NewRueidisDBCache(client)
 	err = rueidisCache.DelBatch(ctx, []string{"a", "b", "f"})
 	if err != nil {
 		return

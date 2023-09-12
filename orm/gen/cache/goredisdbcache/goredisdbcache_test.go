@@ -19,7 +19,7 @@ func TestGoRedisCache_Fetch(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	cache := NewGoRedisCache(goRedis)
+	cache := NewGoRedisDBCache(goRedis)
 	ctx := context.Background()
 	fetch, err := cache.Fetch(ctx, "GoRedisCache_Fetch", func() (string, error) {
 		fmt.Println(1)
@@ -40,7 +40,7 @@ func TestGoRedisCache_FetchBatch(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	cache := NewGoRedisCache(goRedis)
+	cache := NewGoRedisDBCache(goRedis)
 	ctx := context.Background()
 	keys := []string{
 		"GoRedisCache_Fetch_a",
