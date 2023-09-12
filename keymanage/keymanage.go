@@ -1,4 +1,4 @@
-package cachekey
+package keymanage
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ type KeyManage struct {
 	List       map[string]KeyPrefix
 }
 
-// NewKeyManage 实例化缓存key前缀集合
+// NewKeyManage 实例化key管理器
 func NewKeyManage(serverName string) *KeyManage {
 	return &KeyManage{
 		ServerName: serverName,
@@ -20,10 +20,10 @@ func NewKeyManage(serverName string) *KeyManage {
 	}
 }
 
-// AddKey 添加一个缓存key prefix
+// AddKey 添加一个key prefix
 func (p *KeyManage) AddKey(prefix string, expirationTime time.Duration, remark string) *KeyPrefix {
 	if _, ok := p.List[prefix]; ok {
-		panic(fmt.Sprintf("cache key %s is exsit, please change one", prefix))
+		panic(fmt.Sprintf("key %s is exsit, please change one", prefix))
 	}
 	key := KeyPrefix{
 		ServerName:     p.ServerName,
@@ -47,7 +47,7 @@ func (p *KeyManage) Document() string {
 	return str
 }
 
-// KeyPrefix 缓存key前缀
+// KeyPrefix key前缀
 type KeyPrefix struct {
 	ServerName     string
 	PrefixName     string
@@ -71,12 +71,12 @@ func (p *KeyPrefix) Keys(keys []string) []string {
 	return result
 }
 
-// TTL 获取缓存key的过期时间time.Duration
+// TTL 获取key的过期时间time.Duration
 func (p *KeyPrefix) TTL() time.Duration {
 	return p.ExpirationTime
 }
 
-// TTLSecond 获取缓存key的过期时间 Second
+// TTLSecond 获取key的过期时间 Second
 func (p *KeyPrefix) TTLSecond() int {
 	return int(p.ExpirationTime / time.Second)
 }
