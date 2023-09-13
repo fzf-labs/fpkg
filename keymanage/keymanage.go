@@ -12,8 +12,8 @@ type KeyManage struct {
 	List       map[string]KeyPrefix
 }
 
-// NewKeyManage 实例化key管理器
-func NewKeyManage(serverName string) *KeyManage {
+// New 实例化key管理器
+func New(serverName string) *KeyManage {
 	return &KeyManage{
 		ServerName: serverName,
 		List:       make(map[string]KeyPrefix),
