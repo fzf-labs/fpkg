@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/fzf-labs/fpkg/orm"
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_dao"
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_model"
 	"gorm.io/gorm"
@@ -44,6 +45,8 @@ type (
 		FindMultiByPermissionID(ctx context.Context, permissionID string) ([]*gorm_gen_model.SysAPI, error)
 		// FindMultiByPermissionIDS 根据permissionIDS查询多条数据
 		FindMultiByPermissionIDS(ctx context.Context, permissionIDS []string) ([]*gorm_gen_model.SysAPI, error)
+		// FindMultiByPaginator 查询分页数据(通用)
+		FindMultiByPaginator(ctx context.Context, params orm.PaginatorParams) ([]*gorm_gen_model.SysAPI, int64, error)
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
 		DeleteOneCacheByID(ctx context.Context, ID string) error
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
@@ -390,4 +393,28 @@ func (s *SysAPIRepo) FindMultiByPermissionIDS(ctx context.Context, permissionIDS
 		return nil, err
 	}
 	return result, nil
+}
+
+// FindMultiByPaginator 查询分页数据(通用)
+func (s *SysAPIRepo) FindMultiByPaginator(ctx context.Context, params orm.PaginatorParams) ([]*gorm_gen_model.SysAPI, int64, error) {
+	result := make([]*gorm_gen_model.SysAPI, 0)
+	var total int64
+	queryStr, args, err := params.ConvertToGormConditions()
+	if err != nil {
+		return nil, 0, err
+	}
+	err = s.db.WithContext(ctx).Model(&gorm_gen_model.SysAPI{}).Select([]string{"id"}).Where(queryStr, args...).Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	if total == 0 {
+		return nil, total, nil
+	}
+	limit, offset := params.ConvertToPage()
+	order := params.ConvertToOrder()
+	err = s.db.WithContext(ctx).Order(order).Limit(limit).Offset(offset).Where(queryStr, args...).Find(&result).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	return result, total, err
 }

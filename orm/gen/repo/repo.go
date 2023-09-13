@@ -404,6 +404,15 @@ func (r *GenerationRepo) generateReadMethods() (string, error) {
 			readMethods += fmt.Sprintln(interfaceFindMultiByFields.String())
 		}
 	}
+	interfaceFindMultiByPaginator, err := NewTemplate("InterfaceFindMultiByPaginator").Parse(InterfaceFindMultiByPaginator).Execute(map[string]any{
+		"lowerDBName":    r.lowerDBName,
+		"upperTableName": r.upperTableName,
+		"lowerTableName": r.lowerTableName,
+	})
+	if err != nil {
+		return "", err
+	}
+	readMethods += fmt.Sprintln(interfaceFindMultiByPaginator.String())
 	return readMethods, nil
 }
 
@@ -857,6 +866,16 @@ func (r *GenerationRepo) generateReadFunc() (string, error) {
 			readFunc += fmt.Sprintln(findMultiByFields.String())
 		}
 	}
+	findMultiByPaginator, err := NewTemplate("FindMultiByPaginator").Parse(FindMultiByPaginator).Execute(map[string]any{
+		"firstTableChar": r.firstTableChar,
+		"lowerDBName":    r.lowerDBName,
+		"upperTableName": r.upperTableName,
+		"lowerTableName": r.lowerTableName,
+	})
+	if err != nil {
+		return "", err
+	}
+	readFunc += fmt.Sprintln(findMultiByPaginator.String())
 	return readFunc, nil
 }
 

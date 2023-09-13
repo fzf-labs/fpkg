@@ -121,6 +121,12 @@ var InterfaceFindOneCacheByFields string
 //go:embed tpl/find-one-cache-by-fields.tpl
 var FindOneCacheByFields string
 
+//go:embed tpl/interface-find-multi-by-paginator.tpl
+var InterfaceFindMultiByPaginator string
+
+//go:embed tpl/find-multi-by-paginator.tpl
+var FindMultiByPaginator string
+
 //go:embed tpl/interface-update-one.tpl
 var InterfaceUpdateOne string
 
