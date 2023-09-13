@@ -83,7 +83,7 @@ func (s *SearchColumn) convert() error {
 	if s.Exp == "" {
 		s.Exp = "="
 	}
-	if v, ok := expMap[strings.ToLower(s.Exp)]; ok { //nolint
+	if v, ok := expMap[strings.ToLower(s.Exp)]; ok {
 		s.Exp = v
 		if s.Exp == " LIKE " {
 			s.Value = fmt.Sprintf("%%%v%%", s.Value)
