@@ -62,9 +62,6 @@ func (p *PaginatorParams) ConvertToPage() (limit int, offset int) {
 
 // ConvertToOrder 转换为page
 func (p *PaginatorParams) ConvertToOrder() string {
-	if p.Order == "" {
-		return "id DESC"
-	}
 	return p.Order
 }
 
@@ -83,7 +80,7 @@ func (s *SearchColumn) convert() error {
 	if s.Exp == "" {
 		s.Exp = "="
 	}
-	if v, ok := expMap[strings.ToLower(s.Exp)]; ok {
+	if v, ok := expMap[strings.TrimSpace(s.Exp)]; ok {
 		s.Exp = v
 		if s.Exp == " LIKE " {
 			s.Value = fmt.Sprintf("%%%v%%", s.Value)
@@ -94,7 +91,7 @@ func (s *SearchColumn) convert() error {
 	if s.Logic == "" {
 		s.Logic = "AND"
 	}
-	if v, ok := logicMap[strings.ToLower(s.Logic)]; ok {
+	if v, ok := logicMap[strings.TrimSpace(s.Logic)]; ok {
 		s.Logic = v
 	} else {
 		return fmt.Errorf("unknown logic type '%s'", s.Logic)

@@ -46,7 +46,7 @@ type (
 		// FindMultiByPermissionIDS 根据permissionIDS查询多条数据
 		FindMultiByPermissionIDS(ctx context.Context, permissionIDS []string) ([]*gorm_gen_model.SysAPI, error)
 		// FindMultiByPaginator 查询分页数据(通用)
-		FindMultiByPaginator(ctx context.Context, params orm.PaginatorParams) ([]*gorm_gen_model.SysAPI, int64, error)
+		FindMultiByPaginator(ctx context.Context, params *orm.PaginatorParams) ([]*gorm_gen_model.SysAPI, int64, error)
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
 		DeleteOneCacheByID(ctx context.Context, ID string) error
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
@@ -396,7 +396,7 @@ func (s *SysAPIRepo) FindMultiByPermissionIDS(ctx context.Context, permissionIDS
 }
 
 // FindMultiByPaginator 查询分页数据(通用)
-func (s *SysAPIRepo) FindMultiByPaginator(ctx context.Context, params orm.PaginatorParams) ([]*gorm_gen_model.SysAPI, int64, error) {
+func (s *SysAPIRepo) FindMultiByPaginator(ctx context.Context, params *orm.PaginatorParams) ([]*gorm_gen_model.SysAPI, int64, error) {
 	result := make([]*gorm_gen_model.SysAPI, 0)
 	var total int64
 	queryStr, args, err := params.ConvertToGormConditions()
@@ -410,9 +410,13 @@ func (s *SysAPIRepo) FindMultiByPaginator(ctx context.Context, params orm.Pagina
 	if total == 0 {
 		return nil, total, nil
 	}
-	limit, offset := params.ConvertToPage()
+	query := s.db.WithContext(ctx)
 	order := params.ConvertToOrder()
-	err = s.db.WithContext(ctx).Order(order).Limit(limit).Offset(offset).Where(queryStr, args...).Find(&result).Error
+	if order != "" {
+		query = query.Order(order)
+	}
+	limit, offset := params.ConvertToPage()
+	err = query.Limit(limit).Offset(offset).Where(queryStr, args...).Find(&result).Error
 	if err != nil {
 		return nil, 0, err
 	}

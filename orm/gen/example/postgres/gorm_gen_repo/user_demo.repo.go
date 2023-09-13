@@ -62,7 +62,7 @@ type (
 		// FindMultiByIDS 根据IDS查询多条数据
 		FindMultiByIDS(ctx context.Context, IDS []int64) ([]*gorm_gen_model.UserDemo, error)
 		// FindMultiByPaginator 查询分页数据(通用)
-		FindMultiByPaginator(ctx context.Context, params orm.PaginatorParams) ([]*gorm_gen_model.UserDemo, int64, error)
+		FindMultiByPaginator(ctx context.Context, params *orm.PaginatorParams) ([]*gorm_gen_model.UserDemo, int64, error)
 		// DeleteOneCacheByUIDStatus 根据UIDStatus删除一条数据并清理缓存
 		DeleteOneCacheByUIDStatus(ctx context.Context, UID string, status int16) error
 		// DeleteOneCacheByUIDStatus 根据UIDStatus删除一条数据并清理缓存
@@ -764,7 +764,7 @@ func (u *UserDemoRepo) FindMultiByIDS(ctx context.Context, IDS []int64) ([]*gorm
 }
 
 // FindMultiByPaginator 查询分页数据(通用)
-func (u *UserDemoRepo) FindMultiByPaginator(ctx context.Context, params orm.PaginatorParams) ([]*gorm_gen_model.UserDemo, int64, error) {
+func (u *UserDemoRepo) FindMultiByPaginator(ctx context.Context, params *orm.PaginatorParams) ([]*gorm_gen_model.UserDemo, int64, error) {
 	result := make([]*gorm_gen_model.UserDemo, 0)
 	var total int64
 	queryStr, args, err := params.ConvertToGormConditions()
@@ -778,9 +778,13 @@ func (u *UserDemoRepo) FindMultiByPaginator(ctx context.Context, params orm.Pagi
 	if total == 0 {
 		return nil, total, nil
 	}
-	limit, offset := params.ConvertToPage()
+	query := u.db.WithContext(ctx)
 	order := params.ConvertToOrder()
-	err = u.db.WithContext(ctx).Order(order).Limit(limit).Offset(offset).Where(queryStr, args...).Find(&result).Error
+	if order != "" {
+		query = query.Order(order)
+	}
+	limit, offset := params.ConvertToPage()
+	err = query.Limit(limit).Offset(offset).Where(queryStr, args...).Find(&result).Error
 	if err != nil {
 		return nil, 0, err
 	}
