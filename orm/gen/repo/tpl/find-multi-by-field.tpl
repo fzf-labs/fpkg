@@ -1,6 +1,6 @@
 // FindMultiBy{{.upperField}} 根据{{.lowerField}}查询多条数据
-func (r *{{.upperTableName}}Repo) FindMultiBy{{.upperField}}(ctx context.Context, {{.lowerField}} {{.dataType}}) ([]*{{.lowerDBName}}_model.{{.upperTableName}}, error) {
-	dao := {{.lowerDBName}}_dao.Use(r.db).{{.upperTableName}}
+func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiBy{{.upperField}}(ctx context.Context, {{.lowerField}} {{.dataType}}) ([]*{{.lowerDBName}}_model.{{.upperTableName}}, error) {
+	dao := {{.lowerDBName}}_dao.Use({{.firstTableChar}}.db).{{.upperTableName}}
 	result, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.Eq({{.lowerField}})).Find()
 	if err != nil {
 		return nil, err

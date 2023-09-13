@@ -24,10 +24,14 @@ type (
 	ISysJobRepo interface {
 		// CreateOne 创建一条数据
 		CreateOne(ctx context.Context, data *gorm_gen_model.SysJob) error
+		// CreateOneByTx 创建一条数据(事务)
+		CreateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.SysJob) error
 		// CreateBatch 批量创建数据
 		CreateBatch(ctx context.Context, data []*gorm_gen_model.SysJob, batchSize int) error
 		// UpdateOne 更新一条数据
 		UpdateOne(ctx context.Context, data *gorm_gen_model.SysJob) error
+		// UpdateOne 更新一条数据(事务)
+		UpdateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.SysJob) error
 		// FindOneCacheByID 根据ID查询一条数据并设置缓存
 		FindOneCacheByID(ctx context.Context, ID string) (*gorm_gen_model.SysJob, error)
 		// FindOneByID 根据ID查询一条数据
@@ -38,12 +42,20 @@ type (
 		FindMultiByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysJob, error)
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
 		DeleteOneCacheByID(ctx context.Context, ID string) error
+		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
+		DeleteOneCacheByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error
 		// DeleteOneByID 根据ID删除一条数据
 		DeleteOneByID(ctx context.Context, ID string) error
+		// DeleteOneByID 根据ID删除一条数据
+		DeleteOneByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error
 		// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
 		DeleteMultiCacheByIDS(ctx context.Context, IDS []string) error
+		// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
+		DeleteMultiCacheByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error
 		// DeleteMultiByIDS 根据IDS删除多条数据
 		DeleteMultiByIDS(ctx context.Context, IDS []string) error
+		// DeleteMultiByIDS 根据IDS删除多条数据
+		DeleteMultiByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error
 		// DeleteUniqueIndexCache 删除唯一索引存在的缓存
 		DeleteUniqueIndexCache(ctx context.Context, data []*gorm_gen_model.SysJob) error
 	}
@@ -68,8 +80,18 @@ func NewSysJobRepo(db *gorm.DB, cache ISysJobCache) *SysJobRepo {
 }
 
 // CreateOne 创建一条数据
-func (r *SysJobRepo) CreateOne(ctx context.Context, data *gorm_gen_model.SysJob) error {
-	dao := gorm_gen_dao.Use(r.db).SysJob
+func (s *SysJobRepo) CreateOne(ctx context.Context, data *gorm_gen_model.SysJob) error {
+	dao := gorm_gen_dao.Use(s.db).SysJob
+	err := dao.WithContext(ctx).Create(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateOneByTx 创建一条数据(事务)
+func (s *SysJobRepo) CreateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.SysJob) error {
+	dao := tx.SysJob
 	err := dao.WithContext(ctx).Create(data)
 	if err != nil {
 		return err
@@ -78,8 +100,8 @@ func (r *SysJobRepo) CreateOne(ctx context.Context, data *gorm_gen_model.SysJob)
 }
 
 // CreateBatch 批量创建数据
-func (r *SysJobRepo) CreateBatch(ctx context.Context, data []*gorm_gen_model.SysJob, batchSize int) error {
-	dao := gorm_gen_dao.Use(r.db).SysJob
+func (s *SysJobRepo) CreateBatch(ctx context.Context, data []*gorm_gen_model.SysJob, batchSize int) error {
+	dao := gorm_gen_dao.Use(s.db).SysJob
 	err := dao.WithContext(ctx).CreateInBatches(data, batchSize)
 	if err != nil {
 		return err
@@ -88,22 +110,36 @@ func (r *SysJobRepo) CreateBatch(ctx context.Context, data []*gorm_gen_model.Sys
 }
 
 // UpdateOne 更新一条数据
-func (r *SysJobRepo) UpdateOne(ctx context.Context, data *gorm_gen_model.SysJob) error {
-	dao := gorm_gen_dao.Use(r.db).SysJob
+func (s *SysJobRepo) UpdateOne(ctx context.Context, data *gorm_gen_model.SysJob) error {
+	dao := gorm_gen_dao.Use(s.db).SysJob
 	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Updates(data)
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysJob{data})
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysJob{data})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
+// UpdateOneByTx 更新一条数据(事务)
+func (s *SysJobRepo) UpdateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.SysJob) error {
+	dao := tx.SysJob
+	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Updates(data)
+	if err != nil {
+		return err
+	}
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysJob{data})
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 // DeleteOneCacheByID 根据ID删除一条数据并清理缓存
-func (r *SysJobRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
-	dao := gorm_gen_dao.Use(r.db).SysJob
+func (s *SysJobRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
+	dao := gorm_gen_dao.Use(s.db).SysJob
 	first, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
@@ -115,7 +151,28 @@ func (r *SysJobRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysJob{first})
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysJob{first})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
+func (s *SysJobRepo) DeleteOneCacheByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error {
+	dao := tx.SysJob
+	first, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	if first == nil {
+		return nil
+	}
+	_, err = dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
+	if err != nil {
+		return err
+	}
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysJob{first})
 	if err != nil {
 		return err
 	}
@@ -123,8 +180,18 @@ func (r *SysJobRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
 }
 
 // DeleteOneByID 根据ID删除一条数据
-func (r *SysJobRepo) DeleteOneByID(ctx context.Context, ID string) error {
-	dao := gorm_gen_dao.Use(r.db).SysJob
+func (s *SysJobRepo) DeleteOneByID(ctx context.Context, ID string) error {
+	dao := gorm_gen_dao.Use(s.db).SysJob
+	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteOneByID 根据ID删除一条数据
+func (s *SysJobRepo) DeleteOneByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error {
+	dao := tx.SysJob
 	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
 	if err != nil {
 		return err
@@ -133,8 +200,8 @@ func (r *SysJobRepo) DeleteOneByID(ctx context.Context, ID string) error {
 }
 
 // DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
-func (r *SysJobRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) error {
-	dao := gorm_gen_dao.Use(r.db).SysJob
+func (s *SysJobRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) error {
+	dao := gorm_gen_dao.Use(s.db).SysJob
 	list, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
 	if err != nil {
 		return err
@@ -146,7 +213,28 @@ func (r *SysJobRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) er
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, list)
+	err = s.DeleteUniqueIndexCache(ctx, list)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
+func (s *SysJobRepo) DeleteMultiCacheByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error {
+	dao := tx.SysJob
+	list, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
+	if err != nil {
+		return err
+	}
+	if len(list) == 0 {
+		return nil
+	}
+	_, err = dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
+	if err != nil {
+		return err
+	}
+	err = s.DeleteUniqueIndexCache(ctx, list)
 	if err != nil {
 		return err
 	}
@@ -154,8 +242,18 @@ func (r *SysJobRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) er
 }
 
 // DeleteMultiByIDS 根据IDS删除多条数据
-func (r *SysJobRepo) DeleteMultiByIDS(ctx context.Context, IDS []string) error {
-	dao := gorm_gen_dao.Use(r.db).SysJob
+func (s *SysJobRepo) DeleteMultiByIDS(ctx context.Context, IDS []string) error {
+	dao := gorm_gen_dao.Use(s.db).SysJob
+	_, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteMultiByIDS 根据IDS删除多条数据
+func (s *SysJobRepo) DeleteMultiByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error {
+	dao := tx.SysJob
 	_, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
 	if err != nil {
 		return err
@@ -164,13 +262,13 @@ func (r *SysJobRepo) DeleteMultiByIDS(ctx context.Context, IDS []string) error {
 }
 
 // DeleteUniqueIndexCache 删除唯一索引存在的缓存
-func (r *SysJobRepo) DeleteUniqueIndexCache(ctx context.Context, data []*gorm_gen_model.SysJob) error {
+func (s *SysJobRepo) DeleteUniqueIndexCache(ctx context.Context, data []*gorm_gen_model.SysJob) error {
 	keys := make([]string, 0)
 	for _, v := range data {
-		keys = append(keys, r.cache.Key(cacheSysJobByIDPrefix, v.ID))
+		keys = append(keys, s.cache.Key(cacheSysJobByIDPrefix, v.ID))
 
 	}
-	err := r.cache.DelBatch(ctx, keys)
+	err := s.cache.DelBatch(ctx, keys)
 	if err != nil {
 		return err
 	}
@@ -178,11 +276,11 @@ func (r *SysJobRepo) DeleteUniqueIndexCache(ctx context.Context, data []*gorm_ge
 }
 
 // FindOneCacheByID 根据ID查询一条数据并设置缓存
-func (r *SysJobRepo) FindOneCacheByID(ctx context.Context, ID string) (*gorm_gen_model.SysJob, error) {
+func (s *SysJobRepo) FindOneCacheByID(ctx context.Context, ID string) (*gorm_gen_model.SysJob, error) {
 	resp := new(gorm_gen_model.SysJob)
-	key := r.cache.Key(cacheSysJobByIDPrefix, ID)
-	cacheValue, err := r.cache.Fetch(ctx, key, func() (string, error) {
-		dao := gorm_gen_dao.Use(r.db).SysJob
+	key := s.cache.Key(cacheSysJobByIDPrefix, ID)
+	cacheValue, err := s.cache.Fetch(ctx, key, func() (string, error) {
+		dao := gorm_gen_dao.Use(s.db).SysJob
 		result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", err
@@ -204,8 +302,8 @@ func (r *SysJobRepo) FindOneCacheByID(ctx context.Context, ID string) (*gorm_gen
 }
 
 // FindOneByID 根据ID查询一条数据
-func (r *SysJobRepo) FindOneByID(ctx context.Context, ID string) (*gorm_gen_model.SysJob, error) {
-	dao := gorm_gen_dao.Use(r.db).SysJob
+func (s *SysJobRepo) FindOneByID(ctx context.Context, ID string) (*gorm_gen_model.SysJob, error) {
+	dao := gorm_gen_dao.Use(s.db).SysJob
 	result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
@@ -214,21 +312,21 @@ func (r *SysJobRepo) FindOneByID(ctx context.Context, ID string) (*gorm_gen_mode
 }
 
 // FindMultiCacheByIDS 根据IDS查询多条数据并设置缓存
-func (r *SysJobRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysJob, error) {
+func (s *SysJobRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysJob, error) {
 	resp := make([]*gorm_gen_model.SysJob, 0)
 	keys := make([]string, 0)
 	keyToParam := make(map[string]string)
 	for _, v := range IDS {
-		key := r.cache.Key(cacheSysJobByIDPrefix, v)
+		key := s.cache.Key(cacheSysJobByIDPrefix, v)
 		keys = append(keys, key)
 		keyToParam[key] = v
 	}
-	cacheValue, err := r.cache.FetchBatch(ctx, keys, func(miss []string) (map[string]string, error) {
+	cacheValue, err := s.cache.FetchBatch(ctx, keys, func(miss []string) (map[string]string, error) {
 		params := make([]string, 0)
 		for _, v := range miss {
 			params = append(params, keyToParam[v])
 		}
-		dao := gorm_gen_dao.Use(r.db).SysJob
+		dao := gorm_gen_dao.Use(s.db).SysJob
 		result, err := dao.WithContext(ctx).Where(dao.ID.In(params...)).Find()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
@@ -242,7 +340,7 @@ func (r *SysJobRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*
 			if err != nil {
 				return nil, err
 			}
-			value[r.cache.Key(cacheSysJobByIDPrefix, v.ID)] = string(marshal)
+			value[s.cache.Key(cacheSysJobByIDPrefix, v.ID)] = string(marshal)
 		}
 		return value, nil
 	})
@@ -261,8 +359,8 @@ func (r *SysJobRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*
 }
 
 // FindMultiByIDS 根据IDS查询多条数据
-func (r *SysJobRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysJob, error) {
-	dao := gorm_gen_dao.Use(r.db).SysJob
+func (s *SysJobRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysJob, error) {
+	dao := gorm_gen_dao.Use(s.db).SysJob
 	result, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
 	if err != nil {
 		return nil, err

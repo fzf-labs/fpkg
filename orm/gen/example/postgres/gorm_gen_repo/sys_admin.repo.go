@@ -25,10 +25,14 @@ type (
 	ISysAdminRepo interface {
 		// CreateOne 创建一条数据
 		CreateOne(ctx context.Context, data *gorm_gen_model.SysAdmin) error
+		// CreateOneByTx 创建一条数据(事务)
+		CreateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.SysAdmin) error
 		// CreateBatch 批量创建数据
 		CreateBatch(ctx context.Context, data []*gorm_gen_model.SysAdmin, batchSize int) error
 		// UpdateOne 更新一条数据
 		UpdateOne(ctx context.Context, data *gorm_gen_model.SysAdmin) error
+		// UpdateOne 更新一条数据(事务)
+		UpdateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.SysAdmin) error
 		// FindOneCacheByUsername 根据username查询一条数据并设置缓存
 		FindOneCacheByUsername(ctx context.Context, username string) (*gorm_gen_model.SysAdmin, error)
 		// FindOneByUsername 根据username查询一条数据
@@ -47,20 +51,36 @@ type (
 		FindMultiByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysAdmin, error)
 		// DeleteOneCacheByUsername 根据username删除一条数据并清理缓存
 		DeleteOneCacheByUsername(ctx context.Context, username string) error
+		// DeleteOneCacheByUsername 根据username删除一条数据并清理缓存
+		DeleteOneCacheByUsernameTx(ctx context.Context, tx *gorm_gen_dao.Query, username string) error
 		// DeleteOneByUsername 根据username删除一条数据
 		DeleteOneByUsername(ctx context.Context, username string) error
+		// DeleteOneByUsername 根据username删除一条数据
+		DeleteOneByUsernameTx(ctx context.Context, tx *gorm_gen_dao.Query, username string) error
 		// DeleteMultiCacheByUsernames 根据Usernames删除多条数据并清理缓存
 		DeleteMultiCacheByUsernames(ctx context.Context, usernames []string) error
+		// DeleteMultiCacheByUsernames 根据Usernames删除多条数据并清理缓存
+		DeleteMultiCacheByUsernamesTx(ctx context.Context, tx *gorm_gen_dao.Query, usernames []string) error
 		// DeleteMultiByUsernames 根据Usernames删除多条数据
 		DeleteMultiByUsernames(ctx context.Context, usernames []string) error
+		// DeleteMultiByUsernames 根据Usernames删除多条数据
+		DeleteMultiByUsernamesTx(ctx context.Context, tx *gorm_gen_dao.Query, usernames []string) error
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
 		DeleteOneCacheByID(ctx context.Context, ID string) error
+		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
+		DeleteOneCacheByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error
 		// DeleteOneByID 根据ID删除一条数据
 		DeleteOneByID(ctx context.Context, ID string) error
+		// DeleteOneByID 根据ID删除一条数据
+		DeleteOneByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error
 		// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
 		DeleteMultiCacheByIDS(ctx context.Context, IDS []string) error
+		// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
+		DeleteMultiCacheByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error
 		// DeleteMultiByIDS 根据IDS删除多条数据
 		DeleteMultiByIDS(ctx context.Context, IDS []string) error
+		// DeleteMultiByIDS 根据IDS删除多条数据
+		DeleteMultiByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error
 		// DeleteUniqueIndexCache 删除唯一索引存在的缓存
 		DeleteUniqueIndexCache(ctx context.Context, data []*gorm_gen_model.SysAdmin) error
 	}
@@ -85,8 +105,18 @@ func NewSysAdminRepo(db *gorm.DB, cache ISysAdminCache) *SysAdminRepo {
 }
 
 // CreateOne 创建一条数据
-func (r *SysAdminRepo) CreateOne(ctx context.Context, data *gorm_gen_model.SysAdmin) error {
-	dao := gorm_gen_dao.Use(r.db).SysAdmin
+func (s *SysAdminRepo) CreateOne(ctx context.Context, data *gorm_gen_model.SysAdmin) error {
+	dao := gorm_gen_dao.Use(s.db).SysAdmin
+	err := dao.WithContext(ctx).Create(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateOneByTx 创建一条数据(事务)
+func (s *SysAdminRepo) CreateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.SysAdmin) error {
+	dao := tx.SysAdmin
 	err := dao.WithContext(ctx).Create(data)
 	if err != nil {
 		return err
@@ -95,8 +125,8 @@ func (r *SysAdminRepo) CreateOne(ctx context.Context, data *gorm_gen_model.SysAd
 }
 
 // CreateBatch 批量创建数据
-func (r *SysAdminRepo) CreateBatch(ctx context.Context, data []*gorm_gen_model.SysAdmin, batchSize int) error {
-	dao := gorm_gen_dao.Use(r.db).SysAdmin
+func (s *SysAdminRepo) CreateBatch(ctx context.Context, data []*gorm_gen_model.SysAdmin, batchSize int) error {
+	dao := gorm_gen_dao.Use(s.db).SysAdmin
 	err := dao.WithContext(ctx).CreateInBatches(data, batchSize)
 	if err != nil {
 		return err
@@ -105,22 +135,36 @@ func (r *SysAdminRepo) CreateBatch(ctx context.Context, data []*gorm_gen_model.S
 }
 
 // UpdateOne 更新一条数据
-func (r *SysAdminRepo) UpdateOne(ctx context.Context, data *gorm_gen_model.SysAdmin) error {
-	dao := gorm_gen_dao.Use(r.db).SysAdmin
+func (s *SysAdminRepo) UpdateOne(ctx context.Context, data *gorm_gen_model.SysAdmin) error {
+	dao := gorm_gen_dao.Use(s.db).SysAdmin
 	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Updates(data)
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysAdmin{data})
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysAdmin{data})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
+// UpdateOneByTx 更新一条数据(事务)
+func (s *SysAdminRepo) UpdateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.SysAdmin) error {
+	dao := tx.SysAdmin
+	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Updates(data)
+	if err != nil {
+		return err
+	}
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysAdmin{data})
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 // DeleteOneCacheByUsername 根据username删除一条数据并清理缓存
-func (r *SysAdminRepo) DeleteOneCacheByUsername(ctx context.Context, username string) error {
-	dao := gorm_gen_dao.Use(r.db).SysAdmin
+func (s *SysAdminRepo) DeleteOneCacheByUsername(ctx context.Context, username string) error {
+	dao := gorm_gen_dao.Use(s.db).SysAdmin
 	first, err := dao.WithContext(ctx).Where(dao.Username.Eq(username)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
@@ -132,7 +176,28 @@ func (r *SysAdminRepo) DeleteOneCacheByUsername(ctx context.Context, username st
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysAdmin{first})
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysAdmin{first})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteOneCacheByUsername 根据username删除一条数据并清理缓存
+func (s *SysAdminRepo) DeleteOneCacheByUsernameTx(ctx context.Context, tx *gorm_gen_dao.Query, username string) error {
+	dao := tx.SysAdmin
+	first, err := dao.WithContext(ctx).Where(dao.Username.Eq(username)).First()
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	if first == nil {
+		return nil
+	}
+	_, err = dao.WithContext(ctx).Where(dao.Username.Eq(username)).Delete()
+	if err != nil {
+		return err
+	}
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysAdmin{first})
 	if err != nil {
 		return err
 	}
@@ -140,8 +205,18 @@ func (r *SysAdminRepo) DeleteOneCacheByUsername(ctx context.Context, username st
 }
 
 // DeleteOneByUsername 根据username删除一条数据
-func (r *SysAdminRepo) DeleteOneByUsername(ctx context.Context, username string) error {
-	dao := gorm_gen_dao.Use(r.db).SysAdmin
+func (s *SysAdminRepo) DeleteOneByUsername(ctx context.Context, username string) error {
+	dao := gorm_gen_dao.Use(s.db).SysAdmin
+	_, err := dao.WithContext(ctx).Where(dao.Username.Eq(username)).Delete()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteOneByUsername 根据username删除一条数据
+func (s *SysAdminRepo) DeleteOneByUsernameTx(ctx context.Context, tx *gorm_gen_dao.Query, username string) error {
+	dao := tx.SysAdmin
 	_, err := dao.WithContext(ctx).Where(dao.Username.Eq(username)).Delete()
 	if err != nil {
 		return err
@@ -150,8 +225,8 @@ func (r *SysAdminRepo) DeleteOneByUsername(ctx context.Context, username string)
 }
 
 // DeleteMultiCacheByUsernames 根据usernames删除多条数据并清理缓存
-func (r *SysAdminRepo) DeleteMultiCacheByUsernames(ctx context.Context, usernames []string) error {
-	dao := gorm_gen_dao.Use(r.db).SysAdmin
+func (s *SysAdminRepo) DeleteMultiCacheByUsernames(ctx context.Context, usernames []string) error {
+	dao := gorm_gen_dao.Use(s.db).SysAdmin
 	list, err := dao.WithContext(ctx).Where(dao.Username.In(usernames...)).Find()
 	if err != nil {
 		return err
@@ -163,7 +238,28 @@ func (r *SysAdminRepo) DeleteMultiCacheByUsernames(ctx context.Context, username
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, list)
+	err = s.DeleteUniqueIndexCache(ctx, list)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteMultiCacheByUsernames 根据usernames删除多条数据并清理缓存
+func (s *SysAdminRepo) DeleteMultiCacheByUsernamesTx(ctx context.Context, tx *gorm_gen_dao.Query, usernames []string) error {
+	dao := tx.SysAdmin
+	list, err := dao.WithContext(ctx).Where(dao.Username.In(usernames...)).Find()
+	if err != nil {
+		return err
+	}
+	if len(list) == 0 {
+		return nil
+	}
+	_, err = dao.WithContext(ctx).Where(dao.Username.In(usernames...)).Delete()
+	if err != nil {
+		return err
+	}
+	err = s.DeleteUniqueIndexCache(ctx, list)
 	if err != nil {
 		return err
 	}
@@ -171,8 +267,18 @@ func (r *SysAdminRepo) DeleteMultiCacheByUsernames(ctx context.Context, username
 }
 
 // DeleteMultiByUsernames 根据usernames删除多条数据
-func (r *SysAdminRepo) DeleteMultiByUsernames(ctx context.Context, usernames []string) error {
-	dao := gorm_gen_dao.Use(r.db).SysAdmin
+func (s *SysAdminRepo) DeleteMultiByUsernames(ctx context.Context, usernames []string) error {
+	dao := gorm_gen_dao.Use(s.db).SysAdmin
+	_, err := dao.WithContext(ctx).Where(dao.Username.In(usernames...)).Delete()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteMultiByUsernames 根据usernames删除多条数据
+func (s *SysAdminRepo) DeleteMultiByUsernamesTx(ctx context.Context, tx *gorm_gen_dao.Query, usernames []string) error {
+	dao := tx.SysAdmin
 	_, err := dao.WithContext(ctx).Where(dao.Username.In(usernames...)).Delete()
 	if err != nil {
 		return err
@@ -181,8 +287,8 @@ func (r *SysAdminRepo) DeleteMultiByUsernames(ctx context.Context, usernames []s
 }
 
 // DeleteOneCacheByID 根据ID删除一条数据并清理缓存
-func (r *SysAdminRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
-	dao := gorm_gen_dao.Use(r.db).SysAdmin
+func (s *SysAdminRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
+	dao := gorm_gen_dao.Use(s.db).SysAdmin
 	first, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
@@ -194,7 +300,28 @@ func (r *SysAdminRepo) DeleteOneCacheByID(ctx context.Context, ID string) error 
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysAdmin{first})
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysAdmin{first})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
+func (s *SysAdminRepo) DeleteOneCacheByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error {
+	dao := tx.SysAdmin
+	first, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	if first == nil {
+		return nil
+	}
+	_, err = dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
+	if err != nil {
+		return err
+	}
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysAdmin{first})
 	if err != nil {
 		return err
 	}
@@ -202,8 +329,18 @@ func (r *SysAdminRepo) DeleteOneCacheByID(ctx context.Context, ID string) error 
 }
 
 // DeleteOneByID 根据ID删除一条数据
-func (r *SysAdminRepo) DeleteOneByID(ctx context.Context, ID string) error {
-	dao := gorm_gen_dao.Use(r.db).SysAdmin
+func (s *SysAdminRepo) DeleteOneByID(ctx context.Context, ID string) error {
+	dao := gorm_gen_dao.Use(s.db).SysAdmin
+	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteOneByID 根据ID删除一条数据
+func (s *SysAdminRepo) DeleteOneByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error {
+	dao := tx.SysAdmin
 	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
 	if err != nil {
 		return err
@@ -212,8 +349,8 @@ func (r *SysAdminRepo) DeleteOneByID(ctx context.Context, ID string) error {
 }
 
 // DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
-func (r *SysAdminRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) error {
-	dao := gorm_gen_dao.Use(r.db).SysAdmin
+func (s *SysAdminRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) error {
+	dao := gorm_gen_dao.Use(s.db).SysAdmin
 	list, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
 	if err != nil {
 		return err
@@ -225,7 +362,28 @@ func (r *SysAdminRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) 
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, list)
+	err = s.DeleteUniqueIndexCache(ctx, list)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
+func (s *SysAdminRepo) DeleteMultiCacheByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error {
+	dao := tx.SysAdmin
+	list, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
+	if err != nil {
+		return err
+	}
+	if len(list) == 0 {
+		return nil
+	}
+	_, err = dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
+	if err != nil {
+		return err
+	}
+	err = s.DeleteUniqueIndexCache(ctx, list)
 	if err != nil {
 		return err
 	}
@@ -233,8 +391,18 @@ func (r *SysAdminRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) 
 }
 
 // DeleteMultiByIDS 根据IDS删除多条数据
-func (r *SysAdminRepo) DeleteMultiByIDS(ctx context.Context, IDS []string) error {
-	dao := gorm_gen_dao.Use(r.db).SysAdmin
+func (s *SysAdminRepo) DeleteMultiByIDS(ctx context.Context, IDS []string) error {
+	dao := gorm_gen_dao.Use(s.db).SysAdmin
+	_, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteMultiByIDS 根据IDS删除多条数据
+func (s *SysAdminRepo) DeleteMultiByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error {
+	dao := tx.SysAdmin
 	_, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
 	if err != nil {
 		return err
@@ -243,14 +411,14 @@ func (r *SysAdminRepo) DeleteMultiByIDS(ctx context.Context, IDS []string) error
 }
 
 // DeleteUniqueIndexCache 删除唯一索引存在的缓存
-func (r *SysAdminRepo) DeleteUniqueIndexCache(ctx context.Context, data []*gorm_gen_model.SysAdmin) error {
+func (s *SysAdminRepo) DeleteUniqueIndexCache(ctx context.Context, data []*gorm_gen_model.SysAdmin) error {
 	keys := make([]string, 0)
 	for _, v := range data {
-		keys = append(keys, r.cache.Key(cacheSysAdminByUsernamePrefix, v.Username))
-		keys = append(keys, r.cache.Key(cacheSysAdminByIDPrefix, v.ID))
+		keys = append(keys, s.cache.Key(cacheSysAdminByUsernamePrefix, v.Username))
+		keys = append(keys, s.cache.Key(cacheSysAdminByIDPrefix, v.ID))
 
 	}
-	err := r.cache.DelBatch(ctx, keys)
+	err := s.cache.DelBatch(ctx, keys)
 	if err != nil {
 		return err
 	}
@@ -258,11 +426,11 @@ func (r *SysAdminRepo) DeleteUniqueIndexCache(ctx context.Context, data []*gorm_
 }
 
 // FindOneCacheByUsername 根据username查询一条数据并设置缓存
-func (r *SysAdminRepo) FindOneCacheByUsername(ctx context.Context, username string) (*gorm_gen_model.SysAdmin, error) {
+func (s *SysAdminRepo) FindOneCacheByUsername(ctx context.Context, username string) (*gorm_gen_model.SysAdmin, error) {
 	resp := new(gorm_gen_model.SysAdmin)
-	key := r.cache.Key(cacheSysAdminByUsernamePrefix, username)
-	cacheValue, err := r.cache.Fetch(ctx, key, func() (string, error) {
-		dao := gorm_gen_dao.Use(r.db).SysAdmin
+	key := s.cache.Key(cacheSysAdminByUsernamePrefix, username)
+	cacheValue, err := s.cache.Fetch(ctx, key, func() (string, error) {
+		dao := gorm_gen_dao.Use(s.db).SysAdmin
 		result, err := dao.WithContext(ctx).Where(dao.Username.Eq(username)).First()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", err
@@ -284,8 +452,8 @@ func (r *SysAdminRepo) FindOneCacheByUsername(ctx context.Context, username stri
 }
 
 // FindOneByUsername 根据username查询一条数据
-func (r *SysAdminRepo) FindOneByUsername(ctx context.Context, username string) (*gorm_gen_model.SysAdmin, error) {
-	dao := gorm_gen_dao.Use(r.db).SysAdmin
+func (s *SysAdminRepo) FindOneByUsername(ctx context.Context, username string) (*gorm_gen_model.SysAdmin, error) {
+	dao := gorm_gen_dao.Use(s.db).SysAdmin
 	result, err := dao.WithContext(ctx).Where(dao.Username.Eq(username)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
@@ -294,21 +462,21 @@ func (r *SysAdminRepo) FindOneByUsername(ctx context.Context, username string) (
 }
 
 // FindMultiCacheByUsernames 根据usernames查询多条数据并设置缓存
-func (r *SysAdminRepo) FindMultiCacheByUsernames(ctx context.Context, usernames []string) ([]*gorm_gen_model.SysAdmin, error) {
+func (s *SysAdminRepo) FindMultiCacheByUsernames(ctx context.Context, usernames []string) ([]*gorm_gen_model.SysAdmin, error) {
 	resp := make([]*gorm_gen_model.SysAdmin, 0)
 	keys := make([]string, 0)
 	keyToParam := make(map[string]string)
 	for _, v := range usernames {
-		key := r.cache.Key(cacheSysAdminByUsernamePrefix, v)
+		key := s.cache.Key(cacheSysAdminByUsernamePrefix, v)
 		keys = append(keys, key)
 		keyToParam[key] = v
 	}
-	cacheValue, err := r.cache.FetchBatch(ctx, keys, func(miss []string) (map[string]string, error) {
+	cacheValue, err := s.cache.FetchBatch(ctx, keys, func(miss []string) (map[string]string, error) {
 		params := make([]string, 0)
 		for _, v := range miss {
 			params = append(params, keyToParam[v])
 		}
-		dao := gorm_gen_dao.Use(r.db).SysAdmin
+		dao := gorm_gen_dao.Use(s.db).SysAdmin
 		result, err := dao.WithContext(ctx).Where(dao.Username.In(params...)).Find()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
@@ -322,7 +490,7 @@ func (r *SysAdminRepo) FindMultiCacheByUsernames(ctx context.Context, usernames 
 			if err != nil {
 				return nil, err
 			}
-			value[r.cache.Key(cacheSysAdminByUsernamePrefix, v.Username)] = string(marshal)
+			value[s.cache.Key(cacheSysAdminByUsernamePrefix, v.Username)] = string(marshal)
 		}
 		return value, nil
 	})
@@ -341,8 +509,8 @@ func (r *SysAdminRepo) FindMultiCacheByUsernames(ctx context.Context, usernames 
 }
 
 // FindMultiByUsernames 根据usernames查询多条数据
-func (r *SysAdminRepo) FindMultiByUsernames(ctx context.Context, usernames []string) ([]*gorm_gen_model.SysAdmin, error) {
-	dao := gorm_gen_dao.Use(r.db).SysAdmin
+func (s *SysAdminRepo) FindMultiByUsernames(ctx context.Context, usernames []string) ([]*gorm_gen_model.SysAdmin, error) {
+	dao := gorm_gen_dao.Use(s.db).SysAdmin
 	result, err := dao.WithContext(ctx).Where(dao.Username.In(usernames...)).Find()
 	if err != nil {
 		return nil, err
@@ -351,11 +519,11 @@ func (r *SysAdminRepo) FindMultiByUsernames(ctx context.Context, usernames []str
 }
 
 // FindOneCacheByID 根据ID查询一条数据并设置缓存
-func (r *SysAdminRepo) FindOneCacheByID(ctx context.Context, ID string) (*gorm_gen_model.SysAdmin, error) {
+func (s *SysAdminRepo) FindOneCacheByID(ctx context.Context, ID string) (*gorm_gen_model.SysAdmin, error) {
 	resp := new(gorm_gen_model.SysAdmin)
-	key := r.cache.Key(cacheSysAdminByIDPrefix, ID)
-	cacheValue, err := r.cache.Fetch(ctx, key, func() (string, error) {
-		dao := gorm_gen_dao.Use(r.db).SysAdmin
+	key := s.cache.Key(cacheSysAdminByIDPrefix, ID)
+	cacheValue, err := s.cache.Fetch(ctx, key, func() (string, error) {
+		dao := gorm_gen_dao.Use(s.db).SysAdmin
 		result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", err
@@ -377,8 +545,8 @@ func (r *SysAdminRepo) FindOneCacheByID(ctx context.Context, ID string) (*gorm_g
 }
 
 // FindOneByID 根据ID查询一条数据
-func (r *SysAdminRepo) FindOneByID(ctx context.Context, ID string) (*gorm_gen_model.SysAdmin, error) {
-	dao := gorm_gen_dao.Use(r.db).SysAdmin
+func (s *SysAdminRepo) FindOneByID(ctx context.Context, ID string) (*gorm_gen_model.SysAdmin, error) {
+	dao := gorm_gen_dao.Use(s.db).SysAdmin
 	result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
@@ -387,21 +555,21 @@ func (r *SysAdminRepo) FindOneByID(ctx context.Context, ID string) (*gorm_gen_mo
 }
 
 // FindMultiCacheByIDS 根据IDS查询多条数据并设置缓存
-func (r *SysAdminRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysAdmin, error) {
+func (s *SysAdminRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysAdmin, error) {
 	resp := make([]*gorm_gen_model.SysAdmin, 0)
 	keys := make([]string, 0)
 	keyToParam := make(map[string]string)
 	for _, v := range IDS {
-		key := r.cache.Key(cacheSysAdminByIDPrefix, v)
+		key := s.cache.Key(cacheSysAdminByIDPrefix, v)
 		keys = append(keys, key)
 		keyToParam[key] = v
 	}
-	cacheValue, err := r.cache.FetchBatch(ctx, keys, func(miss []string) (map[string]string, error) {
+	cacheValue, err := s.cache.FetchBatch(ctx, keys, func(miss []string) (map[string]string, error) {
 		params := make([]string, 0)
 		for _, v := range miss {
 			params = append(params, keyToParam[v])
 		}
-		dao := gorm_gen_dao.Use(r.db).SysAdmin
+		dao := gorm_gen_dao.Use(s.db).SysAdmin
 		result, err := dao.WithContext(ctx).Where(dao.ID.In(params...)).Find()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
@@ -415,7 +583,7 @@ func (r *SysAdminRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([
 			if err != nil {
 				return nil, err
 			}
-			value[r.cache.Key(cacheSysAdminByIDPrefix, v.ID)] = string(marshal)
+			value[s.cache.Key(cacheSysAdminByIDPrefix, v.ID)] = string(marshal)
 		}
 		return value, nil
 	})
@@ -434,8 +602,8 @@ func (r *SysAdminRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([
 }
 
 // FindMultiByIDS 根据IDS查询多条数据
-func (r *SysAdminRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysAdmin, error) {
-	dao := gorm_gen_dao.Use(r.db).SysAdmin
+func (s *SysAdminRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysAdmin, error) {
+	dao := gorm_gen_dao.Use(s.db).SysAdmin
 	result, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
 	if err != nil {
 		return nil, err

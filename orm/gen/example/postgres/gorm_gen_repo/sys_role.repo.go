@@ -24,10 +24,14 @@ type (
 	ISysRoleRepo interface {
 		// CreateOne 创建一条数据
 		CreateOne(ctx context.Context, data *gorm_gen_model.SysRole) error
+		// CreateOneByTx 创建一条数据(事务)
+		CreateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.SysRole) error
 		// CreateBatch 批量创建数据
 		CreateBatch(ctx context.Context, data []*gorm_gen_model.SysRole, batchSize int) error
 		// UpdateOne 更新一条数据
 		UpdateOne(ctx context.Context, data *gorm_gen_model.SysRole) error
+		// UpdateOne 更新一条数据(事务)
+		UpdateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.SysRole) error
 		// FindOneCacheByID 根据ID查询一条数据并设置缓存
 		FindOneCacheByID(ctx context.Context, ID string) (*gorm_gen_model.SysRole, error)
 		// FindOneByID 根据ID查询一条数据
@@ -38,12 +42,20 @@ type (
 		FindMultiByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysRole, error)
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
 		DeleteOneCacheByID(ctx context.Context, ID string) error
+		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
+		DeleteOneCacheByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error
 		// DeleteOneByID 根据ID删除一条数据
 		DeleteOneByID(ctx context.Context, ID string) error
+		// DeleteOneByID 根据ID删除一条数据
+		DeleteOneByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error
 		// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
 		DeleteMultiCacheByIDS(ctx context.Context, IDS []string) error
+		// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
+		DeleteMultiCacheByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error
 		// DeleteMultiByIDS 根据IDS删除多条数据
 		DeleteMultiByIDS(ctx context.Context, IDS []string) error
+		// DeleteMultiByIDS 根据IDS删除多条数据
+		DeleteMultiByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error
 		// DeleteUniqueIndexCache 删除唯一索引存在的缓存
 		DeleteUniqueIndexCache(ctx context.Context, data []*gorm_gen_model.SysRole) error
 	}
@@ -68,8 +80,18 @@ func NewSysRoleRepo(db *gorm.DB, cache ISysRoleCache) *SysRoleRepo {
 }
 
 // CreateOne 创建一条数据
-func (r *SysRoleRepo) CreateOne(ctx context.Context, data *gorm_gen_model.SysRole) error {
-	dao := gorm_gen_dao.Use(r.db).SysRole
+func (s *SysRoleRepo) CreateOne(ctx context.Context, data *gorm_gen_model.SysRole) error {
+	dao := gorm_gen_dao.Use(s.db).SysRole
+	err := dao.WithContext(ctx).Create(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateOneByTx 创建一条数据(事务)
+func (s *SysRoleRepo) CreateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.SysRole) error {
+	dao := tx.SysRole
 	err := dao.WithContext(ctx).Create(data)
 	if err != nil {
 		return err
@@ -78,8 +100,8 @@ func (r *SysRoleRepo) CreateOne(ctx context.Context, data *gorm_gen_model.SysRol
 }
 
 // CreateBatch 批量创建数据
-func (r *SysRoleRepo) CreateBatch(ctx context.Context, data []*gorm_gen_model.SysRole, batchSize int) error {
-	dao := gorm_gen_dao.Use(r.db).SysRole
+func (s *SysRoleRepo) CreateBatch(ctx context.Context, data []*gorm_gen_model.SysRole, batchSize int) error {
+	dao := gorm_gen_dao.Use(s.db).SysRole
 	err := dao.WithContext(ctx).CreateInBatches(data, batchSize)
 	if err != nil {
 		return err
@@ -88,22 +110,36 @@ func (r *SysRoleRepo) CreateBatch(ctx context.Context, data []*gorm_gen_model.Sy
 }
 
 // UpdateOne 更新一条数据
-func (r *SysRoleRepo) UpdateOne(ctx context.Context, data *gorm_gen_model.SysRole) error {
-	dao := gorm_gen_dao.Use(r.db).SysRole
+func (s *SysRoleRepo) UpdateOne(ctx context.Context, data *gorm_gen_model.SysRole) error {
+	dao := gorm_gen_dao.Use(s.db).SysRole
 	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Updates(data)
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysRole{data})
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysRole{data})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
+// UpdateOneByTx 更新一条数据(事务)
+func (s *SysRoleRepo) UpdateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.SysRole) error {
+	dao := tx.SysRole
+	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Updates(data)
+	if err != nil {
+		return err
+	}
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysRole{data})
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 // DeleteOneCacheByID 根据ID删除一条数据并清理缓存
-func (r *SysRoleRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
-	dao := gorm_gen_dao.Use(r.db).SysRole
+func (s *SysRoleRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
+	dao := gorm_gen_dao.Use(s.db).SysRole
 	first, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
@@ -115,7 +151,28 @@ func (r *SysRoleRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysRole{first})
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysRole{first})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
+func (s *SysRoleRepo) DeleteOneCacheByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error {
+	dao := tx.SysRole
+	first, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	if first == nil {
+		return nil
+	}
+	_, err = dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
+	if err != nil {
+		return err
+	}
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysRole{first})
 	if err != nil {
 		return err
 	}
@@ -123,8 +180,18 @@ func (r *SysRoleRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
 }
 
 // DeleteOneByID 根据ID删除一条数据
-func (r *SysRoleRepo) DeleteOneByID(ctx context.Context, ID string) error {
-	dao := gorm_gen_dao.Use(r.db).SysRole
+func (s *SysRoleRepo) DeleteOneByID(ctx context.Context, ID string) error {
+	dao := gorm_gen_dao.Use(s.db).SysRole
+	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteOneByID 根据ID删除一条数据
+func (s *SysRoleRepo) DeleteOneByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error {
+	dao := tx.SysRole
 	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
 	if err != nil {
 		return err
@@ -133,8 +200,8 @@ func (r *SysRoleRepo) DeleteOneByID(ctx context.Context, ID string) error {
 }
 
 // DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
-func (r *SysRoleRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) error {
-	dao := gorm_gen_dao.Use(r.db).SysRole
+func (s *SysRoleRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) error {
+	dao := gorm_gen_dao.Use(s.db).SysRole
 	list, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
 	if err != nil {
 		return err
@@ -146,7 +213,28 @@ func (r *SysRoleRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) e
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, list)
+	err = s.DeleteUniqueIndexCache(ctx, list)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
+func (s *SysRoleRepo) DeleteMultiCacheByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error {
+	dao := tx.SysRole
+	list, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
+	if err != nil {
+		return err
+	}
+	if len(list) == 0 {
+		return nil
+	}
+	_, err = dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
+	if err != nil {
+		return err
+	}
+	err = s.DeleteUniqueIndexCache(ctx, list)
 	if err != nil {
 		return err
 	}
@@ -154,8 +242,18 @@ func (r *SysRoleRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) e
 }
 
 // DeleteMultiByIDS 根据IDS删除多条数据
-func (r *SysRoleRepo) DeleteMultiByIDS(ctx context.Context, IDS []string) error {
-	dao := gorm_gen_dao.Use(r.db).SysRole
+func (s *SysRoleRepo) DeleteMultiByIDS(ctx context.Context, IDS []string) error {
+	dao := gorm_gen_dao.Use(s.db).SysRole
+	_, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteMultiByIDS 根据IDS删除多条数据
+func (s *SysRoleRepo) DeleteMultiByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error {
+	dao := tx.SysRole
 	_, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
 	if err != nil {
 		return err
@@ -164,13 +262,13 @@ func (r *SysRoleRepo) DeleteMultiByIDS(ctx context.Context, IDS []string) error 
 }
 
 // DeleteUniqueIndexCache 删除唯一索引存在的缓存
-func (r *SysRoleRepo) DeleteUniqueIndexCache(ctx context.Context, data []*gorm_gen_model.SysRole) error {
+func (s *SysRoleRepo) DeleteUniqueIndexCache(ctx context.Context, data []*gorm_gen_model.SysRole) error {
 	keys := make([]string, 0)
 	for _, v := range data {
-		keys = append(keys, r.cache.Key(cacheSysRoleByIDPrefix, v.ID))
+		keys = append(keys, s.cache.Key(cacheSysRoleByIDPrefix, v.ID))
 
 	}
-	err := r.cache.DelBatch(ctx, keys)
+	err := s.cache.DelBatch(ctx, keys)
 	if err != nil {
 		return err
 	}
@@ -178,11 +276,11 @@ func (r *SysRoleRepo) DeleteUniqueIndexCache(ctx context.Context, data []*gorm_g
 }
 
 // FindOneCacheByID 根据ID查询一条数据并设置缓存
-func (r *SysRoleRepo) FindOneCacheByID(ctx context.Context, ID string) (*gorm_gen_model.SysRole, error) {
+func (s *SysRoleRepo) FindOneCacheByID(ctx context.Context, ID string) (*gorm_gen_model.SysRole, error) {
 	resp := new(gorm_gen_model.SysRole)
-	key := r.cache.Key(cacheSysRoleByIDPrefix, ID)
-	cacheValue, err := r.cache.Fetch(ctx, key, func() (string, error) {
-		dao := gorm_gen_dao.Use(r.db).SysRole
+	key := s.cache.Key(cacheSysRoleByIDPrefix, ID)
+	cacheValue, err := s.cache.Fetch(ctx, key, func() (string, error) {
+		dao := gorm_gen_dao.Use(s.db).SysRole
 		result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", err
@@ -204,8 +302,8 @@ func (r *SysRoleRepo) FindOneCacheByID(ctx context.Context, ID string) (*gorm_ge
 }
 
 // FindOneByID 根据ID查询一条数据
-func (r *SysRoleRepo) FindOneByID(ctx context.Context, ID string) (*gorm_gen_model.SysRole, error) {
-	dao := gorm_gen_dao.Use(r.db).SysRole
+func (s *SysRoleRepo) FindOneByID(ctx context.Context, ID string) (*gorm_gen_model.SysRole, error) {
+	dao := gorm_gen_dao.Use(s.db).SysRole
 	result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
@@ -214,21 +312,21 @@ func (r *SysRoleRepo) FindOneByID(ctx context.Context, ID string) (*gorm_gen_mod
 }
 
 // FindMultiCacheByIDS 根据IDS查询多条数据并设置缓存
-func (r *SysRoleRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysRole, error) {
+func (s *SysRoleRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysRole, error) {
 	resp := make([]*gorm_gen_model.SysRole, 0)
 	keys := make([]string, 0)
 	keyToParam := make(map[string]string)
 	for _, v := range IDS {
-		key := r.cache.Key(cacheSysRoleByIDPrefix, v)
+		key := s.cache.Key(cacheSysRoleByIDPrefix, v)
 		keys = append(keys, key)
 		keyToParam[key] = v
 	}
-	cacheValue, err := r.cache.FetchBatch(ctx, keys, func(miss []string) (map[string]string, error) {
+	cacheValue, err := s.cache.FetchBatch(ctx, keys, func(miss []string) (map[string]string, error) {
 		params := make([]string, 0)
 		for _, v := range miss {
 			params = append(params, keyToParam[v])
 		}
-		dao := gorm_gen_dao.Use(r.db).SysRole
+		dao := gorm_gen_dao.Use(s.db).SysRole
 		result, err := dao.WithContext(ctx).Where(dao.ID.In(params...)).Find()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
@@ -242,7 +340,7 @@ func (r *SysRoleRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]
 			if err != nil {
 				return nil, err
 			}
-			value[r.cache.Key(cacheSysRoleByIDPrefix, v.ID)] = string(marshal)
+			value[s.cache.Key(cacheSysRoleByIDPrefix, v.ID)] = string(marshal)
 		}
 		return value, nil
 	})
@@ -261,8 +359,8 @@ func (r *SysRoleRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]
 }
 
 // FindMultiByIDS 根据IDS查询多条数据
-func (r *SysRoleRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysRole, error) {
-	dao := gorm_gen_dao.Use(r.db).SysRole
+func (s *SysRoleRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysRole, error) {
+	dao := gorm_gen_dao.Use(s.db).SysRole
 	result, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
 	if err != nil {
 		return nil, err

@@ -1,1 +1,1 @@
-		keys = append(keys, r.cache.Key( cache{{.upperTableName}}By{{.cacheField}}Prefix, {{.cacheFieldsJoin}}))
+		keys = append(keys, {{.firstTableChar}}.cache.Key( cache{{.upperTableName}}By{{.cacheField}}Prefix, {{.cacheFieldsJoin}}))

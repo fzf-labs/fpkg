@@ -132,3 +132,51 @@ var InterfaceDeleteUniqueIndexCache string
 
 //go:embed tpl/delete-unique-index-cache.tpl
 var DeleteUniqueIndexCache string
+
+//go:embed tpl/interface-create-one-by-tx.tpl
+var InterfaceCreateOneByTx string
+
+//go:embed tpl/create-one-by-tx.tpl
+var CreateOneByTx string
+
+//go:embed tpl/interface-update-one-by-tx.tpl
+var InterfaceUpdateOneByTx string
+
+//go:embed tpl/update-one-by-tx.tpl
+var UpdateOneByTx string
+
+//go:embed tpl/interface-delete-multi-by-field-plural-tx.tpl
+var InterfaceDeleteMultiByFieldPluralTx string
+
+//go:embed tpl/delete-multi-by-field-plural-tx.tpl
+var DeleteMultiByFieldPluralTx string
+
+//go:embed tpl/interface-delete-multi-cache-by-field-plural-tx.tpl
+var InterfaceDeleteMultiCacheByFieldPluralTx string
+
+//go:embed tpl/delete-multi-cache-by-field-plural-tx.tpl
+var DeleteMultiCacheByFieldPluralTx string
+
+//go:embed tpl/interface-delete-one-by-field-tx.tpl
+var InterfaceDeleteOneByFieldTx string
+
+//go:embed tpl/delete-one-by-field-tx.tpl
+var DeleteOneByFieldTx string
+
+//go:embed tpl/interface-delete-one-cache-by-field-tx.tpl
+var InterfaceDeleteOneCacheByFieldTx string
+
+//go:embed tpl/delete-one-cache-by-field-tx.tpl
+var DeleteOneCacheByFieldTx string
+
+//go:embed tpl/interface-delete-one-by-fields-tx.tpl
+var InterfaceDeleteOneByFieldsTx string
+
+//go:embed tpl/delete-one-by-fields-tx.tpl
+var DeleteOneByFieldsTx string
+
+//go:embed tpl/interface-delete-one-cache-by-fields-tx.tpl
+var InterfaceDeleteOneCacheByFieldsTx string
+
+//go:embed tpl/delete-one-cache-by-fields-tx.tpl
+var DeleteOneCacheByFieldsTx string

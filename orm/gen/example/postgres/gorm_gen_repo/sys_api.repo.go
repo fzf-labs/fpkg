@@ -24,10 +24,14 @@ type (
 	ISysAPIRepo interface {
 		// CreateOne 创建一条数据
 		CreateOne(ctx context.Context, data *gorm_gen_model.SysAPI) error
+		// CreateOneByTx 创建一条数据(事务)
+		CreateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.SysAPI) error
 		// CreateBatch 批量创建数据
 		CreateBatch(ctx context.Context, data []*gorm_gen_model.SysAPI, batchSize int) error
 		// UpdateOne 更新一条数据
 		UpdateOne(ctx context.Context, data *gorm_gen_model.SysAPI) error
+		// UpdateOne 更新一条数据(事务)
+		UpdateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.SysAPI) error
 		// FindOneCacheByID 根据ID查询一条数据并设置缓存
 		FindOneCacheByID(ctx context.Context, ID string) (*gorm_gen_model.SysAPI, error)
 		// FindOneByID 根据ID查询一条数据
@@ -42,12 +46,20 @@ type (
 		FindMultiByPermissionIDS(ctx context.Context, permissionIDS []string) ([]*gorm_gen_model.SysAPI, error)
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
 		DeleteOneCacheByID(ctx context.Context, ID string) error
+		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
+		DeleteOneCacheByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error
 		// DeleteOneByID 根据ID删除一条数据
 		DeleteOneByID(ctx context.Context, ID string) error
+		// DeleteOneByID 根据ID删除一条数据
+		DeleteOneByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error
 		// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
 		DeleteMultiCacheByIDS(ctx context.Context, IDS []string) error
+		// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
+		DeleteMultiCacheByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error
 		// DeleteMultiByIDS 根据IDS删除多条数据
 		DeleteMultiByIDS(ctx context.Context, IDS []string) error
+		// DeleteMultiByIDS 根据IDS删除多条数据
+		DeleteMultiByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error
 		// DeleteUniqueIndexCache 删除唯一索引存在的缓存
 		DeleteUniqueIndexCache(ctx context.Context, data []*gorm_gen_model.SysAPI) error
 	}
@@ -72,8 +84,18 @@ func NewSysAPIRepo(db *gorm.DB, cache ISysAPICache) *SysAPIRepo {
 }
 
 // CreateOne 创建一条数据
-func (r *SysAPIRepo) CreateOne(ctx context.Context, data *gorm_gen_model.SysAPI) error {
-	dao := gorm_gen_dao.Use(r.db).SysAPI
+func (s *SysAPIRepo) CreateOne(ctx context.Context, data *gorm_gen_model.SysAPI) error {
+	dao := gorm_gen_dao.Use(s.db).SysAPI
+	err := dao.WithContext(ctx).Create(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateOneByTx 创建一条数据(事务)
+func (s *SysAPIRepo) CreateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.SysAPI) error {
+	dao := tx.SysAPI
 	err := dao.WithContext(ctx).Create(data)
 	if err != nil {
 		return err
@@ -82,8 +104,8 @@ func (r *SysAPIRepo) CreateOne(ctx context.Context, data *gorm_gen_model.SysAPI)
 }
 
 // CreateBatch 批量创建数据
-func (r *SysAPIRepo) CreateBatch(ctx context.Context, data []*gorm_gen_model.SysAPI, batchSize int) error {
-	dao := gorm_gen_dao.Use(r.db).SysAPI
+func (s *SysAPIRepo) CreateBatch(ctx context.Context, data []*gorm_gen_model.SysAPI, batchSize int) error {
+	dao := gorm_gen_dao.Use(s.db).SysAPI
 	err := dao.WithContext(ctx).CreateInBatches(data, batchSize)
 	if err != nil {
 		return err
@@ -92,22 +114,36 @@ func (r *SysAPIRepo) CreateBatch(ctx context.Context, data []*gorm_gen_model.Sys
 }
 
 // UpdateOne 更新一条数据
-func (r *SysAPIRepo) UpdateOne(ctx context.Context, data *gorm_gen_model.SysAPI) error {
-	dao := gorm_gen_dao.Use(r.db).SysAPI
+func (s *SysAPIRepo) UpdateOne(ctx context.Context, data *gorm_gen_model.SysAPI) error {
+	dao := gorm_gen_dao.Use(s.db).SysAPI
 	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Updates(data)
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysAPI{data})
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysAPI{data})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
+// UpdateOneByTx 更新一条数据(事务)
+func (s *SysAPIRepo) UpdateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.SysAPI) error {
+	dao := tx.SysAPI
+	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Updates(data)
+	if err != nil {
+		return err
+	}
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysAPI{data})
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 // DeleteOneCacheByID 根据ID删除一条数据并清理缓存
-func (r *SysAPIRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
-	dao := gorm_gen_dao.Use(r.db).SysAPI
+func (s *SysAPIRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
+	dao := gorm_gen_dao.Use(s.db).SysAPI
 	first, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
@@ -119,7 +155,28 @@ func (r *SysAPIRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysAPI{first})
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysAPI{first})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
+func (s *SysAPIRepo) DeleteOneCacheByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error {
+	dao := tx.SysAPI
+	first, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	if first == nil {
+		return nil
+	}
+	_, err = dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
+	if err != nil {
+		return err
+	}
+	err = s.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.SysAPI{first})
 	if err != nil {
 		return err
 	}
@@ -127,8 +184,18 @@ func (r *SysAPIRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
 }
 
 // DeleteOneByID 根据ID删除一条数据
-func (r *SysAPIRepo) DeleteOneByID(ctx context.Context, ID string) error {
-	dao := gorm_gen_dao.Use(r.db).SysAPI
+func (s *SysAPIRepo) DeleteOneByID(ctx context.Context, ID string) error {
+	dao := gorm_gen_dao.Use(s.db).SysAPI
+	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteOneByID 根据ID删除一条数据
+func (s *SysAPIRepo) DeleteOneByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error {
+	dao := tx.SysAPI
 	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
 	if err != nil {
 		return err
@@ -137,8 +204,8 @@ func (r *SysAPIRepo) DeleteOneByID(ctx context.Context, ID string) error {
 }
 
 // DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
-func (r *SysAPIRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) error {
-	dao := gorm_gen_dao.Use(r.db).SysAPI
+func (s *SysAPIRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) error {
+	dao := gorm_gen_dao.Use(s.db).SysAPI
 	list, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
 	if err != nil {
 		return err
@@ -150,7 +217,28 @@ func (r *SysAPIRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) er
 	if err != nil {
 		return err
 	}
-	err = r.DeleteUniqueIndexCache(ctx, list)
+	err = s.DeleteUniqueIndexCache(ctx, list)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
+func (s *SysAPIRepo) DeleteMultiCacheByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error {
+	dao := tx.SysAPI
+	list, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
+	if err != nil {
+		return err
+	}
+	if len(list) == 0 {
+		return nil
+	}
+	_, err = dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
+	if err != nil {
+		return err
+	}
+	err = s.DeleteUniqueIndexCache(ctx, list)
 	if err != nil {
 		return err
 	}
@@ -158,8 +246,18 @@ func (r *SysAPIRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) er
 }
 
 // DeleteMultiByIDS 根据IDS删除多条数据
-func (r *SysAPIRepo) DeleteMultiByIDS(ctx context.Context, IDS []string) error {
-	dao := gorm_gen_dao.Use(r.db).SysAPI
+func (s *SysAPIRepo) DeleteMultiByIDS(ctx context.Context, IDS []string) error {
+	dao := gorm_gen_dao.Use(s.db).SysAPI
+	_, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteMultiByIDS 根据IDS删除多条数据
+func (s *SysAPIRepo) DeleteMultiByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error {
+	dao := tx.SysAPI
 	_, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
 	if err != nil {
 		return err
@@ -168,13 +266,13 @@ func (r *SysAPIRepo) DeleteMultiByIDS(ctx context.Context, IDS []string) error {
 }
 
 // DeleteUniqueIndexCache 删除唯一索引存在的缓存
-func (r *SysAPIRepo) DeleteUniqueIndexCache(ctx context.Context, data []*gorm_gen_model.SysAPI) error {
+func (s *SysAPIRepo) DeleteUniqueIndexCache(ctx context.Context, data []*gorm_gen_model.SysAPI) error {
 	keys := make([]string, 0)
 	for _, v := range data {
-		keys = append(keys, r.cache.Key(cacheSysAPIByIDPrefix, v.ID))
+		keys = append(keys, s.cache.Key(cacheSysAPIByIDPrefix, v.ID))
 
 	}
-	err := r.cache.DelBatch(ctx, keys)
+	err := s.cache.DelBatch(ctx, keys)
 	if err != nil {
 		return err
 	}
@@ -182,11 +280,11 @@ func (r *SysAPIRepo) DeleteUniqueIndexCache(ctx context.Context, data []*gorm_ge
 }
 
 // FindOneCacheByID 根据ID查询一条数据并设置缓存
-func (r *SysAPIRepo) FindOneCacheByID(ctx context.Context, ID string) (*gorm_gen_model.SysAPI, error) {
+func (s *SysAPIRepo) FindOneCacheByID(ctx context.Context, ID string) (*gorm_gen_model.SysAPI, error) {
 	resp := new(gorm_gen_model.SysAPI)
-	key := r.cache.Key(cacheSysAPIByIDPrefix, ID)
-	cacheValue, err := r.cache.Fetch(ctx, key, func() (string, error) {
-		dao := gorm_gen_dao.Use(r.db).SysAPI
+	key := s.cache.Key(cacheSysAPIByIDPrefix, ID)
+	cacheValue, err := s.cache.Fetch(ctx, key, func() (string, error) {
+		dao := gorm_gen_dao.Use(s.db).SysAPI
 		result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", err
@@ -208,8 +306,8 @@ func (r *SysAPIRepo) FindOneCacheByID(ctx context.Context, ID string) (*gorm_gen
 }
 
 // FindOneByID 根据ID查询一条数据
-func (r *SysAPIRepo) FindOneByID(ctx context.Context, ID string) (*gorm_gen_model.SysAPI, error) {
-	dao := gorm_gen_dao.Use(r.db).SysAPI
+func (s *SysAPIRepo) FindOneByID(ctx context.Context, ID string) (*gorm_gen_model.SysAPI, error) {
+	dao := gorm_gen_dao.Use(s.db).SysAPI
 	result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
@@ -218,21 +316,21 @@ func (r *SysAPIRepo) FindOneByID(ctx context.Context, ID string) (*gorm_gen_mode
 }
 
 // FindMultiCacheByIDS 根据IDS查询多条数据并设置缓存
-func (r *SysAPIRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysAPI, error) {
+func (s *SysAPIRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysAPI, error) {
 	resp := make([]*gorm_gen_model.SysAPI, 0)
 	keys := make([]string, 0)
 	keyToParam := make(map[string]string)
 	for _, v := range IDS {
-		key := r.cache.Key(cacheSysAPIByIDPrefix, v)
+		key := s.cache.Key(cacheSysAPIByIDPrefix, v)
 		keys = append(keys, key)
 		keyToParam[key] = v
 	}
-	cacheValue, err := r.cache.FetchBatch(ctx, keys, func(miss []string) (map[string]string, error) {
+	cacheValue, err := s.cache.FetchBatch(ctx, keys, func(miss []string) (map[string]string, error) {
 		params := make([]string, 0)
 		for _, v := range miss {
 			params = append(params, keyToParam[v])
 		}
-		dao := gorm_gen_dao.Use(r.db).SysAPI
+		dao := gorm_gen_dao.Use(s.db).SysAPI
 		result, err := dao.WithContext(ctx).Where(dao.ID.In(params...)).Find()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
@@ -246,7 +344,7 @@ func (r *SysAPIRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*
 			if err != nil {
 				return nil, err
 			}
-			value[r.cache.Key(cacheSysAPIByIDPrefix, v.ID)] = string(marshal)
+			value[s.cache.Key(cacheSysAPIByIDPrefix, v.ID)] = string(marshal)
 		}
 		return value, nil
 	})
@@ -265,8 +363,8 @@ func (r *SysAPIRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*
 }
 
 // FindMultiByIDS 根据IDS查询多条数据
-func (r *SysAPIRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysAPI, error) {
-	dao := gorm_gen_dao.Use(r.db).SysAPI
+func (s *SysAPIRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.SysAPI, error) {
+	dao := gorm_gen_dao.Use(s.db).SysAPI
 	result, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
 	if err != nil {
 		return nil, err
@@ -275,8 +373,8 @@ func (r *SysAPIRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([]*gorm_
 }
 
 // FindMultiByPermissionID 根据permissionID查询多条数据
-func (r *SysAPIRepo) FindMultiByPermissionID(ctx context.Context, permissionID string) ([]*gorm_gen_model.SysAPI, error) {
-	dao := gorm_gen_dao.Use(r.db).SysAPI
+func (s *SysAPIRepo) FindMultiByPermissionID(ctx context.Context, permissionID string) ([]*gorm_gen_model.SysAPI, error) {
+	dao := gorm_gen_dao.Use(s.db).SysAPI
 	result, err := dao.WithContext(ctx).Where(dao.PermissionID.Eq(permissionID)).Find()
 	if err != nil {
 		return nil, err
@@ -285,8 +383,8 @@ func (r *SysAPIRepo) FindMultiByPermissionID(ctx context.Context, permissionID s
 }
 
 // FindMultiByPermissionIDS 根据permissionIDS查询多条数据
-func (r *SysAPIRepo) FindMultiByPermissionIDS(ctx context.Context, permissionIDS []string) ([]*gorm_gen_model.SysAPI, error) {
-	dao := gorm_gen_dao.Use(r.db).SysAPI
+func (s *SysAPIRepo) FindMultiByPermissionIDS(ctx context.Context, permissionIDS []string) ([]*gorm_gen_model.SysAPI, error) {
+	dao := gorm_gen_dao.Use(s.db).SysAPI
 	result, err := dao.WithContext(ctx).Where(dao.PermissionID.In(permissionIDS...)).Find()
 	if err != nil {
 		return nil, err

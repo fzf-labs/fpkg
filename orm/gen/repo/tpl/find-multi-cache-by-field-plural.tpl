@@ -1,19 +1,19 @@
 // FindMultiCacheBy{{.upperFieldPlural}} 根据{{.lowerFieldPlural}}查询多条数据并设置缓存
-func (r *{{.upperTableName}}Repo) FindMultiCacheBy{{.upperFieldPlural}}(ctx context.Context, {{.lowerFieldPlural}} []{{.dataType}}) ([]*{{.lowerDBName}}_model.{{.upperTableName}}, error) {
+func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiCacheBy{{.upperFieldPlural}}(ctx context.Context, {{.lowerFieldPlural}} []{{.dataType}}) ([]*{{.lowerDBName}}_model.{{.upperTableName}}, error) {
 	resp := make([]*{{.lowerDBName}}_model.{{.upperTableName}}, 0)
 	keys := make([]string, 0)
 	keyToParam := make(map[string]{{.dataType}})
 	for _, v := range {{.lowerFieldPlural}} {
-	    key := r.cache.Key( cache{{.upperTableName}}By{{.upperField}}Prefix, v)
+	    key := {{.firstTableChar}}.cache.Key( cache{{.upperTableName}}By{{.upperField}}Prefix, v)
 		keys = append(keys,key)
 		keyToParam[key] = v
 	}
-	cacheValue, err := r.cache.FetchBatch(ctx, keys, func(miss []string) (map[string]string, error) {
+	cacheValue, err := {{.firstTableChar}}.cache.FetchBatch(ctx, keys, func(miss []string) (map[string]string, error) {
         params := make([]{{.dataType}},0)
         for _, v := range miss {
             params = append(params, keyToParam[v])
         }
-		dao := {{.lowerDBName}}_dao.Use(r.db).{{.upperTableName}}
+		dao := {{.lowerDBName}}_dao.Use({{.firstTableChar}}.db).{{.upperTableName}}
 		result, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.In(params...)).Find()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
@@ -27,7 +27,7 @@ func (r *{{.upperTableName}}Repo) FindMultiCacheBy{{.upperFieldPlural}}(ctx cont
 			if err != nil {
 				return nil, err
 			}
-			value[r.cache.Key( cache{{.upperTableName}}By{{.upperField}}Prefix, v.{{.upperField}})] = string(marshal)
+			value[{{.firstTableChar}}.cache.Key( cache{{.upperTableName}}By{{.upperField}}Prefix, v.{{.upperField}})] = string(marshal)
 		}
 		return value, nil
 	})

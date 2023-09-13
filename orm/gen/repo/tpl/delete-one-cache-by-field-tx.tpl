@@ -1,6 +1,6 @@
 // DeleteOneCacheBy{{.upperField}} 根据{{.lowerField}}删除一条数据并清理缓存
-func ({{.firstTableChar}} *{{.upperTableName}}Repo) DeleteOneCacheBy{{.upperField}}(ctx context.Context, {{.lowerField}} {{.dataType}}) error {
-	dao := {{.lowerDBName}}_dao.Use({{.firstTableChar}}.db).{{.upperTableName}}
+func ({{.firstTableChar}} *{{.upperTableName}}Repo) DeleteOneCacheBy{{.upperField}}Tx(ctx context.Context,tx *{{.lowerDBName}}_dao.Query, {{.lowerField}} {{.dataType}}) error {
+	dao := tx.{{.upperTableName}}
 	first, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.Eq({{.lowerField}})).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err

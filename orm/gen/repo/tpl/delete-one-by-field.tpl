@@ -1,6 +1,6 @@
 // DeleteOneBy{{.upperField}} 根据{{.lowerField}}删除一条数据
-func (r *{{.upperTableName}}Repo) DeleteOneBy{{.upperField}}(ctx context.Context, {{.lowerField}} {{.dataType}}) error {
-	dao := {{.lowerDBName}}_dao.Use(r.db).{{.upperTableName}}
+func ({{.firstTableChar}} *{{.upperTableName}}Repo) DeleteOneBy{{.upperField}}(ctx context.Context, {{.lowerField}} {{.dataType}}) error {
+	dao := {{.lowerDBName}}_dao.Use({{.firstTableChar}}.db).{{.upperTableName}}
 	_, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.Eq({{.lowerField}})).Delete()
 	if err != nil {
 		return err
