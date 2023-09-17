@@ -13,6 +13,7 @@ require (
 	github.com/casbin/casbin/v2 v2.73.1
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/dtm-labs/rockscache v0.1.1
+	github.com/felixge/fgprof v0.9.3
 	github.com/gabriel-vasile/mimetype v1.4.2
 	github.com/go-gorm/caches/v2 v2.0.1
 	github.com/go-mail/mail v2.3.1+incompatible
@@ -37,7 +38,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.16.0
 	github.com/pyihe/apple_validator v0.0.0-20201105140642-5f932dd2c8e9
-	github.com/pyroscope-io/client v0.7.2
 	github.com/redis/go-redis/extra/redisotel/v9 v9.0.5
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/redis/rueidis v1.0.16
@@ -73,12 +73,10 @@ require (
 	gorm.io/plugin/dbresolver v1.4.4
 	gorm.io/plugin/opentelemetry v0.1.3
 	gorm.io/sharding v0.5.3
-	mosn.io/holmes v1.1.0
 )
 
 require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible // indirect
-	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -110,7 +108,6 @@ require (
 	github.com/google/pprof v0.0.0-20230811205829-9131a7e9cc17 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/hashicorp/go-syslog v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgx/v5 v5.4.2 // indirect
@@ -132,16 +129,13 @@ require (
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.10.1 // indirect
-	github.com/pyroscope-io/godeltaprof v0.1.2 // indirect
 	github.com/quic-go/qpack v0.4.0 // indirect
 	github.com/quic-go/qtls-go1-20 v0.3.2 // indirect
 	github.com/quic-go/quic-go v0.37.4 // indirect
-	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/redis/go-redis/extra/rediscmd/v9 v9.0.5 // indirect
 	github.com/refraction-networking/utls v1.4.3 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
-	github.com/shirou/gopsutil v3.20.11+incompatible // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
@@ -165,6 +159,4 @@ require (
 	gopkg.in/mail.v2 v2.3.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gorm.io/hints v1.1.2 // indirect
-	mosn.io/api v0.0.0-20210204052134-5b9a826795fd // indirect
-	mosn.io/pkg v0.0.0-20211217101631-d914102d1baf // indirect
 )
