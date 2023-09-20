@@ -238,6 +238,7 @@ func (r *GenerationRepo) generateImport() (string, error) {
 
 // generateVar
 func (r *GenerationRepo) generateVar() (string, error) {
+	var varStr string
 	var cacheKeys string
 	for _, v := range r.index {
 		if r.CheckDaoFieldType(v.Columns()) {
@@ -260,15 +261,23 @@ func (r *GenerationRepo) generateVar() (string, error) {
 			cacheKeys += varCacheTpl.String()
 		}
 	}
-	tplParams := map[string]any{
+	varTpl, err := NewTemplate("Var").Parse(Var).Execute(map[string]any{
 		"upperTableName": r.upperTableName,
-		"cacheKeys":      cacheKeys,
-	}
-	tpl, err := NewTemplate("Var").Parse(Var).Execute(tplParams)
+	})
 	if err != nil {
 		return "", err
 	}
-	return tpl.String(), nil
+	varStr += fmt.Sprintln(varTpl.String())
+	if len(cacheKeys) > 0 {
+		varCacheKeysTpl, err := NewTemplate("Var").Parse(VarCacheKeys).Execute(map[string]any{
+			"cacheKeys": cacheKeys,
+		})
+		if err != nil {
+			return "", err
+		}
+		varStr += fmt.Sprintln(varCacheKeysTpl.String())
+	}
+	return varStr, nil
 }
 
 // generateCreateMethods
