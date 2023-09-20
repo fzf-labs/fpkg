@@ -226,7 +226,6 @@ func CamelCase(s string) string {
 	if s == "" {
 		return ""
 	}
-
 	result := ""
 	blankSpace := " "
 	regex := regexp.MustCompile("[-_&]+")
@@ -269,12 +268,10 @@ func KebabCase(s string) string {
 	if s == "" {
 		return ""
 	}
-
 	regex := regexp.MustCompile(`[\W_]+`)
 	blankSpace := " "
 	match := regex.ReplaceAllString(s, blankSpace)
 	rs := strings.Split(match, blankSpace)
-
 	var result []string
 	for _, v := range rs {
 		splitWords := splitWordsToLower(v)
@@ -282,7 +279,6 @@ func KebabCase(s string) string {
 			result = append(result, splitWords...)
 		}
 	}
-
 	return strings.Join(result, "-")
 }
 
@@ -291,12 +287,10 @@ func SnakeCase(s string) string {
 	if s == "" {
 		return ""
 	}
-
 	regex := regexp.MustCompile(`[\W_]+`)
 	blankSpace := " "
 	match := regex.ReplaceAllString(s, blankSpace)
 	rs := strings.Split(match, blankSpace)
-
 	var result []string
 	for _, v := range rs {
 		splitWords := splitWordsToLower(v)
@@ -304,14 +298,12 @@ func SnakeCase(s string) string {
 			result = append(result, splitWords...)
 		}
 	}
-
 	return strings.Join(result, "_")
 }
 
 // splitWordsToLower 将将字符串拆分为多个字符串,并转小写
 func splitWordsToLower(s string) []string {
 	var result []string
-
 	upperIndexes := upperIndex(s)
 	l := len(upperIndexes)
 	if upperIndexes == nil || l == 0 {
@@ -341,7 +333,6 @@ func upperIndex(s string) []int {
 	if len(s) > 0 && result != nil && result[0] != 0 {
 		result = append([]int{0}, result...)
 	}
-
 	return result
 }
 

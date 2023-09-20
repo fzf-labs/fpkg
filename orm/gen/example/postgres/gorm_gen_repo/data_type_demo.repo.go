@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/fzf-labs/fpkg/orm"
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_dao"
@@ -41,8 +42,16 @@ type (
 		FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.DataTypeDemo, error)
 		// FindMultiByIDS 根据IDS查询多条数据
 		FindMultiByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.DataTypeDemo, error)
+		// FindMultiByDataTypeTime 根据dataTypeTime查询多条数据
+		FindMultiByDataTypeTime(ctx context.Context, dataTypeTime time.Time) ([]*gorm_gen_model.DataTypeDemo, error)
+		// FindMultiByDataTypeTimes 根据dataTypeTimes查询多条数据
+		FindMultiByDataTypeTimes(ctx context.Context, dataTypeTimes []time.Time) ([]*gorm_gen_model.DataTypeDemo, error)
+		// FindMultiByCacheKey 根据_cacheKey查询多条数据
+		FindMultiByCacheKey(ctx context.Context, _cacheKey string) ([]*gorm_gen_model.DataTypeDemo, error)
+		// FindMultiByCacheKeys 根据_cacheKeys查询多条数据
+		FindMultiByCacheKeys(ctx context.Context, _cacheKeys []string) ([]*gorm_gen_model.DataTypeDemo, error)
 		// FindMultiByPaginator 查询分页数据(通用)
-		FindMultiByPaginator(ctx context.Context, params *orm.PaginatorParams) ([]*gorm_gen_model.DataTypeDemo, int64, error)
+		FindMultiByPaginator(ctx context.Context, parameters *orm.PaginatorParams) ([]*gorm_gen_model.DataTypeDemo, int64, error)
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
 		DeleteOneCacheByID(ctx context.Context, ID string) error
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
@@ -143,18 +152,18 @@ func (d *DataTypeDemoRepo) UpdateOneByTx(ctx context.Context, tx *gorm_gen_dao.Q
 // DeleteOneCacheByID 根据ID删除一条数据并清理缓存
 func (d *DataTypeDemoRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
 	dao := gorm_gen_dao.Use(d.db).DataTypeDemo
-	first, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
+	result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
-	if first == nil {
+	if result == nil {
 		return nil
 	}
 	_, err = dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
 	if err != nil {
 		return err
 	}
-	err = d.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.DataTypeDemo{first})
+	err = d.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.DataTypeDemo{result})
 	if err != nil {
 		return err
 	}
@@ -164,18 +173,18 @@ func (d *DataTypeDemoRepo) DeleteOneCacheByID(ctx context.Context, ID string) er
 // DeleteOneCacheByID 根据ID删除一条数据并清理缓存
 func (d *DataTypeDemoRepo) DeleteOneCacheByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error {
 	dao := tx.DataTypeDemo
-	first, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
+	result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
-	if first == nil {
+	if result == nil {
 		return nil
 	}
 	_, err = dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
 	if err != nil {
 		return err
 	}
-	err = d.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.DataTypeDemo{first})
+	err = d.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.DataTypeDemo{result})
 	if err != nil {
 		return err
 	}
@@ -205,18 +214,18 @@ func (d *DataTypeDemoRepo) DeleteOneByIDTx(ctx context.Context, tx *gorm_gen_dao
 // DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
 func (d *DataTypeDemoRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) error {
 	dao := gorm_gen_dao.Use(d.db).DataTypeDemo
-	list, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
+	result, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
 	if err != nil {
 		return err
 	}
-	if len(list) == 0 {
+	if len(result) == 0 {
 		return nil
 	}
 	_, err = dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
 	if err != nil {
 		return err
 	}
-	err = d.DeleteUniqueIndexCache(ctx, list)
+	err = d.DeleteUniqueIndexCache(ctx, result)
 	if err != nil {
 		return err
 	}
@@ -226,18 +235,18 @@ func (d *DataTypeDemoRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []stri
 // DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
 func (d *DataTypeDemoRepo) DeleteMultiCacheByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error {
 	dao := tx.DataTypeDemo
-	list, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
+	result, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
 	if err != nil {
 		return err
 	}
-	if len(list) == 0 {
+	if len(result) == 0 {
 		return nil
 	}
 	_, err = dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
 	if err != nil {
 		return err
 	}
-	err = d.DeleteUniqueIndexCache(ctx, list)
+	err = d.DeleteUniqueIndexCache(ctx, result)
 	if err != nil {
 		return err
 	}
@@ -281,8 +290,8 @@ func (d *DataTypeDemoRepo) DeleteUniqueIndexCache(ctx context.Context, data []*g
 // FindOneCacheByID 根据ID查询一条数据并设置缓存
 func (d *DataTypeDemoRepo) FindOneCacheByID(ctx context.Context, ID string) (*gorm_gen_model.DataTypeDemo, error) {
 	resp := new(gorm_gen_model.DataTypeDemo)
-	key := d.cache.Key(cacheDataTypeDemoByIDPrefix, ID)
-	cacheValue, err := d.cache.Fetch(ctx, key, func() (string, error) {
+	cacheKey := d.cache.Key(cacheDataTypeDemoByIDPrefix, ID)
+	cacheValue, err := d.cache.Fetch(ctx, cacheKey, func() (string, error) {
 		dao := gorm_gen_dao.Use(d.db).DataTypeDemo
 		result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -317,20 +326,20 @@ func (d *DataTypeDemoRepo) FindOneByID(ctx context.Context, ID string) (*gorm_ge
 // FindMultiCacheByIDS 根据IDS查询多条数据并设置缓存
 func (d *DataTypeDemoRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.DataTypeDemo, error) {
 	resp := make([]*gorm_gen_model.DataTypeDemo, 0)
-	keys := make([]string, 0)
+	cacheKeys := make([]string, 0)
 	keyToParam := make(map[string]string)
 	for _, v := range IDS {
-		key := d.cache.Key(cacheDataTypeDemoByIDPrefix, v)
-		keys = append(keys, key)
-		keyToParam[key] = v
+		cacheKey := d.cache.Key(cacheDataTypeDemoByIDPrefix, v)
+		cacheKeys = append(cacheKeys, cacheKey)
+		keyToParam[cacheKey] = v
 	}
-	cacheValue, err := d.cache.FetchBatch(ctx, keys, func(miss []string) (map[string]string, error) {
-		params := make([]string, 0)
+	cacheValue, err := d.cache.FetchBatch(ctx, cacheKeys, func(miss []string) (map[string]string, error) {
+		parameters := make([]string, 0)
 		for _, v := range miss {
-			params = append(params, keyToParam[v])
+			parameters = append(parameters, keyToParam[v])
 		}
 		dao := gorm_gen_dao.Use(d.db).DataTypeDemo
-		result, err := dao.WithContext(ctx).Where(dao.ID.In(params...)).Find()
+		result, err := dao.WithContext(ctx).Where(dao.ID.In(parameters...)).Find()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
 		}
@@ -371,11 +380,51 @@ func (d *DataTypeDemoRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([]
 	return result, nil
 }
 
+// FindMultiByDataTypeTime 根据dataTypeTime查询多条数据
+func (d *DataTypeDemoRepo) FindMultiByDataTypeTime(ctx context.Context, dataTypeTime time.Time) ([]*gorm_gen_model.DataTypeDemo, error) {
+	dao := gorm_gen_dao.Use(d.db).DataTypeDemo
+	result, err := dao.WithContext(ctx).Where(dao.DataTypeTime.Eq(dataTypeTime)).Find()
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// FindMultiByDataTypeTimes 根据dataTypeTimes查询多条数据
+func (d *DataTypeDemoRepo) FindMultiByDataTypeTimes(ctx context.Context, dataTypeTimes []time.Time) ([]*gorm_gen_model.DataTypeDemo, error) {
+	dao := gorm_gen_dao.Use(d.db).DataTypeDemo
+	result, err := dao.WithContext(ctx).Where(dao.DataTypeTime.In(dataTypeTimes...)).Find()
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// FindMultiByCacheKey 根据_cacheKey查询多条数据
+func (d *DataTypeDemoRepo) FindMultiByCacheKey(ctx context.Context, _cacheKey string) ([]*gorm_gen_model.DataTypeDemo, error) {
+	dao := gorm_gen_dao.Use(d.db).DataTypeDemo
+	result, err := dao.WithContext(ctx).Where(dao.CacheKey.Eq(_cacheKey)).Find()
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// FindMultiByCacheKeys 根据_cacheKeys查询多条数据
+func (d *DataTypeDemoRepo) FindMultiByCacheKeys(ctx context.Context, _cacheKeys []string) ([]*gorm_gen_model.DataTypeDemo, error) {
+	dao := gorm_gen_dao.Use(d.db).DataTypeDemo
+	result, err := dao.WithContext(ctx).Where(dao.CacheKey.In(_cacheKeys...)).Find()
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 // FindMultiByPaginator 查询分页数据(通用)
-func (d *DataTypeDemoRepo) FindMultiByPaginator(ctx context.Context, params *orm.PaginatorParams) ([]*gorm_gen_model.DataTypeDemo, int64, error) {
+func (d *DataTypeDemoRepo) FindMultiByPaginator(ctx context.Context, parameters *orm.PaginatorParams) ([]*gorm_gen_model.DataTypeDemo, int64, error) {
 	result := make([]*gorm_gen_model.DataTypeDemo, 0)
 	var total int64
-	queryStr, args, err := params.ConvertToGormConditions()
+	queryStr, args, err := parameters.ConvertToGormConditions()
 	if err != nil {
 		return nil, 0, err
 	}
@@ -387,11 +436,11 @@ func (d *DataTypeDemoRepo) FindMultiByPaginator(ctx context.Context, params *orm
 		return nil, total, nil
 	}
 	query := d.db.WithContext(ctx)
-	order := params.ConvertToOrder()
+	order := parameters.ConvertToOrder()
 	if order != "" {
 		query = query.Order(order)
 	}
-	limit, offset := params.ConvertToPage()
+	limit, offset := parameters.ConvertToPage()
 	err = query.Limit(limit).Offset(offset).Where(queryStr, args...).Find(&result).Error
 	if err != nil {
 		return nil, 0, err

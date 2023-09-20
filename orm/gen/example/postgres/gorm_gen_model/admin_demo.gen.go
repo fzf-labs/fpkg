@@ -11,10 +11,10 @@ import (
 	"gorm.io/gorm"
 )
 
-const TableNameSysAdmin = "sys_admin"
+const TableNameAdminDemo = "admin_demo"
 
-// SysAdmin mapped from table <sys_admin>
-type SysAdmin struct {
+// AdminDemo mapped from table <admin_demo>
+type AdminDemo struct {
 	ID        string         `gorm:"column:id;primaryKey;default:gen_random_uuid();comment:编号" json:"id"` // 编号
 	Username  string         `gorm:"column:username;not null;default;comment:用户名" json:"username"`        // 用户名
 	Password  string         `gorm:"column:password;not null;comment:密码" json:"password"`                 // 密码
@@ -34,7 +34,7 @@ type SysAdmin struct {
 	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;comment:删除时间" json:"deletedAt"`                     // 删除时间
 }
 
-// TableName SysAdmin's table name
-func (*SysAdmin) TableName() string {
-	return TableNameSysAdmin
+// TableName AdminDemo's table name
+func (*AdminDemo) TableName() string {
+	return TableNameAdminDemo
 }

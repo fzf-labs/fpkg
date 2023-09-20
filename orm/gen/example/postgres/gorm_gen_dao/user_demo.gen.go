@@ -41,7 +41,7 @@ func newUserDemo(db *gorm.DB, opts ...gen.DOOption) userDemo {
 	_userDemo.Avatar = field.NewString(tableName, "avatar")
 	_userDemo.Status = field.NewInt16(tableName, "status")
 	_userDemo.LoginIP = field.NewString(tableName, "login_ip")
-	_userDemo.LoginDate = field.NewField(tableName, "login_date")
+	_userDemo.LoginDate = field.NewTime(tableName, "login_date")
 	_userDemo.TenantID = field.NewInt64(tableName, "tenant_id")
 	_userDemo.CreatedAt = field.NewTime(tableName, "created_at")
 	_userDemo.UpdatedAt = field.NewTime(tableName, "updated_at")
@@ -70,7 +70,7 @@ type userDemo struct {
 	Avatar    field.String // 头像地址
 	Status    field.Int16  // 帐号状态（0正常 -1停用）
 	LoginIP   field.String // 最后登录IP
-	LoginDate field.Field  // 最后登录时间
+	LoginDate field.Time   // 最后登录时间
 	TenantID  field.Int64  // 租户编号
 	CreatedAt field.Time   // 创建时间
 	UpdatedAt field.Time   // 更新时间
@@ -105,7 +105,7 @@ func (u *userDemo) updateTableName(table string) *userDemo {
 	u.Avatar = field.NewString(table, "avatar")
 	u.Status = field.NewInt16(table, "status")
 	u.LoginIP = field.NewString(table, "login_ip")
-	u.LoginDate = field.NewField(table, "login_date")
+	u.LoginDate = field.NewTime(table, "login_date")
 	u.TenantID = field.NewInt64(table, "tenant_id")
 	u.CreatedAt = field.NewTime(table, "created_at")
 	u.UpdatedAt = field.NewTime(table, "updated_at")

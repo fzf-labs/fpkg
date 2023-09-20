@@ -1,6 +1,31 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 14.5 (Debian 14.5-2.pgdg110+2)
+-- Dumped by pg_dump version 15.4 (Homebrew)
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: user_demo; Type: TABLE; Schema: public; Owner: postgres
+--
 
 CREATE TABLE public.user_demo (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    id bigint NOT NULL,
     uid character varying(64) NOT NULL,
     username character varying(30) NOT NULL,
     password character varying(100) NOT NULL,

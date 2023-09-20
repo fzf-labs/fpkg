@@ -19,7 +19,7 @@ func TestGenerationPostgres(t *testing.T) {
 	if err != nil {
 		return
 	}
-	Generation(client, DefaultMySQLDataMap, "./example/postgres/")
+	NewGeneration(client, "./example/postgres/", WithDataMap(DefaultPostgresDataMap), WithOpts(ModelOptionPgEmptyString(), ModelOptionUnderline("UL"))).Do()
 	assert.Equal(t, nil, err)
 }
 
@@ -35,6 +35,6 @@ func TestGenerationMysql(t *testing.T) {
 	if err != nil {
 		return
 	}
-	Generation(client, DefaultPostgresDataMap, "./example/postgres/")
+	NewGeneration(client, "./example/postgres/", WithDataMap(DefaultPostgresDataMap), WithOpts(ModelOptionPgEmptyString(), ModelOptionUnderline("UL"))).Do()
 	assert.Equal(t, nil, err)
 }

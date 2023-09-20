@@ -3,6 +3,7 @@ package repo
 
 import (
 	"fmt"
+	"go/token"
 	"os"
 	"sort"
 	"strconv"
@@ -13,6 +14,18 @@ import (
 	"golang.org/x/tools/imports"
 	"gorm.io/gorm"
 )
+
+var KeyWords = []string{
+	"dao",
+	"parameters",
+	"cacheKey",
+	"cacheKeys",
+	"cacheValue",
+	"keyToParam",
+	"resp",
+	"result",
+	"marshal",
+}
 
 type Repo struct {
 	gorm         *gorm.DB
@@ -30,28 +43,27 @@ func NewGenerationRepo(db *gorm.DB, daoPath, modelPath, relativePath string) *Re
 	}
 }
 
-func (r *Repo) GenerationTable(table string, columnNameToDataType map[string]string) error {
+func (r *Repo) GenerationTable(table string, columnNameToDataType, columnNameToName, columnNameToFieldType map[string]string) error {
 	var file string
 	// 查询当前db的索引
 	indexes, err := r.gorm.Migrator().GetIndexes(table)
 	if err != nil {
 		return err
 	}
-	// 索引按名称排序
-	sort.Slice(indexes, func(i, j int) bool {
-		return indexes[i].Name() > indexes[j].Name()
-	})
+	indexes = r.ProcessIndex(indexes)
 	lowerDBName := r.gorm.Migrator().CurrentDatabase()
 	generationRepo := GenerationRepo{
-		gorm:                 r.gorm,
-		columnNameToDataType: columnNameToDataType,
-		lowerDBName:          lowerDBName,
-		firstTableChar:       "",
-		lowerTableName:       "",
-		upperTableName:       "",
-		daoPkgPath:           FillModelPkgPath(r.daoPath),
-		modelPkgPath:         FillModelPkgPath(r.modelPath),
-		index:                indexes,
+		gorm:                  r.gorm,
+		columnNameToDataType:  columnNameToDataType,
+		columnNameToName:      columnNameToName,
+		columnNameToFieldType: columnNameToFieldType,
+		firstTableChar:        "",
+		lowerDBName:           lowerDBName,
+		lowerTableName:        "",
+		upperTableName:        "",
+		daoPkgPath:            FillModelPkgPath(r.daoPath),
+		modelPkgPath:          FillModelPkgPath(r.modelPath),
+		index:                 indexes,
 	}
 	generationRepo.lowerTableName = generationRepo.LowerName(table)
 	generationRepo.upperTableName = generationRepo.UpperName(table)
@@ -117,6 +129,53 @@ func (r *Repo) MkdirPath() error {
 	return nil
 }
 
+// ProcessIndex 索引处理  索引去重和排序
+func (r *Repo) ProcessIndex(indexes []gorm.Index) []gorm.Index {
+	repeat := make(map[string]struct{})
+	result := make([]gorm.Index, 0)
+	// 主键索引
+	for _, v := range indexes {
+		primaryKey, _ := v.PrimaryKey()
+		if primaryKey {
+			_, ok := repeat[SliToStr(v.Columns())]
+			if !ok {
+				repeat[SliToStr(v.Columns())] = struct{}{}
+				result = append(result, v)
+			}
+		}
+	}
+	// 唯一索引
+	for _, v := range indexes {
+		primaryKey, _ := v.PrimaryKey()
+		unique, _ := v.Unique()
+		if !primaryKey && unique {
+			_, ok := repeat[SliToStr(v.Columns())]
+			if !ok {
+				repeat[SliToStr(v.Columns())] = struct{}{}
+				result = append(result, v)
+			}
+		}
+	}
+	// 普通索引
+	for _, v := range indexes {
+		primaryKey, _ := v.PrimaryKey()
+		unique, _ := v.Unique()
+		if !primaryKey && !unique {
+			_, ok := repeat[SliToStr(v.Columns())]
+			if !ok {
+				repeat[SliToStr(v.Columns())] = struct{}{}
+				result = append(result, v)
+			}
+		}
+	}
+	// 索引按名称排序
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Name() > result[j].Name()
+	})
+	return result
+}
+
+// output 导出文件
 func (r *Repo) output(fileName string, content []byte) error {
 	result, err := imports.Process(fileName, content, nil)
 	if err != nil {
@@ -139,15 +198,17 @@ func (r *Repo) output(fileName string, content []byte) error {
 }
 
 type GenerationRepo struct {
-	gorm                 *gorm.DB
-	columnNameToDataType map[string]string // 字段名称对应的类型
-	firstTableChar       string
-	lowerDBName          string
-	lowerTableName       string
-	upperTableName       string
-	daoPkgPath           string
-	modelPkgPath         string
-	index                []gorm.Index
+	gorm                  *gorm.DB
+	columnNameToDataType  map[string]string // 字段名称对应的类型
+	columnNameToName      map[string]string // 字段名称对应的Go名称
+	columnNameToFieldType map[string]string // 字段名称对应的dao类型
+	firstTableChar        string
+	lowerDBName           string
+	lowerTableName        string
+	upperTableName        string
+	daoPkgPath            string
+	modelPkgPath          string
+	index                 []gorm.Index
 }
 
 // generatePkg
@@ -179,11 +240,14 @@ func (r *GenerationRepo) generateImport() (string, error) {
 func (r *GenerationRepo) generateVar() (string, error) {
 	var cacheKeys string
 	for _, v := range r.index {
+		if r.CheckDaoFieldType(v.Columns()) {
+			continue
+		}
 		unique, _ := v.Unique()
 		if unique {
 			var cacheField string
 			for _, column := range v.Columns() {
-				cacheField += r.UpperName(column)
+				cacheField += r.UpperFieldName(column)
 			}
 			varCacheTpl, err := NewTemplate("VarCache").Parse(VarCache).Execute(map[string]any{
 				"lowerDBName":    r.lowerDBName,
@@ -211,7 +275,6 @@ func (r *GenerationRepo) generateVar() (string, error) {
 func (r *GenerationRepo) generateCreateMethods() (string, error) {
 	var createMethods string
 	interfaceCreateOne, err := NewTemplate("InterfaceCreateOne").Parse(InterfaceCreateOne).Execute(map[string]any{
-
 		"lowerDBName":    r.lowerDBName,
 		"upperTableName": r.upperTableName,
 	})
@@ -220,7 +283,6 @@ func (r *GenerationRepo) generateCreateMethods() (string, error) {
 	}
 	createMethods += fmt.Sprintln(interfaceCreateOne.String())
 	interfaceCreateOneByTx, err := NewTemplate("InterfaceCreateOneByTx").Parse(InterfaceCreateOneByTx).Execute(map[string]any{
-
 		"lowerDBName":    r.lowerDBName,
 		"upperTableName": r.upperTableName,
 	})
@@ -229,7 +291,6 @@ func (r *GenerationRepo) generateCreateMethods() (string, error) {
 	}
 	createMethods += fmt.Sprintln(interfaceCreateOneByTx.String())
 	interfaceCreateBatch, err := NewTemplate("InterfaceCreateBatch").Parse(InterfaceCreateBatch).Execute(map[string]any{
-
 		"lowerDBName":    r.lowerDBName,
 		"upperTableName": r.upperTableName,
 	})
@@ -243,8 +304,19 @@ func (r *GenerationRepo) generateCreateMethods() (string, error) {
 // generateUpdateMethods
 func (r *GenerationRepo) generateUpdateMethods() (string, error) {
 	var updateMethods string
-	interfaceUpdateOne, err := NewTemplate("InterfaceUpdateOne").Parse(InterfaceUpdateOne).Execute(map[string]any{
+	var primaryKey string
+	for _, index := range r.index {
+		isPrimaryKey, _ := index.PrimaryKey()
+		if isPrimaryKey {
+			primaryKey = index.Name()
+			break
+		}
 
+	}
+	if primaryKey == "" {
+		return "", nil
+	}
+	interfaceUpdateOne, err := NewTemplate("InterfaceUpdateOne").Parse(InterfaceUpdateOne).Execute(map[string]any{
 		"lowerDBName":    r.lowerDBName,
 		"upperTableName": r.upperTableName,
 	})
@@ -253,7 +325,6 @@ func (r *GenerationRepo) generateUpdateMethods() (string, error) {
 	}
 	updateMethods += fmt.Sprintln(interfaceUpdateOne.String())
 	interfaceUpdateOneByTx, err := NewTemplate("InterfaceUpdateOneByTx").Parse(InterfaceUpdateOneByTx).Execute(map[string]any{
-
 		"lowerDBName":    r.lowerDBName,
 		"upperTableName": r.upperTableName,
 	})
@@ -268,16 +339,19 @@ func (r *GenerationRepo) generateUpdateMethods() (string, error) {
 func (r *GenerationRepo) generateReadMethods() (string, error) {
 	var readMethods string
 	for _, v := range r.index {
+		if r.CheckDaoFieldType(v.Columns()) {
+			continue
+		}
 		unique, _ := v.Unique()
 		// 唯一 && 字段数于1
 		if unique && len(v.Columns()) == 1 {
+			columnNameToDataType := r.columnNameToDataType[v.Columns()[0]]
 			interfaceFindOneCacheByField, err := NewTemplate("InterfaceFindOneCacheByField").Parse(InterfaceFindOneCacheByField).Execute(map[string]any{
-
 				"lowerDBName":    r.lowerDBName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperName(v.Columns()[0]),
-				"lowerField":     r.LowerName(v.Columns()[0]),
+				"upperField":     r.UpperFieldName(v.Columns()[0]),
+				"lowerField":     r.LowerFieldName(v.Columns()[0]),
 				"dataType":       r.columnNameToDataType[v.Columns()[0]],
 			})
 			if err != nil {
@@ -285,52 +359,56 @@ func (r *GenerationRepo) generateReadMethods() (string, error) {
 			}
 			readMethods += fmt.Sprintln(interfaceFindOneCacheByField.String())
 			interfaceFindOneByField, err := NewTemplate("InterfaceFindOneByField").Parse(InterfaceFindOneByField).Execute(map[string]any{
-
 				"lowerDBName":    r.lowerDBName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperName(v.Columns()[0]),
-				"lowerField":     r.LowerName(v.Columns()[0]),
+				"upperField":     r.UpperFieldName(v.Columns()[0]),
+				"lowerField":     r.LowerFieldName(v.Columns()[0]),
 				"dataType":       r.columnNameToDataType[v.Columns()[0]],
 			})
 			if err != nil {
 				return "", err
 			}
 			readMethods += fmt.Sprintln(interfaceFindOneByField.String())
-			interfaceFindMultiCacheByFieldPlural, err := NewTemplate("InterfaceFindMultiCacheByFieldPlural").Parse(InterfaceFindMultiCacheByFieldPlural).Execute(map[string]any{
-				"lowerDBName":      r.lowerDBName,
-				"upperTableName":   r.upperTableName,
-				"lowerTableName":   r.lowerTableName,
-				"upperField":       r.UpperName(v.Columns()[0]),
-				"lowerField":       r.LowerName(v.Columns()[0]),
-				"upperFieldPlural": inflection.Plural(r.UpperName(v.Columns()[0])),
-				"lowerFieldPlural": inflection.Plural(r.LowerName(v.Columns()[0])),
-				"dataType":         r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
+			switch columnNameToDataType {
+			case "bool":
+			default:
+				interfaceFindMultiCacheByFieldPlural, err := NewTemplate("InterfaceFindMultiCacheByFieldPlural").Parse(InterfaceFindMultiCacheByFieldPlural).Execute(map[string]any{
+					"lowerDBName":      r.lowerDBName,
+					"upperTableName":   r.upperTableName,
+					"lowerTableName":   r.lowerTableName,
+					"upperField":       r.UpperFieldName(v.Columns()[0]),
+					"lowerField":       r.LowerFieldName(v.Columns()[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
+					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				readMethods += fmt.Sprintln(interfaceFindMultiCacheByFieldPlural.String())
+				interfaceFindMultiByFieldPlural, err := NewTemplate("InterfaceFindMultiByFieldPlural").Parse(InterfaceFindMultiByFieldPlural).Execute(map[string]any{
+					"lowerDBName":      r.lowerDBName,
+					"upperTableName":   r.upperTableName,
+					"lowerTableName":   r.lowerTableName,
+					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
+					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				readMethods += fmt.Sprintln(interfaceFindMultiByFieldPlural.String())
 			}
-			readMethods += fmt.Sprintln(interfaceFindMultiCacheByFieldPlural.String())
-			interfaceFindMultiByFieldPlural, err := NewTemplate("InterfaceFindMultiByFieldPlural").Parse(InterfaceFindMultiByFieldPlural).Execute(map[string]any{
-				"lowerDBName":      r.lowerDBName,
-				"upperTableName":   r.upperTableName,
-				"lowerTableName":   r.lowerTableName,
-				"upperFieldPlural": inflection.Plural(r.UpperName(v.Columns()[0])),
-				"lowerFieldPlural": inflection.Plural(r.LowerName(v.Columns()[0])),
-				"dataType":         r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
-			}
-			readMethods += fmt.Sprintln(interfaceFindMultiByFieldPlural.String())
+
 		}
 		// 唯一 && 字段数大于1
 		if unique && len(v.Columns()) > 1 {
 			var upperFields string
 			var fieldAndDataTypes string
-			for _, v := range v.Columns() {
-				upperFields += r.UpperName(v)
-				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerName(v), r.columnNameToDataType[v])
+			for _, vv := range v.Columns() {
+				upperFields += r.UpperFieldName(vv)
+				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(vv), r.columnNameToDataType[vv])
 			}
 			interfaceFindOneCacheByFields, err := NewTemplate("InterfaceFindOneCacheByFields").Parse(InterfaceFindOneCacheByFields).Execute(map[string]any{
 				"lowerDBName":       r.lowerDBName,
@@ -357,39 +435,43 @@ func (r *GenerationRepo) generateReadMethods() (string, error) {
 		}
 		// 不唯一 && 字段数等于1
 		if !unique && len(v.Columns()) == 1 {
-			interfaceFindMultiByField, err := NewTemplate("InterfaceFindMultiByField").Parse(InterfaceFindMultiByField).Execute(map[string]any{
-
-				"lowerDBName":    r.lowerDBName,
-				"upperTableName": r.upperTableName,
-				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperName(v.Columns()[0]),
-				"lowerField":     r.LowerName(v.Columns()[0]),
-				"dataType":       r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
+			columnNameToDataType := r.columnNameToDataType[v.Columns()[0]]
+			switch columnNameToDataType {
+			case "bool":
+			default:
+				interfaceFindMultiByField, err := NewTemplate("InterfaceFindMultiByField").Parse(InterfaceFindMultiByField).Execute(map[string]any{
+					"lowerDBName":    r.lowerDBName,
+					"upperTableName": r.upperTableName,
+					"lowerTableName": r.lowerTableName,
+					"upperField":     r.UpperFieldName(v.Columns()[0]),
+					"lowerField":     r.LowerFieldName(v.Columns()[0]),
+					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				readMethods += fmt.Sprintln(interfaceFindMultiByField.String())
+				interfaceFindMultiByFieldPlural, err := NewTemplate("InterfaceFindMultiByFieldPlural").Parse(InterfaceFindMultiByFieldPlural).Execute(map[string]any{
+					"lowerDBName":      r.lowerDBName,
+					"upperTableName":   r.upperTableName,
+					"lowerTableName":   r.lowerTableName,
+					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
+					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				readMethods += fmt.Sprintln(interfaceFindMultiByFieldPlural.String())
 			}
-			readMethods += fmt.Sprintln(interfaceFindMultiByField.String())
-			interfaceFindMultiByFieldPlural, err := NewTemplate("InterfaceFindMultiByFieldPlural").Parse(InterfaceFindMultiByFieldPlural).Execute(map[string]any{
-				"lowerDBName":      r.lowerDBName,
-				"upperTableName":   r.upperTableName,
-				"lowerTableName":   r.lowerTableName,
-				"upperFieldPlural": inflection.Plural(r.UpperName(v.Columns()[0])),
-				"lowerFieldPlural": inflection.Plural(r.LowerName(v.Columns()[0])),
-				"dataType":         r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
-			}
-			readMethods += fmt.Sprintln(interfaceFindMultiByFieldPlural.String())
 		}
 		// 不唯一 && 字段数大于1
 		if !unique && len(v.Columns()) > 1 {
 			var upperFields string
 			var fieldAndDataTypes string
 			for _, v := range v.Columns() {
-				upperFields += r.UpperName(v)
-				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerName(v), r.columnNameToDataType[v])
+				upperFields += r.UpperFieldName(v)
+				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(v), r.columnNameToDataType[v])
 			}
 			interfaceFindMultiByFields, err := NewTemplate("InterfaceFindMultiByFields").Parse(InterfaceFindMultiByFields).Execute(map[string]any{
 				"lowerDBName":       r.lowerDBName,
@@ -419,139 +501,143 @@ func (r *GenerationRepo) generateReadMethods() (string, error) {
 // generateDelMethods
 func (r *GenerationRepo) generateDelMethods() (string, error) {
 	var delMethods string
+	var haveUnique bool
 	for _, v := range r.index {
+		if r.CheckDaoFieldType(v.Columns()) {
+			continue
+		}
 		unique, _ := v.Unique()
+		if unique {
+			haveUnique = true
+		}
 		// 唯一 && 字段数于1
 		if unique && len(v.Columns()) == 1 {
-			interfaceDeleteOneCacheByField, err := NewTemplate("InterfaceDeleteOneCacheByField").Parse(InterfaceDeleteOneCacheByField).Execute(map[string]any{
-
-				"lowerDBName":    r.lowerDBName,
-				"upperTableName": r.upperTableName,
-				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperName(v.Columns()[0]),
-				"lowerField":     r.LowerName(v.Columns()[0]),
-				"dataType":       r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
+			switch r.columnNameToDataType[v.Columns()[0]] {
+			case "bool":
+			default:
+				interfaceDeleteOneCacheByField, err := NewTemplate("InterfaceDeleteOneCacheByField").Parse(InterfaceDeleteOneCacheByField).Execute(map[string]any{
+					"lowerDBName":    r.lowerDBName,
+					"upperTableName": r.upperTableName,
+					"lowerTableName": r.lowerTableName,
+					"upperField":     r.UpperFieldName(v.Columns()[0]),
+					"lowerField":     r.LowerFieldName(v.Columns()[0]),
+					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				delMethods += fmt.Sprintln(interfaceDeleteOneCacheByField.String())
+				interfaceDeleteOneCacheByFieldTx, err := NewTemplate("InterfaceDeleteOneCacheByFieldTx").Parse(InterfaceDeleteOneCacheByFieldTx).Execute(map[string]any{
+					"lowerDBName":    r.lowerDBName,
+					"upperTableName": r.upperTableName,
+					"lowerTableName": r.lowerTableName,
+					"upperField":     r.UpperFieldName(v.Columns()[0]),
+					"lowerField":     r.LowerFieldName(v.Columns()[0]),
+					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				delMethods += fmt.Sprintln(interfaceDeleteOneCacheByFieldTx.String())
+				interfaceDeleteOneByField, err := NewTemplate("InterfaceDeleteOneByField").Parse(InterfaceDeleteOneByField).Execute(map[string]any{
+					"lowerDBName":    r.lowerDBName,
+					"upperTableName": r.upperTableName,
+					"lowerTableName": r.lowerTableName,
+					"upperField":     r.UpperFieldName(v.Columns()[0]),
+					"lowerField":     r.LowerFieldName(v.Columns()[0]),
+					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				delMethods += fmt.Sprintln(interfaceDeleteOneByField.String())
+				interfaceDeleteOneByFieldTx, err := NewTemplate("InterfaceDeleteOneByFieldTx").Parse(InterfaceDeleteOneByFieldTx).Execute(map[string]any{
+					"lowerDBName":    r.lowerDBName,
+					"upperTableName": r.upperTableName,
+					"lowerTableName": r.lowerTableName,
+					"upperField":     r.UpperFieldName(v.Columns()[0]),
+					"lowerField":     r.LowerFieldName(v.Columns()[0]),
+					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				delMethods += fmt.Sprintln(interfaceDeleteOneByFieldTx.String())
+				interfaceDeleteMultiCacheByFieldPlural, err := NewTemplate("InterfaceDeleteMultiCacheByFieldPlural").Parse(InterfaceDeleteMultiCacheByFieldPlural).Execute(map[string]any{
+					"lowerDBName":      r.lowerDBName,
+					"upperTableName":   r.upperTableName,
+					"lowerTableName":   r.lowerTableName,
+					"upperField":       r.UpperFieldName(v.Columns()[0]),
+					"lowerField":       r.LowerFieldName(v.Columns()[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
+					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				delMethods += fmt.Sprintln(interfaceDeleteMultiCacheByFieldPlural.String())
+				interfaceDeleteMultiCacheByFieldPluralTx, err := NewTemplate("InterfaceDeleteMultiCacheByFieldPluralTx").Parse(InterfaceDeleteMultiCacheByFieldPluralTx).Execute(map[string]any{
+					"lowerDBName":      r.lowerDBName,
+					"upperTableName":   r.upperTableName,
+					"lowerTableName":   r.lowerTableName,
+					"upperField":       r.UpperFieldName(v.Columns()[0]),
+					"lowerField":       r.LowerFieldName(v.Columns()[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
+					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				delMethods += fmt.Sprintln(interfaceDeleteMultiCacheByFieldPluralTx.String())
+				interfaceDeleteMultiByFieldPlural, err := NewTemplate("InterfaceDeleteMultiByFieldPlural").Parse(InterfaceDeleteMultiByFieldPlural).Execute(map[string]any{
+					"lowerDBName":      r.lowerDBName,
+					"upperTableName":   r.upperTableName,
+					"lowerTableName":   r.lowerTableName,
+					"upperField":       r.UpperFieldName(v.Columns()[0]),
+					"lowerField":       r.LowerFieldName(v.Columns()[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
+					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				delMethods += fmt.Sprintln(interfaceDeleteMultiByFieldPlural.String())
+				interfaceDeleteMultiByFieldPluralTx, err := NewTemplate("InterfaceDeleteMultiByFieldPluralTx").Parse(InterfaceDeleteMultiByFieldPluralTx).Execute(map[string]any{
+					"lowerDBName":      r.lowerDBName,
+					"upperTableName":   r.upperTableName,
+					"lowerTableName":   r.lowerTableName,
+					"upperField":       r.UpperFieldName(v.Columns()[0]),
+					"lowerField":       r.LowerFieldName(v.Columns()[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
+					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				delMethods += fmt.Sprintln(interfaceDeleteMultiByFieldPluralTx.String())
 			}
-			delMethods += fmt.Sprintln(interfaceDeleteOneCacheByField.String())
-			interfaceDeleteOneCacheByFieldTx, err := NewTemplate("InterfaceDeleteOneCacheByFieldTx").Parse(InterfaceDeleteOneCacheByFieldTx).Execute(map[string]any{
-
-				"lowerDBName":    r.lowerDBName,
-				"upperTableName": r.upperTableName,
-				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperName(v.Columns()[0]),
-				"lowerField":     r.LowerName(v.Columns()[0]),
-				"dataType":       r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
-			}
-			delMethods += fmt.Sprintln(interfaceDeleteOneCacheByFieldTx.String())
-			interfaceDeleteOneByField, err := NewTemplate("InterfaceDeleteOneByField").Parse(InterfaceDeleteOneByField).Execute(map[string]any{
-
-				"lowerDBName":    r.lowerDBName,
-				"upperTableName": r.upperTableName,
-				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperName(v.Columns()[0]),
-				"lowerField":     r.LowerName(v.Columns()[0]),
-				"dataType":       r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
-			}
-			delMethods += fmt.Sprintln(interfaceDeleteOneByField.String())
-			interfaceDeleteOneByFieldTx, err := NewTemplate("InterfaceDeleteOneByFieldTx").Parse(InterfaceDeleteOneByFieldTx).Execute(map[string]any{
-
-				"lowerDBName":    r.lowerDBName,
-				"upperTableName": r.upperTableName,
-				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperName(v.Columns()[0]),
-				"lowerField":     r.LowerName(v.Columns()[0]),
-				"dataType":       r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
-			}
-			delMethods += fmt.Sprintln(interfaceDeleteOneByFieldTx.String())
-			interfaceDeleteMultiCacheByFieldPlural, err := NewTemplate("InterfaceDeleteMultiCacheByFieldPlural").Parse(InterfaceDeleteMultiCacheByFieldPlural).Execute(map[string]any{
-				"lowerDBName":      r.lowerDBName,
-				"upperTableName":   r.upperTableName,
-				"lowerTableName":   r.lowerTableName,
-				"upperField":       r.UpperName(v.Columns()[0]),
-				"lowerField":       r.LowerName(v.Columns()[0]),
-				"upperFieldPlural": inflection.Plural(r.UpperName(v.Columns()[0])),
-				"lowerFieldPlural": inflection.Plural(r.LowerName(v.Columns()[0])),
-				"dataType":         r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
-			}
-			delMethods += fmt.Sprintln(interfaceDeleteMultiCacheByFieldPlural.String())
-			interfaceDeleteMultiCacheByFieldPluralTx, err := NewTemplate("InterfaceDeleteMultiCacheByFieldPluralTx").Parse(InterfaceDeleteMultiCacheByFieldPluralTx).Execute(map[string]any{
-				"lowerDBName":      r.lowerDBName,
-				"upperTableName":   r.upperTableName,
-				"lowerTableName":   r.lowerTableName,
-				"upperField":       r.UpperName(v.Columns()[0]),
-				"lowerField":       r.LowerName(v.Columns()[0]),
-				"upperFieldPlural": inflection.Plural(r.UpperName(v.Columns()[0])),
-				"lowerFieldPlural": inflection.Plural(r.LowerName(v.Columns()[0])),
-				"dataType":         r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
-			}
-			delMethods += fmt.Sprintln(interfaceDeleteMultiCacheByFieldPluralTx.String())
-			interfaceDeleteMultiByFieldPlural, err := NewTemplate("InterfaceDeleteMultiByFieldPlural").Parse(InterfaceDeleteMultiByFieldPlural).Execute(map[string]any{
-				"lowerDBName":      r.lowerDBName,
-				"upperTableName":   r.upperTableName,
-				"lowerTableName":   r.lowerTableName,
-				"upperField":       r.UpperName(v.Columns()[0]),
-				"lowerField":       r.LowerName(v.Columns()[0]),
-				"upperFieldPlural": inflection.Plural(r.UpperName(v.Columns()[0])),
-				"lowerFieldPlural": inflection.Plural(r.LowerName(v.Columns()[0])),
-				"dataType":         r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
-			}
-			delMethods += fmt.Sprintln(interfaceDeleteMultiByFieldPlural.String())
-			interfaceDeleteMultiByFieldPluralTx, err := NewTemplate("InterfaceDeleteMultiByFieldPluralTx").Parse(InterfaceDeleteMultiByFieldPluralTx).Execute(map[string]any{
-				"lowerDBName":      r.lowerDBName,
-				"upperTableName":   r.upperTableName,
-				"lowerTableName":   r.lowerTableName,
-				"upperField":       r.UpperName(v.Columns()[0]),
-				"lowerField":       r.LowerName(v.Columns()[0]),
-				"upperFieldPlural": inflection.Plural(r.UpperName(v.Columns()[0])),
-				"lowerFieldPlural": inflection.Plural(r.LowerName(v.Columns()[0])),
-				"dataType":         r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
-			}
-			delMethods += fmt.Sprintln(interfaceDeleteMultiByFieldPluralTx.String())
 		}
 		// 唯一 && 字段数大于1
 		if unique && len(v.Columns()) > 1 {
 			var upperFields string
 			var fieldAndDataTypes string
-			var whereFields string
-			for _, v := range v.Columns() {
-				upperFields += r.UpperName(v)
-				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerName(v), r.columnNameToDataType[v])
-				whereFields += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperName(v), r.LowerName(v))
+			for _, vv := range v.Columns() {
+				upperFields += r.UpperFieldName(vv)
+				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(vv), r.columnNameToDataType[vv])
 			}
 			interfaceDeleteOneCacheByFields, err := NewTemplate("InterfaceDeleteOneCacheByFields").Parse(InterfaceDeleteOneCacheByFields).Execute(map[string]any{
 				"lowerDBName":       r.lowerDBName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperName(v.Columns()[0]),
-				"lowerField":        r.LowerName(v.Columns()[0]),
+				"upperField":        r.UpperFieldName(v.Columns()[0]),
+				"lowerField":        r.LowerFieldName(v.Columns()[0]),
 				"upperFields":       upperFields,
 				"dataType":          r.columnNameToDataType[v.Columns()[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
-				"whereFields":       strings.Trim(whereFields, ","),
 			})
 			if err != nil {
 				return "", err
@@ -561,12 +647,11 @@ func (r *GenerationRepo) generateDelMethods() (string, error) {
 				"lowerDBName":       r.lowerDBName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperName(v.Columns()[0]),
-				"lowerField":        r.LowerName(v.Columns()[0]),
+				"upperField":        r.UpperFieldName(v.Columns()[0]),
+				"lowerField":        r.LowerFieldName(v.Columns()[0]),
 				"upperFields":       upperFields,
 				"dataType":          r.columnNameToDataType[v.Columns()[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
-				"whereFields":       strings.Trim(whereFields, ","),
 			})
 			if err != nil {
 				return "", err
@@ -576,12 +661,11 @@ func (r *GenerationRepo) generateDelMethods() (string, error) {
 				"lowerDBName":       r.lowerDBName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperName(v.Columns()[0]),
-				"lowerField":        r.LowerName(v.Columns()[0]),
+				"upperField":        r.UpperFieldName(v.Columns()[0]),
+				"lowerField":        r.LowerFieldName(v.Columns()[0]),
 				"upperFields":       upperFields,
 				"dataType":          r.columnNameToDataType[v.Columns()[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
-				"whereFields":       strings.Trim(whereFields, ","),
 			})
 			if err != nil {
 				return "", err
@@ -591,12 +675,11 @@ func (r *GenerationRepo) generateDelMethods() (string, error) {
 				"lowerDBName":       r.lowerDBName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperName(v.Columns()[0]),
-				"lowerField":        r.LowerName(v.Columns()[0]),
+				"upperField":        r.UpperFieldName(v.Columns()[0]),
+				"lowerField":        r.LowerFieldName(v.Columns()[0]),
 				"upperFields":       upperFields,
 				"dataType":          r.columnNameToDataType[v.Columns()[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
-				"whereFields":       strings.Trim(whereFields, ","),
 			})
 			if err != nil {
 				return "", err
@@ -612,8 +695,10 @@ func (r *GenerationRepo) generateDelMethods() (string, error) {
 
 		}
 	}
+	if !haveUnique {
+		return "", nil
+	}
 	interfaceDeleteUniqueIndexCacheTpl, err := NewTemplate("InterfaceDeleteUniqueIndexCache").Parse(InterfaceDeleteUniqueIndexCache).Execute(map[string]any{
-
 		"lowerDBName":    r.lowerDBName,
 		"upperTableName": r.upperTableName,
 	})
@@ -708,17 +793,29 @@ func (r *GenerationRepo) generateCreateFunc() (string, error) {
 func (r *GenerationRepo) generateReadFunc() (string, error) {
 	var readFunc string
 	for _, v := range r.index {
+		if r.CheckDaoFieldType(v.Columns()) {
+			continue
+		}
 		unique, _ := v.Unique()
 		// 唯一 && 字段数于1
 		if unique && len(v.Columns()) == 1 {
+			var whereField string
+			columnNameToDataType := r.columnNameToDataType[v.Columns()[0]]
+			switch columnNameToDataType {
+			case "bool":
+				whereField += fmt.Sprintf("dao.%s.Is(%s),", r.UpperFieldName(v.Columns()[0]), r.LowerFieldName(v.Columns()[0]))
+			default:
+				whereField += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperFieldName(v.Columns()[0]), r.LowerFieldName(v.Columns()[0]))
+			}
 			findOneCacheByField, err := NewTemplate("findOneCacheByField").Parse(FindOneCacheByField).Execute(map[string]any{
 				"firstTableChar": r.firstTableChar,
 				"lowerDBName":    r.lowerDBName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperName(v.Columns()[0]),
-				"lowerField":     r.LowerName(v.Columns()[0]),
+				"upperField":     r.UpperFieldName(v.Columns()[0]),
+				"lowerField":     r.LowerFieldName(v.Columns()[0]),
 				"dataType":       r.columnNameToDataType[v.Columns()[0]],
+				"whereField":     whereField,
 			})
 			if err != nil {
 				return "", err
@@ -729,45 +826,51 @@ func (r *GenerationRepo) generateReadFunc() (string, error) {
 				"lowerDBName":    r.lowerDBName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperName(v.Columns()[0]),
-				"lowerField":     r.LowerName(v.Columns()[0]),
+				"upperField":     r.UpperFieldName(v.Columns()[0]),
+				"lowerField":     r.LowerFieldName(v.Columns()[0]),
 				"dataType":       r.columnNameToDataType[v.Columns()[0]],
+				"whereField":     whereField,
 			})
 			if err != nil {
 				return "", err
 			}
 			readFunc += fmt.Sprintln(findOneByField.String())
-			findMultiCacheByFieldPlural, err := NewTemplate("findMultiCacheByFieldPlural").Parse(FindMultiCacheByFieldPlural).Execute(map[string]any{
-				"firstTableChar":   r.firstTableChar,
-				"lowerDBName":      r.lowerDBName,
-				"upperTableName":   r.upperTableName,
-				"lowerTableName":   r.lowerTableName,
-				"upperField":       r.UpperName(v.Columns()[0]),
-				"lowerField":       r.LowerName(v.Columns()[0]),
-				"upperFieldPlural": inflection.Plural(r.UpperName(v.Columns()[0])),
-				"lowerFieldPlural": inflection.Plural(r.LowerName(v.Columns()[0])),
-				"dataType":         r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
-			}
-			readFunc += fmt.Sprintln(findMultiCacheByFieldPlural.String())
 
-			findMultiByFieldPlural, err := NewTemplate("findMultiByFieldPlural").Parse(FindMultiByFieldPlural).Execute(map[string]any{
-				"firstTableChar":   r.firstTableChar,
-				"lowerDBName":      r.lowerDBName,
-				"upperField":       r.UpperName(v.Columns()[0]),
-				"upperTableName":   r.upperTableName,
-				"lowerTableName":   r.lowerTableName,
-				"upperFieldPlural": inflection.Plural(r.UpperName(v.Columns()[0])),
-				"lowerFieldPlural": inflection.Plural(r.LowerName(v.Columns()[0])),
-				"dataType":         r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
+			switch columnNameToDataType {
+			case "bool":
+			default:
+				findMultiCacheByFieldPlural, err := NewTemplate("findMultiCacheByFieldPlural").Parse(FindMultiCacheByFieldPlural).Execute(map[string]any{
+					"firstTableChar":   r.firstTableChar,
+					"lowerDBName":      r.lowerDBName,
+					"upperTableName":   r.upperTableName,
+					"lowerTableName":   r.lowerTableName,
+					"upperField":       r.UpperFieldName(v.Columns()[0]),
+					"lowerField":       r.LowerFieldName(v.Columns()[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
+					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+					"whereField":       whereField,
+				})
+				if err != nil {
+					return "", err
+				}
+				readFunc += fmt.Sprintln(findMultiCacheByFieldPlural.String())
+				findMultiByFieldPlural, err := NewTemplate("findMultiByFieldPlural").Parse(FindMultiByFieldPlural).Execute(map[string]any{
+					"firstTableChar":   r.firstTableChar,
+					"lowerDBName":      r.lowerDBName,
+					"upperField":       r.UpperFieldName(v.Columns()[0]),
+					"upperTableName":   r.upperTableName,
+					"lowerTableName":   r.lowerTableName,
+					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
+					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+					"whereField":       whereField,
+				})
+				if err != nil {
+					return "", err
+				}
+				readFunc += fmt.Sprintln(findMultiByFieldPlural.String())
 			}
-			readFunc += fmt.Sprintln(findMultiByFieldPlural.String())
-
 		}
 		// 唯一 && 字段数大于1
 		if unique && len(v.Columns()) > 1 {
@@ -776,10 +879,15 @@ func (r *GenerationRepo) generateReadFunc() (string, error) {
 			var lowerFieldsJoin string
 			var whereFields string
 			for _, v := range v.Columns() {
-				upperFields += r.UpperName(v)
-				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerName(v), r.columnNameToDataType[v])
-				lowerFieldsJoin += fmt.Sprintf("%s,", r.LowerName(v))
-				whereFields += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperName(v), r.LowerName(v))
+				upperFields += r.UpperFieldName(v)
+				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(v), r.columnNameToDataType[v])
+				lowerFieldsJoin += fmt.Sprintf("%s,", r.LowerFieldName(v))
+				switch r.columnNameToDataType[v] {
+				case "bool":
+					whereFields += fmt.Sprintf("dao.%s.Is(%s),", r.UpperFieldName(v), r.LowerFieldName(v))
+				default:
+					whereFields += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperFieldName(v), r.LowerFieldName(v))
+				}
 			}
 			findOneCacheByFields, err := NewTemplate("findOneCacheByFields").Parse(FindOneCacheByFields).Execute(map[string]any{
 				"firstTableChar":    r.firstTableChar,
@@ -792,7 +900,6 @@ func (r *GenerationRepo) generateReadFunc() (string, error) {
 				"lowerFieldsJoin":   strings.Trim(lowerFieldsJoin, ","),
 			})
 			readFunc += fmt.Sprintln(findOneCacheByFields.String())
-
 			if err != nil {
 				return "", err
 			}
@@ -809,37 +916,50 @@ func (r *GenerationRepo) generateReadFunc() (string, error) {
 				return "", err
 			}
 			readFunc += fmt.Sprintln(findOneByFields.String())
-
 		}
 		// 不唯一 && 字段数等于1
 		if !unique && len(v.Columns()) == 1 {
+			var whereField string
+			columnNameToDataType := r.columnNameToDataType[v.Columns()[0]]
+			switch columnNameToDataType {
+			case "bool":
+				whereField += fmt.Sprintf("dao.%s.Is(%s),", r.UpperFieldName(v.Columns()[0]), r.LowerFieldName(v.Columns()[0]))
+			default:
+				whereField += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperFieldName(v.Columns()[0]), r.LowerFieldName(v.Columns()[0]))
+			}
 			findMultiByField, err := NewTemplate("findMultiByField").Parse(FindMultiByField).Execute(map[string]any{
 				"firstTableChar": r.firstTableChar,
 				"lowerDBName":    r.lowerDBName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperName(v.Columns()[0]),
-				"lowerField":     r.LowerName(v.Columns()[0]),
+				"upperField":     r.UpperFieldName(v.Columns()[0]),
+				"lowerField":     r.LowerFieldName(v.Columns()[0]),
 				"dataType":       r.columnNameToDataType[v.Columns()[0]],
+				"whereField":     whereField,
 			})
 			if err != nil {
 				return "", err
 			}
 			readFunc += fmt.Sprintln(findMultiByField.String())
-			findMultiByFieldPlural, err := NewTemplate("findMultiByFieldPlural").Parse(FindMultiByFieldPlural).Execute(map[string]any{
-				"firstTableChar":   r.firstTableChar,
-				"lowerDBName":      r.lowerDBName,
-				"upperField":       r.UpperName(v.Columns()[0]),
-				"upperTableName":   r.upperTableName,
-				"lowerTableName":   r.lowerTableName,
-				"upperFieldPlural": inflection.Plural(r.UpperName(v.Columns()[0])),
-				"lowerFieldPlural": inflection.Plural(r.LowerName(v.Columns()[0])),
-				"dataType":         r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
+			switch columnNameToDataType {
+			case "bool":
+			default:
+				findMultiByFieldPlural, err := NewTemplate("findMultiByFieldPlural").Parse(FindMultiByFieldPlural).Execute(map[string]any{
+					"firstTableChar":   r.firstTableChar,
+					"lowerDBName":      r.lowerDBName,
+					"upperField":       r.UpperFieldName(v.Columns()[0]),
+					"upperTableName":   r.upperTableName,
+					"lowerTableName":   r.lowerTableName,
+					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
+					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+					"whereField":       whereField,
+				})
+				if err != nil {
+					return "", err
+				}
+				readFunc += fmt.Sprintln(findMultiByFieldPlural.String())
 			}
-			readFunc += fmt.Sprintln(findMultiByFieldPlural.String())
 		}
 		// 不唯一 && 字段数大于1
 		if !unique && len(v.Columns()) > 1 {
@@ -847,9 +967,14 @@ func (r *GenerationRepo) generateReadFunc() (string, error) {
 			var fieldAndDataTypes string
 			var whereFields string
 			for _, v := range v.Columns() {
-				upperFields += r.UpperName(v)
-				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerName(v), r.columnNameToDataType[v])
-				whereFields += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperName(v), r.LowerName(v))
+				upperFields += r.UpperFieldName(v)
+				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(v), r.columnNameToDataType[v])
+				switch r.columnNameToDataType[v] {
+				case "bool":
+					whereFields += fmt.Sprintf("dao.%s.Is(%s),", r.UpperFieldName(v), r.LowerFieldName(v))
+				default:
+					whereFields += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperFieldName(v), r.LowerFieldName(v))
+				}
 			}
 			findMultiByFields, err := NewTemplate("findMultiByFields").Parse(FindMultiByFields).Execute(map[string]any{
 				"firstTableChar":    r.firstTableChar,
@@ -882,11 +1007,23 @@ func (r *GenerationRepo) generateReadFunc() (string, error) {
 // generateUpdateFunc
 func (r *GenerationRepo) generateUpdateFunc() (string, error) {
 	var updateFunc string
+	var primaryKey string
+	for _, index := range r.index {
+		isPrimaryKey, _ := index.PrimaryKey()
+		if isPrimaryKey {
+			primaryKey = index.Columns()[0]
+			break
+		}
+	}
+	if primaryKey == "" {
+		return "", nil
+	}
 	updateOneTpl, err := NewTemplate("UpdateOne").Parse(UpdateOne).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
 		"lowerDBName":    r.lowerDBName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
+		"upperField":     r.UpperFieldName(primaryKey),
 	})
 	if err != nil {
 		return "", err
@@ -897,6 +1034,7 @@ func (r *GenerationRepo) generateUpdateFunc() (string, error) {
 		"lowerDBName":    r.lowerDBName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
+		"upperField":     r.UpperFieldName(primaryKey),
 	})
 	if err != nil {
 		return "", err
@@ -909,14 +1047,19 @@ func (r *GenerationRepo) generateUpdateFunc() (string, error) {
 func (r *GenerationRepo) generateDelFunc() (string, error) {
 	var delMethods string
 	var varCacheDelKeys string
+	var haveUnique bool
 	for _, v := range r.index {
+		if r.CheckDaoFieldType(v.Columns()) {
+			continue
+		}
 		unique, _ := v.Unique()
 		if unique {
+			haveUnique = true
 			var cacheField string
 			cacheFieldsJoinSli := make([]string, 0)
 			for _, column := range v.Columns() {
-				cacheField += r.UpperName(column)
-				cacheFieldsJoinSli = append(cacheFieldsJoinSli, fmt.Sprintf("v.%s", r.UpperName(column)))
+				cacheField += r.UpperFieldName(column)
+				cacheFieldsJoinSli = append(cacheFieldsJoinSli, fmt.Sprintf("v.%s", r.UpperFieldName(column)))
 			}
 			varCacheDelKeyTpl, err := NewTemplate("VarCacheDelKey").Parse(VarCacheDelKey).Execute(map[string]any{
 				"firstTableChar":  r.firstTableChar,
@@ -931,118 +1074,123 @@ func (r *GenerationRepo) generateDelFunc() (string, error) {
 		}
 		// 唯一 && 字段数于1
 		if unique && len(v.Columns()) == 1 {
-			deleteOneCacheByField, err := NewTemplate("DeleteOneCacheByField").Parse(DeleteOneCacheByField).Execute(map[string]any{
-				"firstTableChar": r.firstTableChar,
-				"lowerDBName":    r.lowerDBName,
-				"upperTableName": r.upperTableName,
-				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperName(v.Columns()[0]),
-				"lowerField":     r.LowerName(v.Columns()[0]),
-				"dataType":       r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
+			columnNameToDataType := r.columnNameToDataType[v.Columns()[0]]
+			switch columnNameToDataType {
+			case "bool":
+			default:
+				deleteOneCacheByField, err := NewTemplate("DeleteOneCacheByField").Parse(DeleteOneCacheByField).Execute(map[string]any{
+					"firstTableChar": r.firstTableChar,
+					"lowerDBName":    r.lowerDBName,
+					"upperTableName": r.upperTableName,
+					"lowerTableName": r.lowerTableName,
+					"upperField":     r.UpperName(v.Columns()[0]),
+					"lowerField":     r.LowerName(v.Columns()[0]),
+					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				delMethods += fmt.Sprintln(deleteOneCacheByField.String())
+				deleteOneCacheByFieldTx, err := NewTemplate("DeleteOneCacheByFieldTx").Parse(DeleteOneCacheByFieldTx).Execute(map[string]any{
+					"firstTableChar": r.firstTableChar,
+					"lowerDBName":    r.lowerDBName,
+					"upperTableName": r.upperTableName,
+					"lowerTableName": r.lowerTableName,
+					"upperField":     r.UpperName(v.Columns()[0]),
+					"lowerField":     r.LowerName(v.Columns()[0]),
+					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				delMethods += fmt.Sprintln(deleteOneCacheByFieldTx.String())
+				deleteOneByField, err := NewTemplate("DeleteOneByField").Parse(DeleteOneByField).Execute(map[string]any{
+					"firstTableChar": r.firstTableChar,
+					"lowerDBName":    r.lowerDBName,
+					"upperTableName": r.upperTableName,
+					"lowerTableName": r.lowerTableName,
+					"upperField":     r.UpperName(v.Columns()[0]),
+					"lowerField":     r.LowerName(v.Columns()[0]),
+					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				delMethods += fmt.Sprintln(deleteOneByField.String())
+				deleteOneByFieldTx, err := NewTemplate("DeleteOneByFieldTx").Parse(DeleteOneByFieldTx).Execute(map[string]any{
+					"firstTableChar": r.firstTableChar,
+					"lowerDBName":    r.lowerDBName,
+					"upperTableName": r.upperTableName,
+					"lowerTableName": r.lowerTableName,
+					"upperField":     r.UpperName(v.Columns()[0]),
+					"lowerField":     r.LowerName(v.Columns()[0]),
+					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				delMethods += fmt.Sprintln(deleteOneByFieldTx.String())
+				deleteMultiCacheByFieldPlural, err := NewTemplate("DeleteMultiCacheByFieldPlural").Parse(DeleteMultiCacheByFieldPlural).Execute(map[string]any{
+					"firstTableChar":   r.firstTableChar,
+					"lowerDBName":      r.lowerDBName,
+					"upperTableName":   r.upperTableName,
+					"lowerTableName":   r.lowerTableName,
+					"upperField":       r.UpperFieldName(v.Columns()[0]),
+					"lowerField":       r.LowerFieldName(v.Columns()[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
+					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				delMethods += fmt.Sprintln(deleteMultiCacheByFieldPlural.String())
+				deleteMultiCacheByFieldPluralTx, err := NewTemplate("DeleteMultiCacheByFieldPluralTx").Parse(DeleteMultiCacheByFieldPluralTx).Execute(map[string]any{
+					"firstTableChar":   r.firstTableChar,
+					"lowerDBName":      r.lowerDBName,
+					"upperTableName":   r.upperTableName,
+					"lowerTableName":   r.lowerTableName,
+					"upperField":       r.UpperFieldName(v.Columns()[0]),
+					"lowerField":       r.LowerFieldName(v.Columns()[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
+					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				delMethods += fmt.Sprintln(deleteMultiCacheByFieldPluralTx.String())
+				deleteMultiByFieldPlural, err := NewTemplate("DeleteMultiByFieldPlural").Parse(DeleteMultiByFieldPlural).Execute(map[string]any{
+					"firstTableChar":   r.firstTableChar,
+					"lowerDBName":      r.lowerDBName,
+					"upperTableName":   r.upperTableName,
+					"lowerTableName":   r.lowerTableName,
+					"upperField":       r.UpperFieldName(v.Columns()[0]),
+					"lowerField":       r.LowerFieldName(v.Columns()[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
+					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				delMethods += fmt.Sprintln(deleteMultiByFieldPlural.String())
+				deleteMultiByFieldPluralTx, err := NewTemplate("DeleteMultiByFieldPluralTx").Parse(DeleteMultiByFieldPluralTx).Execute(map[string]any{
+					"firstTableChar":   r.firstTableChar,
+					"lowerDBName":      r.lowerDBName,
+					"upperTableName":   r.upperTableName,
+					"lowerTableName":   r.lowerTableName,
+					"upperField":       r.UpperFieldName(v.Columns()[0]),
+					"lowerField":       r.LowerFieldName(v.Columns()[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
+					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+				})
+				if err != nil {
+					return "", err
+				}
+				delMethods += fmt.Sprintln(deleteMultiByFieldPluralTx.String())
 			}
-			delMethods += fmt.Sprintln(deleteOneCacheByField.String())
-			deleteOneCacheByFieldTx, err := NewTemplate("DeleteOneCacheByFieldTx").Parse(DeleteOneCacheByFieldTx).Execute(map[string]any{
-				"firstTableChar": r.firstTableChar,
-				"lowerDBName":    r.lowerDBName,
-				"upperTableName": r.upperTableName,
-				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperName(v.Columns()[0]),
-				"lowerField":     r.LowerName(v.Columns()[0]),
-				"dataType":       r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
-			}
-			delMethods += fmt.Sprintln(deleteOneCacheByFieldTx.String())
-			deleteOneByField, err := NewTemplate("DeleteOneByField").Parse(DeleteOneByField).Execute(map[string]any{
-				"firstTableChar": r.firstTableChar,
-				"lowerDBName":    r.lowerDBName,
-				"upperTableName": r.upperTableName,
-				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperName(v.Columns()[0]),
-				"lowerField":     r.LowerName(v.Columns()[0]),
-				"dataType":       r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
-			}
-			delMethods += fmt.Sprintln(deleteOneByField.String())
-			deleteOneByFieldTx, err := NewTemplate("DeleteOneByFieldTx").Parse(DeleteOneByFieldTx).Execute(map[string]any{
-				"firstTableChar": r.firstTableChar,
-				"lowerDBName":    r.lowerDBName,
-				"upperTableName": r.upperTableName,
-				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperName(v.Columns()[0]),
-				"lowerField":     r.LowerName(v.Columns()[0]),
-				"dataType":       r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
-			}
-			delMethods += fmt.Sprintln(deleteOneByFieldTx.String())
-			deleteMultiCacheByFieldPlural, err := NewTemplate("DeleteMultiCacheByFieldPlural").Parse(DeleteMultiCacheByFieldPlural).Execute(map[string]any{
-				"firstTableChar":   r.firstTableChar,
-				"lowerDBName":      r.lowerDBName,
-				"upperTableName":   r.upperTableName,
-				"lowerTableName":   r.lowerTableName,
-				"upperField":       r.UpperName(v.Columns()[0]),
-				"lowerField":       r.LowerName(v.Columns()[0]),
-				"upperFieldPlural": inflection.Plural(r.UpperName(v.Columns()[0])),
-				"lowerFieldPlural": inflection.Plural(r.LowerName(v.Columns()[0])),
-				"dataType":         r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
-			}
-			delMethods += fmt.Sprintln(deleteMultiCacheByFieldPlural.String())
-			deleteMultiCacheByFieldPluralTx, err := NewTemplate("DeleteMultiCacheByFieldPluralTx").Parse(DeleteMultiCacheByFieldPluralTx).Execute(map[string]any{
-				"firstTableChar":   r.firstTableChar,
-				"lowerDBName":      r.lowerDBName,
-				"upperTableName":   r.upperTableName,
-				"lowerTableName":   r.lowerTableName,
-				"upperField":       r.UpperName(v.Columns()[0]),
-				"lowerField":       r.LowerName(v.Columns()[0]),
-				"upperFieldPlural": inflection.Plural(r.UpperName(v.Columns()[0])),
-				"lowerFieldPlural": inflection.Plural(r.LowerName(v.Columns()[0])),
-				"dataType":         r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
-			}
-			delMethods += fmt.Sprintln(deleteMultiCacheByFieldPluralTx.String())
-			deleteMultiByFieldPlural, err := NewTemplate("DeleteMultiByFieldPlural").Parse(DeleteMultiByFieldPlural).Execute(map[string]any{
-				"firstTableChar":   r.firstTableChar,
-				"lowerDBName":      r.lowerDBName,
-				"upperTableName":   r.upperTableName,
-				"lowerTableName":   r.lowerTableName,
-				"upperField":       r.UpperName(v.Columns()[0]),
-				"lowerField":       r.LowerName(v.Columns()[0]),
-				"upperFieldPlural": inflection.Plural(r.UpperName(v.Columns()[0])),
-				"lowerFieldPlural": inflection.Plural(r.LowerName(v.Columns()[0])),
-				"dataType":         r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
-			}
-			delMethods += fmt.Sprintln(deleteMultiByFieldPlural.String())
-			deleteMultiByFieldPluralTx, err := NewTemplate("DeleteMultiByFieldPluralTx").Parse(DeleteMultiByFieldPluralTx).Execute(map[string]any{
-				"firstTableChar":   r.firstTableChar,
-				"lowerDBName":      r.lowerDBName,
-				"upperTableName":   r.upperTableName,
-				"lowerTableName":   r.lowerTableName,
-				"upperField":       r.UpperName(v.Columns()[0]),
-				"lowerField":       r.LowerName(v.Columns()[0]),
-				"upperFieldPlural": inflection.Plural(r.UpperName(v.Columns()[0])),
-				"lowerFieldPlural": inflection.Plural(r.LowerName(v.Columns()[0])),
-				"dataType":         r.columnNameToDataType[v.Columns()[0]],
-			})
-			if err != nil {
-				return "", err
-			}
-			delMethods += fmt.Sprintln(deleteMultiByFieldPluralTx.String())
 		}
 		// 唯一 && 字段数大于1
 		if unique && len(v.Columns()) > 1 {
@@ -1050,17 +1198,22 @@ func (r *GenerationRepo) generateDelFunc() (string, error) {
 			var fieldAndDataTypes string
 			var whereFields string
 			for _, v := range v.Columns() {
-				upperFields += r.UpperName(v)
-				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerName(v), r.columnNameToDataType[v])
-				whereFields += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperName(v), r.LowerName(v))
+				upperFields += r.UpperFieldName(v)
+				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(v), r.columnNameToDataType[v])
+				switch r.columnNameToDataType[v] {
+				case "bool":
+					whereFields += fmt.Sprintf("dao.%s.Is(%s),", r.UpperFieldName(v), r.LowerFieldName(v))
+				default:
+					whereFields += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperFieldName(v), r.LowerFieldName(v))
+				}
 			}
 			deleteOneCacheByFields, err := NewTemplate("DeleteOneCacheByFields").Parse(DeleteOneCacheByFields).Execute(map[string]any{
 				"firstTableChar":    r.firstTableChar,
 				"lowerDBName":       r.lowerDBName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperName(v.Columns()[0]),
-				"lowerField":        r.LowerName(v.Columns()[0]),
+				"upperField":        r.UpperFieldName(v.Columns()[0]),
+				"lowerField":        r.LowerFieldName(v.Columns()[0]),
 				"upperFields":       upperFields,
 				"dataType":          r.columnNameToDataType[v.Columns()[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
@@ -1075,8 +1228,8 @@ func (r *GenerationRepo) generateDelFunc() (string, error) {
 				"lowerDBName":       r.lowerDBName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperName(v.Columns()[0]),
-				"lowerField":        r.LowerName(v.Columns()[0]),
+				"upperField":        r.UpperFieldName(v.Columns()[0]),
+				"lowerField":        r.LowerFieldName(v.Columns()[0]),
 				"upperFields":       upperFields,
 				"dataType":          r.columnNameToDataType[v.Columns()[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
@@ -1092,7 +1245,7 @@ func (r *GenerationRepo) generateDelFunc() (string, error) {
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperFields":       upperFields,
-				"lowerField":        r.LowerName(v.Columns()[0]),
+				"lowerField":        r.LowerFieldName(v.Columns()[0]),
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
 				"whereFields":       strings.Trim(whereFields, ","),
 			})
@@ -1106,7 +1259,7 @@ func (r *GenerationRepo) generateDelFunc() (string, error) {
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperFields":       upperFields,
-				"lowerField":        r.LowerName(v.Columns()[0]),
+				"lowerField":        r.LowerFieldName(v.Columns()[0]),
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
 				"whereFields":       strings.Trim(whereFields, ","),
 			})
@@ -1124,6 +1277,9 @@ func (r *GenerationRepo) generateDelFunc() (string, error) {
 
 		}
 	}
+	if !haveUnique {
+		return "", nil
+	}
 	deleteUniqueIndexCacheTpl, err := NewTemplate("DeleteUniqueIndexCache").Parse(DeleteUniqueIndexCache).Execute(map[string]any{
 		"firstTableChar":  r.firstTableChar,
 		"lowerDBName":     r.lowerDBName,
@@ -1138,6 +1294,20 @@ func (r *GenerationRepo) generateDelFunc() (string, error) {
 	return delMethods, nil
 }
 
+// UpperFieldName 字段名称大写
+func (r *GenerationRepo) UpperFieldName(s string) string {
+	return r.columnNameToName[s]
+}
+
+// LowerFieldName 字段名称小写
+func (r *GenerationRepo) LowerFieldName(s string) string {
+	str := r.LowerName(s)
+	if token.Lookup(str).IsKeyword() || StrSliFind(KeyWords, str) {
+		str = "_" + str
+	}
+	return str
+}
+
 // UpperName 大写
 func (r *GenerationRepo) UpperName(s string) string {
 	return r.gorm.NamingStrategy.SchemaName(s)
@@ -1145,22 +1315,40 @@ func (r *GenerationRepo) UpperName(s string) string {
 
 // LowerName 小写
 func (r *GenerationRepo) LowerName(s string) string {
-	s = r.UpperName(s)
-	if s == "" {
-		return s
+	str := r.UpperName(s)
+	if str == "" {
+		return str
 	}
 	words := []string{"API", "ASCII", "CPU", "CSS", "DNS", "EOF", "GUID", "HTML", "HTTP", "HTTPS", "ID", "IP", "JSON", "LHS", "QPS", "RAM", "RHS", "RPC", "SLA", "SMTP", "SSH", "TLS", "ttl", "UID", "UI", "UUID", "URI", "URL", "UTF8", "VM", "XML", "XSRF", "XSS"}
 	// 如果第一个单词命中  则不处理
 	for _, v := range words {
-		if strings.HasPrefix(s, v) {
-			return s
+		if strings.HasPrefix(str, v) {
+			return str
 		}
 	}
-	rs := []rune(s)
+	rs := []rune(str)
 	f := rs[0]
-
 	if 'A' <= f && f <= 'Z' {
-		return string(unicode.ToLower(f)) + string(rs[1:])
+		str = string(unicode.ToLower(f)) + string(rs[1:])
 	}
-	return s
+	return str
+}
+
+// Plural 复数形式
+func (r *GenerationRepo) Plural(s string) string {
+	str := inflection.Plural(s)
+	if str == s {
+		str += "Plural"
+	}
+	return str
+}
+
+// CheckDaoFieldType  检查字段状态
+func (r *GenerationRepo) CheckDaoFieldType(s []string) bool {
+	for _, v := range s {
+		if r.columnNameToFieldType[v] == "Field" {
+			return true
+		}
+	}
+	return false
 }

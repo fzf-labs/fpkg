@@ -27,6 +27,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/hibiken/asynq v0.24.1
+	github.com/iancoleman/strcase v0.3.0
 	github.com/imroc/req/v3 v3.41.4
 	github.com/jinzhu/inflection v1.0.0
 	github.com/json-iterator/go v1.1.12

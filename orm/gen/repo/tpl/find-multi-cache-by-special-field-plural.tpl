@@ -9,10 +9,10 @@ func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiCacheBy{{.upperFiel
 		keyToParam[cacheKey] = v
 	}
 	cacheValue, err := {{.firstTableChar}}.cache.FetchBatch(ctx, cacheKeys, func(miss []string) (map[string]string, error) {
-        parameters := make([]{{.dataType}},0)
-        for _, v := range miss {
-            parameters = append(parameters, keyToParam[v])
-        }
+		parameters := make([]driver.Valuer, 0)
+		for _, v := range miss {
+			parameters = append(parameters, driver.Valuer(keyToParam[v]))
+		}
 		dao := {{.lowerDBName}}_dao.Use({{.firstTableChar}}.db).{{.upperTableName}}
 		result, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.In(parameters...)).Find()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {

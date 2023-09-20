@@ -1,8 +1,8 @@
 // FindMultiByPaginator 查询分页数据(通用)
-func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiByPaginator(ctx context.Context, params *orm.PaginatorParams) ([]*{{.lowerDBName}}_model.{{.upperTableName}}, int64, error) {
+func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiByPaginator(ctx context.Context, parameters *orm.PaginatorParams) ([]*{{.lowerDBName}}_model.{{.upperTableName}}, int64, error) {
 	result := make([]*{{.lowerDBName}}_model.{{.upperTableName}}, 0)
 	var total int64
-	queryStr, args, err := params.ConvertToGormConditions()
+	queryStr, args, err := parameters.ConvertToGormConditions()
 	if err != nil {
 		return nil, 0, err
 	}
@@ -14,11 +14,11 @@ func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiByPaginator(ctx con
 		return nil, total, nil
 	}
 	query := {{.firstTableChar}}.db.WithContext(ctx)
-	order := params.ConvertToOrder()
+	order := parameters.ConvertToOrder()
 	if(order != ""){
 	    query = query.Order(order)
 	}
-	limit, offset := params.ConvertToPage()
+	limit, offset := parameters.ConvertToPage()
 	err = query.Limit(limit).Offset(offset).Where(queryStr, args...).Find(&result).Error
 	if err != nil {
 		return nil, 0, err

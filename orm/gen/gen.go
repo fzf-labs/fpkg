@@ -2,14 +2,12 @@ package gen
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"sync"
-	"unicode"
 
 	"github.com/fzf-labs/fpkg/orm/gen/repo"
-	"golang.org/x/exp/slog"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
+	"github.com/iancoleman/strcase"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gen"
@@ -22,44 +20,111 @@ const (
 	TimeTime    = "time.Time"
 )
 
-func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType) (dataType string), outPutPath string) {
+type Generation struct {
+	db         *gorm.DB                                                      // 数据库
+	outPutPath string                                                        // 文件生成链接
+	genRepo    bool                                                          // 是否生成repo
+	dataMap    map[string]func(columnType gorm.ColumnType) (dataType string) // 自定义字段类型映射
+	tables     []string                                                      // 指定表集合
+	opts       []gen.ModelOpt                                                // 特殊处理逻辑函数
+}
+
+func NewGeneration(db *gorm.DB, outPutPath string, opts ...Option) *Generation {
+	g := &Generation{
+		db:         db,
+		outPutPath: outPutPath,
+		genRepo:    true,
+		dataMap:    nil,
+		tables:     nil,
+		opts:       nil,
+	}
+	if len(opts) > 0 {
+		for _, v := range opts {
+			v(g)
+		}
+	}
+	return g
+}
+
+type Option func(gen *Generation)
+
+// WithOutRepo 选项函数-不生成repo
+func WithOutRepo() Option {
+	return func(r *Generation) {
+		r.genRepo = false
+	}
+}
+
+// WithTables 选项函数-自定义表
+func WithTables(tables []string) Option {
+	return func(r *Generation) {
+		r.tables = tables
+	}
+}
+
+// WithDataMap 选项函数-自定义关系映射
+func WithDataMap(dataMap map[string]func(columnType gorm.ColumnType) (dataType string)) Option {
+	return func(r *Generation) {
+		r.dataMap = dataMap
+	}
+}
+
+// WithOpts 选项函数-自定义特殊设置
+func WithOpts(opts ...gen.ModelOpt) Option {
+	return func(r *Generation) {
+		r.opts = opts
+	}
+}
+
+// Do 生成
+func (g *Generation) Do() {
 	// 路径处理
-	dbName := db.Migrator().CurrentDatabase()
-	outPutPath = strings.Trim(outPutPath, "/")
+	dbName := g.db.Migrator().CurrentDatabase()
+	outPutPath := strings.Trim(g.outPutPath, "/")
 	daoPath := fmt.Sprintf("%s/%s_dao", outPutPath, dbName)
 	modelPath := fmt.Sprintf("%s/%s_model", outPutPath, dbName)
 	repoPath := fmt.Sprintf("%s/%s_repo", outPutPath, dbName)
 	// 初始化
-	g := gen.NewGenerator(gen.Config{
+	generator := gen.NewGenerator(gen.Config{
 		OutPath:      daoPath,
 		ModelPkgPath: modelPath,
 	})
 	// 使用数据库
-	g.UseDB(db)
+	generator.UseDB(g.db)
 	// 自定义字段类型映射
-	g.WithDataTypeMap(dataMap)
+	generator.WithDataTypeMap(g.dataMap)
 	// json 小驼峰模型命名
-	g.WithJSONTagNameStrategy(LowerCamelCase)
-	// 针对PG空字符串特殊处理
-	g.WithOpts(gen.FieldGORMTagReg(".*?", func(tag field.GormTag) field.GormTag {
-		if strings.Contains(tag.Build(), "default:''::character varying") {
-			tag.Set("default", "")
-		}
-		return tag
-	}))
-	// 从数据库中生成所有表
-	g.ApplyBasic(g.GenerateAllTable()...)
-	g.Execute()
-	// 生成repo
-	generationRepo := repo.NewGenerationRepo(db, daoPath, modelPath, repoPath)
-	err := generationRepo.MkdirPath()
+	generator.WithJSONTagNameStrategy(LowerCamelCase)
+	// 特殊处理逻辑
+	if len(g.opts) > 0 {
+		generator.WithOpts(g.opts...)
+	}
+	// 获取所有表
+	tables, err := g.db.Migrator().GetTables()
 	if err != nil {
-		slog.Error("repo MkdirPath err:", err)
 		return
 	}
-	tables, err := db.Migrator().GetTables()
+	// 指定表
+	if len(g.tables) > 0 {
+		tables = g.tables
+	}
+	models := make([]interface{}, len(tables))
+	for i, tableName := range tables {
+		models[i] = generator.GenerateModel(tableName)
+	}
+	generator.ApplyBasic(models...)
+	// 生成model,dao
+	generator.Execute()
+	// 判断是否生成repo
+	if !g.genRepo {
+		return
+	}
+	// 生成repo
+	generationRepo := repo.NewGenerationRepo(g.db, daoPath, modelPath, repoPath)
+	// 生成repo的文件夹目录文件
+	err = generationRepo.MkdirPath()
 	if err != nil {
-		slog.Error("repo GetTables err:", err)
+		log.Println("repo MkdirPath err:", err)
 		return
 	}
 	var wg sync.WaitGroup
@@ -68,14 +133,22 @@ func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType)
 		t := v
 		go func(table string) {
 			defer wg.Done()
+			// 表字段对应的类型
 			columnNameToDataType := make(map[string]string)
-			queryStructMeta := g.GenerateModel(table)
-			for _, v := range queryStructMeta.Fields {
-				columnNameToDataType[v.ColumnName] = v.Type
+			// 表字段对应的名称
+			columnNameToName := make(map[string]string)
+			// 表字段对应的dao字段类型
+			columnNameToFieldType := make(map[string]string)
+			queryStructMeta := generator.GenerateModel(table)
+			for _, vv := range queryStructMeta.Fields {
+				columnNameToDataType[vv.ColumnName] = vv.Type
+				columnNameToName[vv.ColumnName] = vv.Name
+				columnNameToFieldType[vv.ColumnName] = vv.GenType()
 			}
-			err = generationRepo.GenerationTable(table, columnNameToDataType)
+			// 数据表repo代码生成
+			err = generationRepo.GenerationTable(table, columnNameToDataType, columnNameToName, columnNameToFieldType)
 			if err != nil {
-				slog.Error("repo GenerationTable err:", err)
+				log.Println("repo GenerationTable err:", err)
 				return
 			}
 		}(t)
@@ -83,31 +156,35 @@ func Generation(db *gorm.DB, dataMap map[string]func(columnType gorm.ColumnType)
 	wg.Wait()
 }
 
-// DefaultMySQLDataMap 默认mysql字段类型映射
-var DefaultMySQLDataMap = map[string]func(columnType gorm.ColumnType) (dataType string){
-	"int":     func(columnType gorm.ColumnType) (dataType string) { return "int64" },
-	"tinyint": func(columnType gorm.ColumnType) (dataType string) { return "int32" },
-	"json":    func(columnType gorm.ColumnType) string { return "datatypes.JSON" },
-	"timestamp": func(columnType gorm.ColumnType) string {
-		nullable, _ := columnType.Nullable()
-		if nullable {
-			return SQLNullTime
+// ModelOptionUnderline 前缀是下划线重命名
+func ModelOptionUnderline(new string) gen.ModelOpt {
+	return gen.FieldModify(func(f gen.Field) gen.Field {
+		if strings.HasPrefix(f.Name, "_") {
+			f.Name = strings.Replace(f.Name, "_", new, 1)
+			f.Tag.Set(field.TagKeyJson, f.Name)
 		}
-		return TimeTime
-	},
-	"datetime": func(columnType gorm.ColumnType) string {
-		nullable, _ := columnType.Nullable()
-		if nullable {
-			return SQLNullTime
+		return f
+	})
+}
+
+// ModelOptionPgEmptyString Postgres空字符串处理
+func ModelOptionPgEmptyString() gen.ModelOpt {
+	return gen.FieldGORMTagReg(".*?", func(tag field.GormTag) field.GormTag {
+		if strings.Contains(tag.Build(), "default:''::character varying") {
+			tag.Set("default", "")
 		}
-		return TimeTime
-	},
+		return tag
+	})
 }
 
 // DefaultPostgresDataMap 默认Postgres字段类型映射
 var DefaultPostgresDataMap = map[string]func(columnType gorm.ColumnType) (dataType string){
-	"json": func(columnType gorm.ColumnType) string { return "datatypes.JSON" },
+	"json":  func(columnType gorm.ColumnType) string { return "datatypes.JSON" },
+	"jsonb": func(columnType gorm.ColumnType) string { return "datatypes.JSON" },
 	"timestamptz": func(columnType gorm.ColumnType) string {
+		if repo.StrSliFind([]string{"deleted_at", "deletedAt", "deleted_time", "deleted_time"}, columnType.Name()) {
+			return "gorm.DeletedAt"
+		}
 		nullable, _ := columnType.Nullable()
 		if nullable {
 			return SQLNullTime
@@ -137,16 +214,7 @@ func ConnectDB(dbType, dsn string) *gorm.DB {
 	return db
 }
 
-// UpperCamelCase 下划线单词转为大写驼峰单词
-func UpperCamelCase(s string) string {
-	s = strings.ReplaceAll(s, "_", " ")
-	causer := cases.Title(language.English)
-	s = causer.String(s)
-	return strings.ReplaceAll(s, " ", "")
-}
-
 // LowerCamelCase 下划线单词转为小写驼峰单词
 func LowerCamelCase(s string) string {
-	s = UpperCamelCase(s)
-	return string(unicode.ToLower(rune(s[0]))) + s[1:]
+	return strcase.ToLowerCamel(s)
 }

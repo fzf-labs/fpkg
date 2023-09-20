@@ -5,7 +5,6 @@
 package gorm_gen_model
 
 import (
-	"database/sql"
 	"time"
 
 	"gorm.io/gorm"
@@ -29,7 +28,7 @@ type UserDemo struct {
 	Avatar    string         `gorm:"column:avatar;comment:头像地址" json:"avatar"`                    // 头像地址
 	Status    int16          `gorm:"column:status;not null;comment:帐号状态（0正常 -1停用）" json:"status"` // 帐号状态（0正常 -1停用）
 	LoginIP   string         `gorm:"column:login_ip;comment:最后登录IP" json:"loginIp"`               // 最后登录IP
-	LoginDate sql.NullTime   `gorm:"column:login_date;comment:最后登录时间" json:"loginDate"`           // 最后登录时间
+	LoginDate time.Time      `gorm:"column:login_date;comment:最后登录时间" json:"loginDate"`           // 最后登录时间
 	TenantID  int64          `gorm:"column:tenant_id;not null;comment:租户编号" json:"tenantId"`      // 租户编号
 	CreatedAt time.Time      `gorm:"column:created_at;not null;comment:创建时间" json:"createdAt"`    // 创建时间
 	UpdatedAt time.Time      `gorm:"column:updated_at;not null;comment:更新时间" json:"updatedAt"`    // 更新时间

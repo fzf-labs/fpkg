@@ -1,14 +1,18 @@
 // DeleteMultiCacheBy{{.upperFieldPlural}} 根据{{.lowerFieldPlural}}删除多条数据并清理缓存
 func ({{.firstTableChar}} *{{.upperTableName}}Repo) DeleteMultiCacheBy{{.upperFieldPlural}}(ctx context.Context, {{.lowerFieldPlural}} []{{.dataType}}) error {
 	dao := {{.lowerDBName}}_dao.Use({{.firstTableChar}}.db).{{.upperTableName}}
-	result, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.In({{.lowerFieldPlural}}...)).Find()
+    parameters := make([]driver.Valuer, len({{.lowerFieldPlural}}))
+    for k, v := range {{.lowerFieldPlural}} {
+        parameters[k] = driver.Valuer(v)
+    }
+	result, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.In(parameters...)).Find()
 	if err != nil {
 		return err
 	}
 	if len(result) == 0 {
 		return nil
 	}
-	_, err = dao.WithContext(ctx).Where(dao.{{.upperField}}.In({{.lowerFieldPlural}}...)).Delete()
+	_, err = dao.WithContext(ctx).Where(dao.{{.upperField}}.In(parameters...)).Delete()
 	if err != nil {
 		return err
 	}

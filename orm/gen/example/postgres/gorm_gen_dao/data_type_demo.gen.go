@@ -37,6 +37,18 @@ func newDataTypeDemo(db *gorm.DB, opts ...gen.DOOption) dataTypeDemo {
 	_dataTypeDemo.CreatedAt = field.NewTime(tableName, "created_at")
 	_dataTypeDemo.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_dataTypeDemo.DeletedAt = field.NewField(tableName, "deleted_at")
+	_dataTypeDemo.DataTypeTimeNull = field.NewField(tableName, "data_type_time_null")
+	_dataTypeDemo.DataTypeTime = field.NewTime(tableName, "data_type_time")
+	_dataTypeDemo.DataTypeJsonb = field.NewField(tableName, "data_type_jsonb")
+	_dataTypeDemo.DataTypeDate = field.NewTime(tableName, "data_type_date")
+	_dataTypeDemo.DataTypeFloat4 = field.NewFloat32(tableName, "data_type_float4")
+	_dataTypeDemo.DataTypeFloat8 = field.NewFloat64(tableName, "data_type_float8")
+	_dataTypeDemo.ULid = field.NewString(tableName, "_id")
+	_dataTypeDemo.CacheKey = field.NewString(tableName, "cacheKey")
+	_dataTypeDemo.DataTypeTimestamp = field.NewTime(tableName, "data_type_timestamp")
+	_dataTypeDemo.DataTypeBytea = field.NewField(tableName, "data_type_bytea")
+	_dataTypeDemo.DataTypeNumeric = field.NewFloat64(tableName, "data_type_numeric")
+	_dataTypeDemo.DataTypeInterval = field.NewString(tableName, "data_type_interval")
 
 	_dataTypeDemo.fillFieldMap()
 
@@ -46,17 +58,29 @@ func newDataTypeDemo(db *gorm.DB, opts ...gen.DOOption) dataTypeDemo {
 type dataTypeDemo struct {
 	dataTypeDemoDo dataTypeDemoDo
 
-	ALL             field.Asterisk
-	ID              field.String // ID
-	DataTypeBool    field.Bool   // 数据类型 bool
-	DataTypeInt2    field.Int16  // 数据类型 int2
-	DataTypeInt8    field.Int64  // 数据类型 int8
-	DataTypeVarchar field.String // 数据类型 varchar
-	DataTypeText    field.String // 数据类型 text
-	DataTypeJSON    field.Field  // 数据类型 json
-	CreatedAt       field.Time   // 创建时间
-	UpdatedAt       field.Time   // 更新时间
-	DeletedAt       field.Field  // 删除时间
+	ALL               field.Asterisk
+	ID                field.String // ID
+	DataTypeBool      field.Bool   // 数据类型 bool
+	DataTypeInt2      field.Int16  // 数据类型 int2
+	DataTypeInt8      field.Int64  // 数据类型 int8
+	DataTypeVarchar   field.String // 数据类型 varchar
+	DataTypeText      field.String // 数据类型 text
+	DataTypeJSON      field.Field  // 数据类型 json
+	CreatedAt         field.Time   // 创建时间
+	UpdatedAt         field.Time   // 更新时间
+	DeletedAt         field.Field  // 删除时间
+	DataTypeTimeNull  field.Field  // 数据类型 time null
+	DataTypeTime      field.Time   // 数据类型 time not null
+	DataTypeJsonb     field.Field  // 数据类型 jsonb
+	DataTypeDate      field.Time
+	DataTypeFloat4    field.Float32
+	DataTypeFloat8    field.Float64
+	ULid              field.String // 验证下划线
+	CacheKey          field.String // 特殊保留字段名称
+	DataTypeTimestamp field.Time
+	DataTypeBytea     field.Field
+	DataTypeNumeric   field.Float64
+	DataTypeInterval  field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -83,6 +107,18 @@ func (d *dataTypeDemo) updateTableName(table string) *dataTypeDemo {
 	d.CreatedAt = field.NewTime(table, "created_at")
 	d.UpdatedAt = field.NewTime(table, "updated_at")
 	d.DeletedAt = field.NewField(table, "deleted_at")
+	d.DataTypeTimeNull = field.NewField(table, "data_type_time_null")
+	d.DataTypeTime = field.NewTime(table, "data_type_time")
+	d.DataTypeJsonb = field.NewField(table, "data_type_jsonb")
+	d.DataTypeDate = field.NewTime(table, "data_type_date")
+	d.DataTypeFloat4 = field.NewFloat32(table, "data_type_float4")
+	d.DataTypeFloat8 = field.NewFloat64(table, "data_type_float8")
+	d.ULid = field.NewString(table, "_id")
+	d.CacheKey = field.NewString(table, "cacheKey")
+	d.DataTypeTimestamp = field.NewTime(table, "data_type_timestamp")
+	d.DataTypeBytea = field.NewField(table, "data_type_bytea")
+	d.DataTypeNumeric = field.NewFloat64(table, "data_type_numeric")
+	d.DataTypeInterval = field.NewString(table, "data_type_interval")
 
 	d.fillFieldMap()
 
@@ -111,7 +147,7 @@ func (d *dataTypeDemo) GetFieldByName(fieldName string) (field.OrderExpr, bool) 
 }
 
 func (d *dataTypeDemo) fillFieldMap() {
-	d.fieldMap = make(map[string]field.Expr, 10)
+	d.fieldMap = make(map[string]field.Expr, 22)
 	d.fieldMap["id"] = d.ID
 	d.fieldMap["data_type_bool"] = d.DataTypeBool
 	d.fieldMap["data_type_int2"] = d.DataTypeInt2
@@ -122,6 +158,18 @@ func (d *dataTypeDemo) fillFieldMap() {
 	d.fieldMap["created_at"] = d.CreatedAt
 	d.fieldMap["updated_at"] = d.UpdatedAt
 	d.fieldMap["deleted_at"] = d.DeletedAt
+	d.fieldMap["data_type_time_null"] = d.DataTypeTimeNull
+	d.fieldMap["data_type_time"] = d.DataTypeTime
+	d.fieldMap["data_type_jsonb"] = d.DataTypeJsonb
+	d.fieldMap["data_type_date"] = d.DataTypeDate
+	d.fieldMap["data_type_float4"] = d.DataTypeFloat4
+	d.fieldMap["data_type_float8"] = d.DataTypeFloat8
+	d.fieldMap["_id"] = d.ULid
+	d.fieldMap["cacheKey"] = d.CacheKey
+	d.fieldMap["data_type_timestamp"] = d.DataTypeTimestamp
+	d.fieldMap["data_type_bytea"] = d.DataTypeBytea
+	d.fieldMap["data_type_numeric"] = d.DataTypeNumeric
+	d.fieldMap["data_type_interval"] = d.DataTypeInterval
 }
 
 func (d dataTypeDemo) clone(db *gorm.DB) dataTypeDemo {
