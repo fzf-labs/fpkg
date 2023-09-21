@@ -161,7 +161,7 @@ func ModelOptionUnderline(new string) gen.ModelOpt {
 	return gen.FieldModify(func(f gen.Field) gen.Field {
 		if strings.HasPrefix(f.Name, "_") {
 			f.Name = strings.Replace(f.Name, "_", new, 1)
-			f.Tag.Set(field.TagKeyJson, f.Name)
+			f.Tag.Set(field.TagKeyJson, f.ColumnName)
 		}
 		return f
 	})
