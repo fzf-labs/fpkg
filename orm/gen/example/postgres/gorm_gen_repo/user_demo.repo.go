@@ -62,7 +62,7 @@ type (
 		// FindMultiByIDS 根据IDS查询多条数据
 		FindMultiByIDS(ctx context.Context, IDS []int64) ([]*gorm_gen_model.UserDemo, error)
 		// FindMultiByPaginator 查询分页数据(通用)
-		FindMultiByPaginator(ctx context.Context, parameters *orm.PaginatorParams) ([]*gorm_gen_model.UserDemo, int64, error)
+		FindMultiByPaginator(ctx context.Context, paginatorReq *orm.PaginatorReq) ([]*gorm_gen_model.UserDemo, *orm.PaginatorReply, error)
 		// DeleteOneCacheByStatusUID 根据StatusUID删除一条数据并清理缓存
 		DeleteOneCacheByStatusUID(ctx context.Context, status int16, UID string) error
 		// DeleteOneCacheByStatusUID 根据StatusUID删除一条数据并清理缓存
@@ -763,29 +763,29 @@ func (u *UserDemoRepo) FindMultiByIDS(ctx context.Context, IDS []int64) ([]*gorm
 }
 
 // FindMultiByPaginator 查询分页数据(通用)
-func (u *UserDemoRepo) FindMultiByPaginator(ctx context.Context, parameters *orm.PaginatorParams) ([]*gorm_gen_model.UserDemo, int64, error) {
+func (u *UserDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorReq *orm.PaginatorReq) ([]*gorm_gen_model.UserDemo, *orm.PaginatorReply, error) {
 	result := make([]*gorm_gen_model.UserDemo, 0)
 	var total int64
-	queryStr, args, err := parameters.ConvertToGormConditions()
+	queryStr, args, err := paginatorReq.ConvertToGormConditions()
 	if err != nil {
-		return nil, 0, err
+		return nil, nil, err
 	}
 	err = u.db.WithContext(ctx).Model(&gorm_gen_model.UserDemo{}).Select([]string{"id"}).Where(queryStr, args...).Count(&total).Error
 	if err != nil {
-		return nil, 0, err
+		return nil, nil, err
 	}
 	if total == 0 {
-		return nil, total, nil
+		return nil, nil, nil
 	}
 	query := u.db.WithContext(ctx)
-	order := parameters.ConvertToOrder()
+	order := paginatorReq.ConvertToOrder()
 	if order != "" {
 		query = query.Order(order)
 	}
-	limit, offset := parameters.ConvertToPage()
-	err = query.Limit(limit).Offset(offset).Where(queryStr, args...).Find(&result).Error
+	paginatorReply := paginatorReq.ConvertToPage(int(total))
+	err = query.Limit(paginatorReply.Limit).Offset(paginatorReply.Offset).Where(queryStr, args...).Find(&result).Error
 	if err != nil {
-		return nil, 0, err
+		return nil, nil, err
 	}
-	return result, total, err
+	return result, paginatorReply, err
 }

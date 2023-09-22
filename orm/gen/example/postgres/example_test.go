@@ -70,7 +70,7 @@ func Test_FindMultiByPaginator(t *testing.T) {
 	ctx := context.Background()
 	rueidisCache := rueidisdbcache.NewRueidisDBCache(client)
 	repo := gorm_gen_repo.NewUserDemoRepo(gormPostgresClient, rueidisCache)
-	result, total, err := repo.FindMultiByPaginator(ctx, &orm.PaginatorParams{
+	result, total, err := repo.FindMultiByPaginator(ctx, &orm.PaginatorReq{
 		Page:     1,
 		PageSize: 1,
 		Order:    "created_at DESC",

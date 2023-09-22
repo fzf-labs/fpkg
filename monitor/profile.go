@@ -51,7 +51,7 @@ type Profile struct {
 	files    []string
 	closeFns []func()
 
-	//ctx    context.Context
+	// ctx    context.Context
 	stopCh chan struct{}
 }
 

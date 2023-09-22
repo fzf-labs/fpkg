@@ -108,7 +108,7 @@ func (g *Generation) Do() {
 	if len(g.tables) > 0 {
 		tables = g.tables
 	}
-	models := make([]interface{}, len(tables))
+	models := make([]any, len(tables))
 	for i, tableName := range tables {
 		models[i] = generator.GenerateModel(tableName)
 	}
@@ -157,10 +157,10 @@ func (g *Generation) Do() {
 }
 
 // ModelOptionUnderline 前缀是下划线重命名
-func ModelOptionUnderline(new string) gen.ModelOpt {
+func ModelOptionUnderline(rename string) gen.ModelOpt {
 	return gen.FieldModify(func(f gen.Field) gen.Field {
 		if strings.HasPrefix(f.Name, "_") {
-			f.Name = strings.Replace(f.Name, "_", new, 1)
+			f.Name = strings.Replace(f.Name, "_", rename, 1)
 			f.Tag.Set(field.TagKeyJson, f.ColumnName)
 		}
 		return f
