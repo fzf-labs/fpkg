@@ -10,6 +10,7 @@ import (
 	"errors"
 
 	"github.com/fzf-labs/fpkg/orm"
+	"github.com/fzf-labs/fpkg/orm/gen/cache"
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_dao"
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_model"
 	"gorm.io/gorm"
@@ -87,20 +88,13 @@ type (
 		// DeleteUniqueIndexCache 删除唯一索引存在的缓存
 		DeleteUniqueIndexCache(ctx context.Context, data []*gorm_gen_model.AdminDemo) error
 	}
-	IAdminDemoCache interface {
-		Key(fields ...any) string
-		Fetch(ctx context.Context, key string, fn func() (string, error)) (string, error)
-		FetchBatch(ctx context.Context, keys []string, fn func(miss []string) (map[string]string, error)) (map[string]string, error)
-		Del(ctx context.Context, key string) error
-		DelBatch(ctx context.Context, keys []string) error
-	}
 	AdminDemoRepo struct {
 		db    *gorm.DB
-		cache IAdminDemoCache
+		cache cache.IDBCache
 	}
 )
 
-func NewAdminDemoRepo(db *gorm.DB, cache IAdminDemoCache) *AdminDemoRepo {
+func NewAdminDemoRepo(db *gorm.DB, cache cache.IDBCache) *AdminDemoRepo {
 	return &AdminDemoRepo{
 		db:    db,
 		cache: cache,
