@@ -1092,8 +1092,8 @@ func (r *GenerationRepo) generateDelFunc() (string, error) {
 					"lowerDBName":    r.lowerDBName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperName(v.Columns()[0]),
-					"lowerField":     r.LowerName(v.Columns()[0]),
+					"upperField":     r.UpperFieldName(v.Columns()[0]),
+					"lowerField":     r.LowerFieldName(v.Columns()[0]),
 					"dataType":       r.columnNameToDataType[v.Columns()[0]],
 				})
 				if err != nil {
@@ -1105,8 +1105,8 @@ func (r *GenerationRepo) generateDelFunc() (string, error) {
 					"lowerDBName":    r.lowerDBName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperName(v.Columns()[0]),
-					"lowerField":     r.LowerName(v.Columns()[0]),
+					"upperField":     r.UpperFieldName(v.Columns()[0]),
+					"lowerField":     r.LowerFieldName(v.Columns()[0]),
 					"dataType":       r.columnNameToDataType[v.Columns()[0]],
 				})
 				if err != nil {
@@ -1118,8 +1118,8 @@ func (r *GenerationRepo) generateDelFunc() (string, error) {
 					"lowerDBName":    r.lowerDBName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperName(v.Columns()[0]),
-					"lowerField":     r.LowerName(v.Columns()[0]),
+					"upperField":     r.UpperFieldName(v.Columns()[0]),
+					"lowerField":     r.LowerFieldName(v.Columns()[0]),
 					"dataType":       r.columnNameToDataType[v.Columns()[0]],
 				})
 				if err != nil {
@@ -1131,8 +1131,8 @@ func (r *GenerationRepo) generateDelFunc() (string, error) {
 					"lowerDBName":    r.lowerDBName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperName(v.Columns()[0]),
-					"lowerField":     r.LowerName(v.Columns()[0]),
+					"upperField":     r.UpperFieldName(v.Columns()[0]),
+					"lowerField":     r.LowerFieldName(v.Columns()[0]),
 					"dataType":       r.columnNameToDataType[v.Columns()[0]],
 				})
 				if err != nil {
