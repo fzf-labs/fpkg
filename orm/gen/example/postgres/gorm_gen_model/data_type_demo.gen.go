@@ -32,12 +32,13 @@ type DataTypeDemo struct {
 	DataTypeDate      time.Time      `gorm:"column:data_type_date" json:"dataTypeDate"`
 	DataTypeFloat4    float32        `gorm:"column:data_type_float4" json:"dataTypeFloat4"`
 	DataTypeFloat8    float64        `gorm:"column:data_type_float8" json:"dataTypeFloat8"`
-	ULid              string         `gorm:"column:_id;comment:验证下划线" json:"_id"`              // 验证下划线
+	UlID              string         `gorm:"column:_id;comment:验证下划线" json:"_id"`              // 验证下划线
 	CacheKey          string         `gorm:"column:cacheKey;comment:特殊保留字段名称" json:"cacheKey"` // 特殊保留字段名称
 	DataTypeTimestamp time.Time      `gorm:"column:data_type_timestamp" json:"dataTypeTimestamp"`
 	DataTypeBytea     []uint8        `gorm:"column:data_type_bytea" json:"dataTypeBytea"`
 	DataTypeNumeric   float64        `gorm:"column:data_type_numeric" json:"dataTypeNumeric"`
 	DataTypeInterval  string         `gorm:"column:data_type_interval" json:"dataTypeInterval"`
+	BatchAPI          string         `gorm:"column:batch_api" json:"batchApi"`
 }
 
 // TableName DataTypeDemo's table name

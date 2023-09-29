@@ -10,7 +10,6 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/iancoleman/strcase"
 	"github.com/jinzhu/inflection"
 	"golang.org/x/tools/imports"
 	"gorm.io/gorm"
@@ -1311,7 +1310,22 @@ func (r *GenerationRepo) UpperFieldName(s string) string {
 
 // LowerFieldName 字段名称小写
 func (r *GenerationRepo) LowerFieldName(s string) string {
-	str := strcase.ToLowerCamel(r.UpperFieldName(s))
+	str := r.UpperFieldName(s)
+	if str == "" {
+		return str
+	}
+	words := []string{"API", "ASCII", "CPU", "CSS", "DNS", "EOF", "GUID", "HTML", "HTTP", "HTTPS", "ID", "IP", "JSON", "LHS", "QPS", "RAM", "RHS", "RPC", "SLA", "SMTP", "SSH", "TLS", "ttl", "UID", "UI", "UUID", "URI", "URL", "UTF8", "VM", "XML", "XSRF", "XSS"}
+	// 如果第一个单词命中  则不处理
+	for _, v := range words {
+		if strings.HasPrefix(str, v) {
+			return str
+		}
+	}
+	rs := []rune(str)
+	f := rs[0]
+	if 'A' <= f && f <= 'Z' {
+		str = string(unicode.ToLower(f)) + string(rs[1:])
+	}
 	if token.Lookup(str).IsKeyword() || StrSliFind(KeyWords, str) {
 		str = "_" + str
 	}

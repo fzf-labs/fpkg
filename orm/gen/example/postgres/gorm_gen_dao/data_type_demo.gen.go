@@ -43,12 +43,13 @@ func newDataTypeDemo(db *gorm.DB, opts ...gen.DOOption) dataTypeDemo {
 	_dataTypeDemo.DataTypeDate = field.NewTime(tableName, "data_type_date")
 	_dataTypeDemo.DataTypeFloat4 = field.NewFloat32(tableName, "data_type_float4")
 	_dataTypeDemo.DataTypeFloat8 = field.NewFloat64(tableName, "data_type_float8")
-	_dataTypeDemo.ULid = field.NewString(tableName, "_id")
+	_dataTypeDemo.UlID = field.NewString(tableName, "_id")
 	_dataTypeDemo.CacheKey = field.NewString(tableName, "cacheKey")
 	_dataTypeDemo.DataTypeTimestamp = field.NewTime(tableName, "data_type_timestamp")
 	_dataTypeDemo.DataTypeBytea = field.NewField(tableName, "data_type_bytea")
 	_dataTypeDemo.DataTypeNumeric = field.NewFloat64(tableName, "data_type_numeric")
 	_dataTypeDemo.DataTypeInterval = field.NewString(tableName, "data_type_interval")
+	_dataTypeDemo.BatchAPI = field.NewString(tableName, "batch_api")
 
 	_dataTypeDemo.fillFieldMap()
 
@@ -75,12 +76,13 @@ type dataTypeDemo struct {
 	DataTypeDate      field.Time
 	DataTypeFloat4    field.Float32
 	DataTypeFloat8    field.Float64
-	ULid              field.String // 验证下划线
+	UlID              field.String // 验证下划线
 	CacheKey          field.String // 特殊保留字段名称
 	DataTypeTimestamp field.Time
 	DataTypeBytea     field.Field
 	DataTypeNumeric   field.Float64
 	DataTypeInterval  field.String
+	BatchAPI          field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -113,12 +115,13 @@ func (d *dataTypeDemo) updateTableName(table string) *dataTypeDemo {
 	d.DataTypeDate = field.NewTime(table, "data_type_date")
 	d.DataTypeFloat4 = field.NewFloat32(table, "data_type_float4")
 	d.DataTypeFloat8 = field.NewFloat64(table, "data_type_float8")
-	d.ULid = field.NewString(table, "_id")
+	d.UlID = field.NewString(table, "_id")
 	d.CacheKey = field.NewString(table, "cacheKey")
 	d.DataTypeTimestamp = field.NewTime(table, "data_type_timestamp")
 	d.DataTypeBytea = field.NewField(table, "data_type_bytea")
 	d.DataTypeNumeric = field.NewFloat64(table, "data_type_numeric")
 	d.DataTypeInterval = field.NewString(table, "data_type_interval")
+	d.BatchAPI = field.NewString(table, "batch_api")
 
 	d.fillFieldMap()
 
@@ -147,7 +150,7 @@ func (d *dataTypeDemo) GetFieldByName(fieldName string) (field.OrderExpr, bool) 
 }
 
 func (d *dataTypeDemo) fillFieldMap() {
-	d.fieldMap = make(map[string]field.Expr, 22)
+	d.fieldMap = make(map[string]field.Expr, 23)
 	d.fieldMap["id"] = d.ID
 	d.fieldMap["data_type_bool"] = d.DataTypeBool
 	d.fieldMap["data_type_int2"] = d.DataTypeInt2
@@ -164,12 +167,13 @@ func (d *dataTypeDemo) fillFieldMap() {
 	d.fieldMap["data_type_date"] = d.DataTypeDate
 	d.fieldMap["data_type_float4"] = d.DataTypeFloat4
 	d.fieldMap["data_type_float8"] = d.DataTypeFloat8
-	d.fieldMap["_id"] = d.ULid
+	d.fieldMap["_id"] = d.UlID
 	d.fieldMap["cacheKey"] = d.CacheKey
 	d.fieldMap["data_type_timestamp"] = d.DataTypeTimestamp
 	d.fieldMap["data_type_bytea"] = d.DataTypeBytea
 	d.fieldMap["data_type_numeric"] = d.DataTypeNumeric
 	d.fieldMap["data_type_interval"] = d.DataTypeInterval
+	d.fieldMap["batch_api"] = d.BatchAPI
 }
 
 func (d dataTypeDemo) clone(db *gorm.DB) dataTypeDemo {

@@ -19,7 +19,7 @@ func TestGenerationPostgres(t *testing.T) {
 	if err != nil {
 		return
 	}
-	NewGeneration(client, "./example/postgres/", WithDataMap(DefaultPostgresDataMap), WithOpts(ModelOptionPgEmptyString(), ModelOptionUnderline("UL"))).Do()
+	NewGeneration(client, "./example/postgres/", WithDataMap(DefaultPostgresDataMap), WithOpts(ModelOptionPgEmptyString(), ModelOptionUnderline("ul_"))).Do()
 	assert.Equal(t, nil, err)
 }
 
