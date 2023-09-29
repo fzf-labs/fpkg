@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/iancoleman/strcase"
 	"github.com/jinzhu/inflection"
 	"golang.org/x/tools/imports"
 	"gorm.io/gorm"
@@ -1310,7 +1311,7 @@ func (r *GenerationRepo) UpperFieldName(s string) string {
 
 // LowerFieldName 字段名称小写
 func (r *GenerationRepo) LowerFieldName(s string) string {
-	str := r.LowerName(s)
+	str := strcase.ToLowerCamel(r.UpperFieldName(s))
 	if token.Lookup(str).IsKeyword() || StrSliFind(KeyWords, str) {
 		str = "_" + str
 	}

@@ -43,14 +43,14 @@ type (
 		FindMultiCacheByUsernames(ctx context.Context, usernames []string) ([]*gorm_gen_model.AdminDemo, error)
 		// FindMultiByUsernames 根据usernames查询多条数据
 		FindMultiByUsernames(ctx context.Context, usernames []string) ([]*gorm_gen_model.AdminDemo, error)
-		// FindOneCacheByID 根据ID查询一条数据并设置缓存
-		FindOneCacheByID(ctx context.Context, ID string) (*gorm_gen_model.AdminDemo, error)
-		// FindOneByID 根据ID查询一条数据
-		FindOneByID(ctx context.Context, ID string) (*gorm_gen_model.AdminDemo, error)
-		// FindMultiCacheByIDS 根据IDS查询多条数据并设置缓存
-		FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.AdminDemo, error)
-		// FindMultiByIDS 根据IDS查询多条数据
-		FindMultiByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.AdminDemo, error)
+		// FindOneCacheByID 根据id查询一条数据并设置缓存
+		FindOneCacheByID(ctx context.Context, id string) (*gorm_gen_model.AdminDemo, error)
+		// FindOneByID 根据id查询一条数据
+		FindOneByID(ctx context.Context, id string) (*gorm_gen_model.AdminDemo, error)
+		// FindMultiCacheByIDS 根据ids查询多条数据并设置缓存
+		FindMultiCacheByIDS(ctx context.Context, ids []string) ([]*gorm_gen_model.AdminDemo, error)
+		// FindMultiByIDS 根据ids查询多条数据
+		FindMultiByIDS(ctx context.Context, ids []string) ([]*gorm_gen_model.AdminDemo, error)
 		// FindMultiByPaginator 查询分页数据(通用)
 		FindMultiByPaginator(ctx context.Context, paginatorReq *orm.PaginatorReq) ([]*gorm_gen_model.AdminDemo, *orm.PaginatorReply, error)
 		// DeleteOneCacheByUsername 根据username删除一条数据并清理缓存
@@ -69,22 +69,22 @@ type (
 		DeleteMultiByUsernames(ctx context.Context, usernames []string) error
 		// DeleteMultiByUsernames 根据Usernames删除多条数据
 		DeleteMultiByUsernamesTx(ctx context.Context, tx *gorm_gen_dao.Query, usernames []string) error
-		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
-		DeleteOneCacheByID(ctx context.Context, ID string) error
-		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
-		DeleteOneCacheByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error
-		// DeleteOneByID 根据ID删除一条数据
-		DeleteOneByID(ctx context.Context, ID string) error
-		// DeleteOneByID 根据ID删除一条数据
-		DeleteOneByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error
+		// DeleteOneCacheByID 根据id删除一条数据并清理缓存
+		DeleteOneCacheByID(ctx context.Context, id string) error
+		// DeleteOneCacheByID 根据id删除一条数据并清理缓存
+		DeleteOneCacheByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, id string) error
+		// DeleteOneByID 根据id删除一条数据
+		DeleteOneByID(ctx context.Context, id string) error
+		// DeleteOneByID 根据id删除一条数据
+		DeleteOneByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, id string) error
 		// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
-		DeleteMultiCacheByIDS(ctx context.Context, IDS []string) error
+		DeleteMultiCacheByIDS(ctx context.Context, ids []string) error
 		// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
-		DeleteMultiCacheByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error
+		DeleteMultiCacheByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, ids []string) error
 		// DeleteMultiByIDS 根据IDS删除多条数据
-		DeleteMultiByIDS(ctx context.Context, IDS []string) error
+		DeleteMultiByIDS(ctx context.Context, ids []string) error
 		// DeleteMultiByIDS 根据IDS删除多条数据
-		DeleteMultiByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error
+		DeleteMultiByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, ids []string) error
 		// DeleteUniqueIndexCache 删除唯一索引存在的缓存
 		DeleteUniqueIndexCache(ctx context.Context, data []*gorm_gen_model.AdminDemo) error
 	}
@@ -283,17 +283,17 @@ func (a *AdminDemoRepo) DeleteMultiByUsernamesTx(ctx context.Context, tx *gorm_g
 	return nil
 }
 
-// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
-func (a *AdminDemoRepo) DeleteOneCacheByID(ctx context.Context, ID string) error {
+// DeleteOneCacheByID 根据id删除一条数据并清理缓存
+func (a *AdminDemoRepo) DeleteOneCacheByID(ctx context.Context, id string) error {
 	dao := gorm_gen_dao.Use(a.db).AdminDemo
-	result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
+	result, err := dao.WithContext(ctx).Where(dao.ID.Eq(id)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 	if result == nil {
 		return nil
 	}
-	_, err = dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
+	_, err = dao.WithContext(ctx).Where(dao.ID.Eq(id)).Delete()
 	if err != nil {
 		return err
 	}
@@ -304,17 +304,17 @@ func (a *AdminDemoRepo) DeleteOneCacheByID(ctx context.Context, ID string) error
 	return nil
 }
 
-// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
-func (a *AdminDemoRepo) DeleteOneCacheByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error {
+// DeleteOneCacheByID 根据id删除一条数据并清理缓存
+func (a *AdminDemoRepo) DeleteOneCacheByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, id string) error {
 	dao := tx.AdminDemo
-	result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
+	result, err := dao.WithContext(ctx).Where(dao.ID.Eq(id)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 	if result == nil {
 		return nil
 	}
-	_, err = dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
+	_, err = dao.WithContext(ctx).Where(dao.ID.Eq(id)).Delete()
 	if err != nil {
 		return err
 	}
@@ -325,37 +325,37 @@ func (a *AdminDemoRepo) DeleteOneCacheByIDTx(ctx context.Context, tx *gorm_gen_d
 	return nil
 }
 
-// DeleteOneByID 根据ID删除一条数据
-func (a *AdminDemoRepo) DeleteOneByID(ctx context.Context, ID string) error {
+// DeleteOneByID 根据id删除一条数据
+func (a *AdminDemoRepo) DeleteOneByID(ctx context.Context, id string) error {
 	dao := gorm_gen_dao.Use(a.db).AdminDemo
-	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
+	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(id)).Delete()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// DeleteOneByID 根据ID删除一条数据
-func (a *AdminDemoRepo) DeleteOneByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, ID string) error {
+// DeleteOneByID 根据id删除一条数据
+func (a *AdminDemoRepo) DeleteOneByIDTx(ctx context.Context, tx *gorm_gen_dao.Query, id string) error {
 	dao := tx.AdminDemo
-	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).Delete()
+	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(id)).Delete()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
-func (a *AdminDemoRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string) error {
+// DeleteMultiCacheByIDS 根据ids删除多条数据并清理缓存
+func (a *AdminDemoRepo) DeleteMultiCacheByIDS(ctx context.Context, ids []string) error {
 	dao := gorm_gen_dao.Use(a.db).AdminDemo
-	result, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
+	result, err := dao.WithContext(ctx).Where(dao.ID.In(ids...)).Find()
 	if err != nil {
 		return err
 	}
 	if len(result) == 0 {
 		return nil
 	}
-	_, err = dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
+	_, err = dao.WithContext(ctx).Where(dao.ID.In(ids...)).Delete()
 	if err != nil {
 		return err
 	}
@@ -366,17 +366,17 @@ func (a *AdminDemoRepo) DeleteMultiCacheByIDS(ctx context.Context, IDS []string)
 	return nil
 }
 
-// DeleteMultiCacheByIDS 根据IDS删除多条数据并清理缓存
-func (a *AdminDemoRepo) DeleteMultiCacheByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error {
+// DeleteMultiCacheByIDS 根据ids删除多条数据并清理缓存
+func (a *AdminDemoRepo) DeleteMultiCacheByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, ids []string) error {
 	dao := tx.AdminDemo
-	result, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
+	result, err := dao.WithContext(ctx).Where(dao.ID.In(ids...)).Find()
 	if err != nil {
 		return err
 	}
 	if len(result) == 0 {
 		return nil
 	}
-	_, err = dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
+	_, err = dao.WithContext(ctx).Where(dao.ID.In(ids...)).Delete()
 	if err != nil {
 		return err
 	}
@@ -387,20 +387,20 @@ func (a *AdminDemoRepo) DeleteMultiCacheByIDSTx(ctx context.Context, tx *gorm_ge
 	return nil
 }
 
-// DeleteMultiByIDS 根据IDS删除多条数据
-func (a *AdminDemoRepo) DeleteMultiByIDS(ctx context.Context, IDS []string) error {
+// DeleteMultiByIDS 根据ids删除多条数据
+func (a *AdminDemoRepo) DeleteMultiByIDS(ctx context.Context, ids []string) error {
 	dao := gorm_gen_dao.Use(a.db).AdminDemo
-	_, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
+	_, err := dao.WithContext(ctx).Where(dao.ID.In(ids...)).Delete()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// DeleteMultiByIDS 根据IDS删除多条数据
-func (a *AdminDemoRepo) DeleteMultiByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, IDS []string) error {
+// DeleteMultiByIDS 根据ids删除多条数据
+func (a *AdminDemoRepo) DeleteMultiByIDSTx(ctx context.Context, tx *gorm_gen_dao.Query, ids []string) error {
 	dao := tx.AdminDemo
-	_, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Delete()
+	_, err := dao.WithContext(ctx).Where(dao.ID.In(ids...)).Delete()
 	if err != nil {
 		return err
 	}
@@ -515,13 +515,13 @@ func (a *AdminDemoRepo) FindMultiByUsernames(ctx context.Context, usernames []st
 	return result, nil
 }
 
-// FindOneCacheByID 根据ID查询一条数据并设置缓存
-func (a *AdminDemoRepo) FindOneCacheByID(ctx context.Context, ID string) (*gorm_gen_model.AdminDemo, error) {
+// FindOneCacheByID 根据id查询一条数据并设置缓存
+func (a *AdminDemoRepo) FindOneCacheByID(ctx context.Context, id string) (*gorm_gen_model.AdminDemo, error) {
 	resp := new(gorm_gen_model.AdminDemo)
-	cacheKey := a.cache.Key(cacheAdminDemoByIDPrefix, ID)
+	cacheKey := a.cache.Key(cacheAdminDemoByIDPrefix, id)
 	cacheValue, err := a.cache.Fetch(ctx, cacheKey, func() (string, error) {
 		dao := gorm_gen_dao.Use(a.db).AdminDemo
-		result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
+		result, err := dao.WithContext(ctx).Where(dao.ID.Eq(id)).First()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", err
 		}
@@ -541,22 +541,22 @@ func (a *AdminDemoRepo) FindOneCacheByID(ctx context.Context, ID string) (*gorm_
 	return resp, nil
 }
 
-// FindOneByID 根据ID查询一条数据
-func (a *AdminDemoRepo) FindOneByID(ctx context.Context, ID string) (*gorm_gen_model.AdminDemo, error) {
+// FindOneByID 根据id查询一条数据
+func (a *AdminDemoRepo) FindOneByID(ctx context.Context, id string) (*gorm_gen_model.AdminDemo, error) {
 	dao := gorm_gen_dao.Use(a.db).AdminDemo
-	result, err := dao.WithContext(ctx).Where(dao.ID.Eq(ID)).First()
+	result, err := dao.WithContext(ctx).Where(dao.ID.Eq(id)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
 	return result, nil
 }
 
-// FindMultiCacheByIDS 根据IDS查询多条数据并设置缓存
-func (a *AdminDemoRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.AdminDemo, error) {
+// FindMultiCacheByIDS 根据ids查询多条数据并设置缓存
+func (a *AdminDemoRepo) FindMultiCacheByIDS(ctx context.Context, ids []string) ([]*gorm_gen_model.AdminDemo, error) {
 	resp := make([]*gorm_gen_model.AdminDemo, 0)
 	cacheKeys := make([]string, 0)
 	keyToParam := make(map[string]string)
-	for _, v := range IDS {
+	for _, v := range ids {
 		cacheKey := a.cache.Key(cacheAdminDemoByIDPrefix, v)
 		cacheKeys = append(cacheKeys, cacheKey)
 		keyToParam[cacheKey] = v
@@ -598,10 +598,10 @@ func (a *AdminDemoRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) (
 	return resp, nil
 }
 
-// FindMultiByIDS 根据IDS查询多条数据
-func (a *AdminDemoRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.AdminDemo, error) {
+// FindMultiByIDS 根据ids查询多条数据
+func (a *AdminDemoRepo) FindMultiByIDS(ctx context.Context, ids []string) ([]*gorm_gen_model.AdminDemo, error) {
 	dao := gorm_gen_dao.Use(a.db).AdminDemo
-	result, err := dao.WithContext(ctx).Where(dao.ID.In(IDS...)).Find()
+	result, err := dao.WithContext(ctx).Where(dao.ID.In(ids...)).Find()
 	if err != nil {
 		return nil, err
 	}
