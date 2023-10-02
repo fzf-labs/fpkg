@@ -29,7 +29,7 @@ CREATE TABLE public.data_type_demo (
     data_type_bool boolean,
     data_type_int2 smallint,
     data_type_int8 bigint,
-    data_type_varchar character varying,
+    data_type_varchar character varying DEFAULT 'test'::character varying,
     data_type_text text,
     data_type_json json,
     created_at timestamp with time zone NOT NULL,
@@ -46,7 +46,8 @@ CREATE TABLE public.data_type_demo (
     data_type_timestamp timestamp without time zone,
     data_type_bytea bytea,
     data_type_numeric numeric,
-    data_type_interval interval
+    data_type_interval interval,
+    batch_api character varying
 );
 
 
@@ -173,10 +174,31 @@ ALTER TABLE ONLY public.data_type_demo
 
 
 --
+-- Name: data_type_demo__id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX data_type_demo__id_idx ON public.data_type_demo USING btree (_id);
+
+
+--
+-- Name: data_type_demo_batch_api_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX data_type_demo_batch_api_idx ON public.data_type_demo USING btree (batch_api);
+
+
+--
 -- Name: data_type_demo_cacheKey_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX "data_type_demo_cacheKey_idx" ON public.data_type_demo USING btree ("cacheKey");
+
+
+--
+-- Name: data_type_demo_data_type_bytea_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX data_type_demo_data_type_bytea_idx ON public.data_type_demo USING btree (data_type_bytea);
 
 
 --

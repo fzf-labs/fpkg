@@ -3,6 +3,7 @@ package gen
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -167,11 +168,13 @@ func ModelOptionUnderline(rename string) gen.ModelOpt {
 	})
 }
 
-// ModelOptionPgEmptyString Postgres空字符串处理
-func ModelOptionPgEmptyString() gen.ModelOpt {
+// ModelOptionPgDefaultString Postgres默认字符串处理
+func ModelOptionPgDefaultString() gen.ModelOpt {
 	return gen.FieldGORMTagReg(".*?", func(tag field.GormTag) field.GormTag {
-		if strings.Contains(tag.Build(), "default:''::character varying") {
-			tag.Set("default", "")
+		regex := regexp.MustCompile(`default:'(.*?)'::character varying`)
+		matches := regex.FindStringSubmatch(tag.Build())
+		if len(matches) > 0 {
+			tag.Set("default", matches[1])
 		}
 		return tag
 	})
