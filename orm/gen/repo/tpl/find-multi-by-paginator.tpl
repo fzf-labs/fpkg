@@ -4,14 +4,14 @@ func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiByPaginator(ctx con
 	var total int64
 	queryStr, args, err := paginatorReq.ConvertToGormConditions()
 	if err != nil {
-		return nil, nil, err
+		return result, nil, err
 	}
 	err = {{.firstTableChar}}.db.WithContext(ctx).Model(&{{.lowerDBName}}_model.{{.upperTableName}}{}).Select([]string{"id"}).Where(queryStr, args...).Count(&total).Error
 	if err != nil {
-		return nil, nil, err
+		return result, nil, err
 	}
 	if total == 0 {
-		return nil, nil, nil
+		return result, nil, nil
 	}
 	query := {{.firstTableChar}}.db.WithContext(ctx)
 	order := paginatorReq.ConvertToOrder()
@@ -21,7 +21,7 @@ func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiByPaginator(ctx con
 	paginatorReply := paginatorReq.ConvertToPage(int(total))
 	err = query.Limit(paginatorReply.Limit).Offset(paginatorReply.Offset).Where(queryStr, args...).Find(&result).Error
 	if err != nil {
-		return nil, nil, err
+		return result, nil, err
 	}
 	return result, paginatorReply, err
 }
