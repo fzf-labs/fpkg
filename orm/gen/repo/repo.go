@@ -299,6 +299,22 @@ func (r *GenerationRepo) generateCreateMethods() (string, error) {
 		return "", err
 	}
 	createMethods += fmt.Sprintln(interfaceCreateOneByTx.String())
+	interfaceSaveOne, err := NewTemplate("InterfaceSaveOne").Parse(InterfaceSaveOne).Execute(map[string]any{
+		"lowerDBName":    r.lowerDBName,
+		"upperTableName": r.upperTableName,
+	})
+	if err != nil {
+		return "", err
+	}
+	createMethods += fmt.Sprintln(interfaceSaveOne.String())
+	interfaceSaveOneByTx, err := NewTemplate("InterfaceSaveOneByTx").Parse(InterfaceSaveOneByTx).Execute(map[string]any{
+		"lowerDBName":    r.lowerDBName,
+		"upperTableName": r.upperTableName,
+	})
+	if err != nil {
+		return "", err
+	}
+	createMethods += fmt.Sprintln(interfaceSaveOneByTx.String())
 	interfaceCreateBatch, err := NewTemplate("InterfaceCreateBatch").Parse(InterfaceCreateBatch).Execute(map[string]any{
 		"lowerDBName":    r.lowerDBName,
 		"upperTableName": r.upperTableName,
@@ -786,6 +802,26 @@ func (r *GenerationRepo) generateCreateFunc() (string, error) {
 		return "", err
 	}
 	createFunc += fmt.Sprintln(createOneByTx.String())
+	saveOne, err := NewTemplate("SaveOne").Parse(SaveOne).Execute(map[string]any{
+		"firstTableChar": r.firstTableChar,
+		"lowerDBName":    r.lowerDBName,
+		"upperTableName": r.upperTableName,
+		"lowerTableName": r.lowerTableName,
+	})
+	if err != nil {
+		return "", err
+	}
+	createFunc += fmt.Sprintln(saveOne.String())
+	saveOneByTx, err := NewTemplate("SaveOneByTx").Parse(SaveOneByTx).Execute(map[string]any{
+		"firstTableChar": r.firstTableChar,
+		"lowerDBName":    r.lowerDBName,
+		"upperTableName": r.upperTableName,
+		"lowerTableName": r.lowerTableName,
+	})
+	if err != nil {
+		return "", err
+	}
+	createFunc += fmt.Sprintln(saveOneByTx.String())
 	createBatch, err := NewTemplate("CreateBatch").Parse(CreateBatch).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
 		"lowerDBName":    r.lowerDBName,

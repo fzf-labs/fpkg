@@ -29,6 +29,10 @@ type (
 		CreateOne(ctx context.Context, data *gorm_gen_model.AdminDemo) error
 		// CreateOneByTx 创建一条数据(事务)
 		CreateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.AdminDemo) error
+		// SaveOne 保存一条数据
+		SaveOne(ctx context.Context, data *gorm_gen_model.AdminDemo) error
+		// SaveOneByTx 保存一条数据(事务)
+		SaveOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.AdminDemo) error
 		// CreateBatch 批量创建数据
 		CreateBatch(ctx context.Context, data []*gorm_gen_model.AdminDemo, batchSize int) error
 		// UpdateOne 更新一条数据
@@ -115,6 +119,26 @@ func (a *AdminDemoRepo) CreateOne(ctx context.Context, data *gorm_gen_model.Admi
 func (a *AdminDemoRepo) CreateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.AdminDemo) error {
 	dao := tx.AdminDemo
 	err := dao.WithContext(ctx).Create(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// SaveOne 保存一条数据
+func (a *AdminDemoRepo) SaveOne(ctx context.Context, data *gorm_gen_model.AdminDemo) error {
+	dao := gorm_gen_dao.Use(a.db).AdminDemo
+	err := dao.WithContext(ctx).Save(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// SaveOneByTx 保存一条数据(事务)
+func (a *AdminDemoRepo) SaveOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.AdminDemo) error {
+	dao := tx.AdminDemo
+	err := dao.WithContext(ctx).Save(data)
 	if err != nil {
 		return err
 	}
