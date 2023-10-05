@@ -180,6 +180,13 @@ func ModelOptionPgDefaultString() gen.ModelOpt {
 	})
 }
 
+func ModelOptionRemoveDefault() gen.ModelOpt {
+	return gen.FieldGORMTagReg(".*?", func(tag field.GormTag) field.GormTag {
+		tag.Remove("default")
+		return tag
+	})
+}
+
 // DefaultPostgresDataMap 默认Postgres字段类型映射
 var DefaultPostgresDataMap = map[string]func(columnType gorm.ColumnType) (dataType string){
 	"json":  func(columnType gorm.ColumnType) string { return "datatypes.JSON" },

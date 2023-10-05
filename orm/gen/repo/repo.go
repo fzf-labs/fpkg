@@ -299,22 +299,22 @@ func (r *GenerationRepo) generateCreateMethods() (string, error) {
 		return "", err
 	}
 	createMethods += fmt.Sprintln(interfaceCreateOneByTx.String())
-	interfaceSaveOne, err := NewTemplate("InterfaceSaveOne").Parse(InterfaceSaveOne).Execute(map[string]any{
+	interfaceUpsertOne, err := NewTemplate("InterfaceUpsertOne").Parse(InterfaceUpsertOne).Execute(map[string]any{
 		"lowerDBName":    r.lowerDBName,
 		"upperTableName": r.upperTableName,
 	})
 	if err != nil {
 		return "", err
 	}
-	createMethods += fmt.Sprintln(interfaceSaveOne.String())
-	interfaceSaveOneByTx, err := NewTemplate("InterfaceSaveOneByTx").Parse(InterfaceSaveOneByTx).Execute(map[string]any{
+	createMethods += fmt.Sprintln(interfaceUpsertOne.String())
+	interfaceUpsertOneByTx, err := NewTemplate("InterfaceUpsertOneByTx").Parse(InterfaceUpsertOneByTx).Execute(map[string]any{
 		"lowerDBName":    r.lowerDBName,
 		"upperTableName": r.upperTableName,
 	})
 	if err != nil {
 		return "", err
 	}
-	createMethods += fmt.Sprintln(interfaceSaveOneByTx.String())
+	createMethods += fmt.Sprintln(interfaceUpsertOneByTx.String())
 	interfaceCreateBatch, err := NewTemplate("InterfaceCreateBatch").Parse(InterfaceCreateBatch).Execute(map[string]any{
 		"lowerDBName":    r.lowerDBName,
 		"upperTableName": r.upperTableName,
@@ -802,7 +802,7 @@ func (r *GenerationRepo) generateCreateFunc() (string, error) {
 		return "", err
 	}
 	createFunc += fmt.Sprintln(createOneByTx.String())
-	saveOne, err := NewTemplate("SaveOne").Parse(SaveOne).Execute(map[string]any{
+	upsertOne, err := NewTemplate("UpsertOne").Parse(UpsertOne).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
 		"lowerDBName":    r.lowerDBName,
 		"upperTableName": r.upperTableName,
@@ -811,8 +811,8 @@ func (r *GenerationRepo) generateCreateFunc() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	createFunc += fmt.Sprintln(saveOne.String())
-	saveOneByTx, err := NewTemplate("SaveOneByTx").Parse(SaveOneByTx).Execute(map[string]any{
+	createFunc += fmt.Sprintln(upsertOne.String())
+	upsertOneByTx, err := NewTemplate("UpsertOneByTx").Parse(UpsertOneByTx).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
 		"lowerDBName":    r.lowerDBName,
 		"upperTableName": r.upperTableName,
@@ -821,7 +821,7 @@ func (r *GenerationRepo) generateCreateFunc() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	createFunc += fmt.Sprintln(saveOneByTx.String())
+	createFunc += fmt.Sprintln(upsertOneByTx.String())
 	createBatch, err := NewTemplate("CreateBatch").Parse(CreateBatch).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
 		"lowerDBName":    r.lowerDBName,

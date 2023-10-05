@@ -34,11 +34,11 @@ var InterfaceCreateOne string
 //go:embed tpl/create-one.tpl
 var CreateOne string
 
-//go:embed tpl/interface-save-one.tpl
-var InterfaceSaveOne string
+//go:embed tpl/interface-upsert-one.tpl
+var InterfaceUpsertOne string
 
-//go:embed tpl/save-one.tpl
-var SaveOne string
+//go:embed tpl/upsert-one.tpl
+var UpsertOne string
 
 //go:embed tpl/interface-create-batch.tpl
 var InterfaceCreateBatch string
@@ -154,11 +154,11 @@ var InterfaceCreateOneByTx string
 //go:embed tpl/create-one-by-tx.tpl
 var CreateOneByTx string
 
-//go:embed tpl/interface-save-one-by-tx.tpl
-var InterfaceSaveOneByTx string
+//go:embed tpl/interface-upsert-one-by-tx.tpl
+var InterfaceUpsertOneByTx string
 
-//go:embed tpl/save-one-by-tx.tpl
-var SaveOneByTx string
+//go:embed tpl/upsert-one-by-tx.tpl
+var UpsertOneByTx string
 
 //go:embed tpl/interface-update-one-by-tx.tpl
 var InterfaceUpdateOneByTx string

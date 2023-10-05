@@ -30,10 +30,10 @@ type (
 		CreateOne(ctx context.Context, data *gorm_gen_model.DataTypeDemo) error
 		// CreateOneByTx 创建一条数据(事务)
 		CreateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.DataTypeDemo) error
-		// SaveOne 保存一条数据
-		SaveOne(ctx context.Context, data *gorm_gen_model.DataTypeDemo) error
-		// SaveOneByTx 保存一条数据(事务)
-		SaveOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.DataTypeDemo) error
+		// UpsertOne Upsert一条数据
+		UpsertOne(ctx context.Context, data *gorm_gen_model.DataTypeDemo) error
+		// UpsertOneByTx Upsert一条数据(事务)
+		UpsertOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.DataTypeDemo) error
 		// CreateBatch 批量创建数据
 		CreateBatch(ctx context.Context, data []*gorm_gen_model.DataTypeDemo, batchSize int) error
 		// UpdateOne 更新一条数据
@@ -138,8 +138,8 @@ func (d *DataTypeDemoRepo) CreateOneByTx(ctx context.Context, tx *gorm_gen_dao.Q
 	return nil
 }
 
-// SaveOne 保存一条数据
-func (d *DataTypeDemoRepo) SaveOne(ctx context.Context, data *gorm_gen_model.DataTypeDemo) error {
+// UpsertOne Upsert一条数据
+func (d *DataTypeDemoRepo) UpsertOne(ctx context.Context, data *gorm_gen_model.DataTypeDemo) error {
 	dao := gorm_gen_dao.Use(d.db).DataTypeDemo
 	err := dao.WithContext(ctx).Save(data)
 	if err != nil {
@@ -148,8 +148,8 @@ func (d *DataTypeDemoRepo) SaveOne(ctx context.Context, data *gorm_gen_model.Dat
 	return nil
 }
 
-// SaveOneByTx 保存一条数据(事务)
-func (d *DataTypeDemoRepo) SaveOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.DataTypeDemo) error {
+// UpsertOneByTx Upsert一条数据(事务)
+func (d *DataTypeDemoRepo) UpsertOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.DataTypeDemo) error {
 	dao := tx.DataTypeDemo
 	err := dao.WithContext(ctx).Save(data)
 	if err != nil {
