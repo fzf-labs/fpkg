@@ -180,9 +180,14 @@ func ModelOptionPgDefaultString() gen.ModelOpt {
 	})
 }
 
+// ModelOptionRemoveDefault 默认字符串移除(主键除外)
 func ModelOptionRemoveDefault() gen.ModelOpt {
 	return gen.FieldGORMTagReg(".*?", func(tag field.GormTag) field.GormTag {
-		tag.Remove("default")
+		regex := regexp.MustCompile(`primaryKey`)
+		matches := regex.FindStringSubmatch(tag.Build())
+		if len(matches) == 0 {
+			tag.Remove("default")
+		}
 		return tag
 	})
 }
