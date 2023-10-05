@@ -171,7 +171,7 @@ func (d *DataTypeDemoRepo) CreateBatch(ctx context.Context, data []*gorm_gen_mod
 // UpdateOne 更新一条数据
 func (d *DataTypeDemoRepo) UpdateOne(ctx context.Context, data *gorm_gen_model.DataTypeDemo) error {
 	dao := gorm_gen_dao.Use(d.db).DataTypeDemo
-	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Updates(data)
+	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Select(dao.ALL).Updates(data)
 	if err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func (d *DataTypeDemoRepo) UpdateOne(ctx context.Context, data *gorm_gen_model.D
 // UpdateOneByTx 更新一条数据(事务)
 func (d *DataTypeDemoRepo) UpdateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.DataTypeDemo) error {
 	dao := tx.DataTypeDemo
-	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Updates(data)
+	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Select(dao.ALL).Updates(data)
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,7 @@
 // UpdateOne 更新一条数据
 func ({{.firstTableChar}} *{{.upperTableName}}Repo) UpdateOne(ctx context.Context, data *{{.lowerDBName}}_model.{{.upperTableName}}) error {
 	dao := {{.lowerDBName}}_dao.Use({{.firstTableChar}}.db).{{.upperTableName}}
-	_, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.Eq(data.{{.upperField}})).Updates(data)
+	_, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.Eq(data.{{.upperField}})).Select(dao.ALL).Updates(data)
 	if err != nil {
 		return err
 	}
