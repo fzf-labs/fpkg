@@ -357,6 +357,22 @@ func (r *GenerationRepo) generateUpdateMethods() (string, error) {
 		return "", err
 	}
 	updateMethods += fmt.Sprintln(interfaceUpdateOneByTx.String())
+	interfaceUpdateOneWithZero, err := NewTemplate("InterfaceUpdateOneWithZero").Parse(InterfaceUpdateOneWithZero).Execute(map[string]any{
+		"lowerDBName":    r.lowerDBName,
+		"upperTableName": r.upperTableName,
+	})
+	if err != nil {
+		return "", err
+	}
+	updateMethods += fmt.Sprintln(interfaceUpdateOneWithZero.String())
+	interfaceUpdateOneWithZeroByTx, err := NewTemplate("InterfaceUpdateOneWithZeroByTx").Parse(InterfaceUpdateOneWithZeroByTx).Execute(map[string]any{
+		"lowerDBName":    r.lowerDBName,
+		"upperTableName": r.upperTableName,
+	})
+	if err != nil {
+		return "", err
+	}
+	updateMethods += fmt.Sprintln(interfaceUpdateOneWithZeroByTx.String())
 	return updateMethods, nil
 }
 
@@ -1085,6 +1101,29 @@ func (r *GenerationRepo) generateUpdateFunc() (string, error) {
 		return "", err
 	}
 	updateFunc += fmt.Sprintln(updateOneByTx.String())
+
+	updateOneWithZero, err := NewTemplate("UpdateOneWithZero").Parse(UpdateOneWithZero).Execute(map[string]any{
+		"firstTableChar": r.firstTableChar,
+		"lowerDBName":    r.lowerDBName,
+		"upperTableName": r.upperTableName,
+		"lowerTableName": r.lowerTableName,
+		"upperField":     r.UpperFieldName(primaryKey),
+	})
+	if err != nil {
+		return "", err
+	}
+	updateFunc += fmt.Sprintln(updateOneWithZero.String())
+	updateOneWithZeroByTx, err := NewTemplate("UpdateOneWithZeroByTx").Parse(UpdateOneWithZeroByTx).Execute(map[string]any{
+		"firstTableChar": r.firstTableChar,
+		"lowerDBName":    r.lowerDBName,
+		"upperTableName": r.upperTableName,
+		"lowerTableName": r.lowerTableName,
+		"upperField":     r.UpperFieldName(primaryKey),
+	})
+	if err != nil {
+		return "", err
+	}
+	updateFunc += fmt.Sprintln(updateOneWithZeroByTx.String())
 	return updateFunc, nil
 }
 

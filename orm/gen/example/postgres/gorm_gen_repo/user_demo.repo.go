@@ -40,6 +40,10 @@ type (
 		UpdateOne(ctx context.Context, data *gorm_gen_model.UserDemo) error
 		// UpdateOne 更新一条数据(事务)
 		UpdateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.UserDemo) error
+		// UpdateOneWithZero 更新一条数据,包含零值
+		UpdateOneWithZero(ctx context.Context, data *gorm_gen_model.UserDemo) error
+		// UpdateOneWithZero 更新一条数据,包含零值(事务)
+		UpdateOneWithZeroByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.UserDemo) error
 		// FindMultiByUsername 根据username查询多条数据
 		FindMultiByUsername(ctx context.Context, username string) ([]*gorm_gen_model.UserDemo, error)
 		// FindMultiByUsernames 根据usernames查询多条数据
@@ -177,7 +181,7 @@ func (u *UserDemoRepo) CreateBatch(ctx context.Context, data []*gorm_gen_model.U
 // UpdateOne 更新一条数据
 func (u *UserDemoRepo) UpdateOne(ctx context.Context, data *gorm_gen_model.UserDemo) error {
 	dao := gorm_gen_dao.Use(u.db).UserDemo
-	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Select(dao.ALL).Updates(data)
+	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Updates(data)
 	if err != nil {
 		return err
 	}
@@ -190,6 +194,34 @@ func (u *UserDemoRepo) UpdateOne(ctx context.Context, data *gorm_gen_model.UserD
 
 // UpdateOneByTx 更新一条数据(事务)
 func (u *UserDemoRepo) UpdateOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.UserDemo) error {
+	dao := tx.UserDemo
+	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Updates(data)
+	if err != nil {
+		return err
+	}
+	err = u.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.UserDemo{data})
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+// UpdateOneWithZero 更新一条数据,包含零值
+func (u *UserDemoRepo) UpdateOneWithZero(ctx context.Context, data *gorm_gen_model.UserDemo) error {
+	dao := gorm_gen_dao.Use(u.db).UserDemo
+	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Select(dao.ALL).Updates(data)
+	if err != nil {
+		return err
+	}
+	err = u.DeleteUniqueIndexCache(ctx, []*gorm_gen_model.UserDemo{data})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpdateOneWithZeroByTx 更新一条数据(事务),包含零值
+func (u *UserDemoRepo) UpdateOneWithZeroByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.UserDemo) error {
 	dao := tx.UserDemo
 	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Select(dao.ALL).Updates(data)
 	if err != nil {

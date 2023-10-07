@@ -142,6 +142,12 @@ var InterfaceUpdateOne string
 //go:embed tpl/update-one.tpl
 var UpdateOne string
 
+//go:embed tpl/interface-update-one-with-zero.tpl
+var InterfaceUpdateOneWithZero string
+
+//go:embed tpl/update-one-with-zero.tpl
+var UpdateOneWithZero string
+
 //go:embed tpl/interface-delete-unique-index-cache.tpl
 var InterfaceDeleteUniqueIndexCache string
 
@@ -165,6 +171,12 @@ var InterfaceUpdateOneByTx string
 
 //go:embed tpl/update-one-by-tx.tpl
 var UpdateOneByTx string
+
+//go:embed tpl/interface-update-one-with-zero-by-tx.tpl
+var InterfaceUpdateOneWithZeroByTx string
+
+//go:embed tpl/update-one-with-zero-by-tx.tpl
+var UpdateOneWithZeroByTx string
 
 //go:embed tpl/interface-delete-multi-by-field-plural-tx.tpl
 var InterfaceDeleteMultiByFieldPluralTx string
