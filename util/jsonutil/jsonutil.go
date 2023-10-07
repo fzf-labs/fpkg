@@ -7,28 +7,24 @@ import (
 	"github.com/bytedance/sonic"
 )
 
-// Encode 编码
-func Encode(v any) ([]byte, error) {
+// Marshal 编码
+func Marshal(v any) ([]byte, error) {
 	return sonic.Marshal(v)
 }
 
-// EncodeToString 编码到字符串
-func EncodeToString(v any) (string, error) {
-	marshal, err := sonic.Marshal(v)
-	if err != nil {
-		return "", err
-	}
-	return string(marshal), nil
+// MarshalToString 编码到字符串
+func MarshalToString(v any) (string, error) {
+	return sonic.MarshalString(v)
 }
 
-// Decode 解码
-func Decode(bts []byte, ptr any) error {
+// Unmarshal 解码
+func Unmarshal(bts []byte, ptr any) error {
 	return sonic.Unmarshal(bts, ptr)
 }
 
-// DecodeString 解码字符串
-func DecodeString(str string, ptr any) error {
-	return sonic.Unmarshal([]byte(str), ptr)
+// UnmarshalString 解码字符串
+func UnmarshalString(str string, ptr any) error {
+	return sonic.UnmarshalString(str, ptr)
 }
 
 // Dump 打印
