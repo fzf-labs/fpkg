@@ -1,18 +1,21 @@
 package orm
 
 import (
+	"bufio"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/fzf-labs/fpkg/orm/plugin"
+	"github.com/fzf-labs/fpkg/util/fileutil"
 	"github.com/pkg/errors"
-	"golang.org/x/exp/slog"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -88,20 +91,25 @@ func DumpPostgres(db *gorm.DB, dsn, outPath string) {
 		return
 	}
 	for _, v := range tables {
+		outFile := filepath.Join(outPath, fmt.Sprintf("%s.sql", v))
 		cmdArgs := []string{
 			"-h", dsnParse.Host,
 			"-p", strconv.Itoa(dsnParse.Port),
 			"-U", dsnParse.User,
 			"-s", dsnParse.Dbname,
 			"-t", v,
-			"-f", filepath.Join(outPath, fmt.Sprintf("%s.sql", v)),
 		}
 		// 创建一个 Cmd 对象来表示将要执行的命令
 		cmd := exec.Command("pg_dump", cmdArgs...)
 		// 添加一个环境变量到命令中
 		cmd.Env = append(cmd.Env, fmt.Sprintf("PGPASSWORD=%s", dsnParse.Password))
 		// 执行命令，并捕获输出和错误信息
-		err := cmd.Run()
+		output, err := cmd.Output()
+		if err != nil {
+			slog.Error("cmd exec err:", err)
+			return
+		}
+		err = fileutil.WriteContentCover(outFile, remove(string(output)))
 		if err != nil {
 			slog.Error("DumpPostgres err:", err)
 			return
@@ -145,6 +153,21 @@ func PostgresDsnParse(dsn string) *PostgresDsn {
 		case "dbname":
 			result.Dbname = value
 		}
+	}
+	return result
+}
+
+// remove 移除多余行
+func remove(str string) string {
+	var result string
+	reader := strings.NewReader(str)
+	scanner := bufio.NewScanner(reader)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if len(line) == 0 || strings.HasPrefix(line, "--") || strings.HasPrefix(line, "SELECT") || strings.HasPrefix(line, "SET") || regexp.MustCompile(`ALTER TABLE .*? OWNER TO postgres`).MatchString(line) {
+			continue
+		}
+		result += fmt.Sprintln(line)
 	}
 	return result
 }
