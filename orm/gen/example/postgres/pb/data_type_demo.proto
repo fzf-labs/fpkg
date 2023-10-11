@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+package DataTypeDemo.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "paginator/paginator.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "validate/validate.proto";
+
+option go_package = "v1;v1";
+
+service DataTypeDemo {
+  //数据类型示例-创建一条数据
+  rpc DataTypeDemoStore(DataTypeDemoStoreReq) returns (DataTypeDemoStoreReply) {
+    option (google.api.http) = {
+      post: "/data_type_demo/v1/data_type_demo_store"
+      body: "*"
+    };
+  }
+  //数据类型示例-删除多条数据
+  rpc DataTypeDemoDel(DataTypeDemoDelReq) returns (DataTypeDemoDelReply) {
+    option (google.api.http) = {
+      post: "/data_type_demo/v1/data_type_demo_del"
+      body: "*"
+    };
+  }
+  //数据类型示例-单条数据查询
+  rpc DataTypeDemoOne(DataTypeDemoOneReq) returns (DataTypeDemoOneReply) {
+    option (google.api.http) = {get: "/data_type_demo/v1/data_type_demo_info"};
+  }
+  //数据类型示例-列表数据查询
+  rpc DataTypeDemoList(DataTypeDemoListReq) returns (DataTypeDemoListReply) {
+    option (google.api.http) = {
+      post: "/data_type_demo/v1/data_type_demo_list",
+      body: "*"
+    };
+  }
+}
+//数据类型示例信息
+message DataTypeDemoInfo {
+	string ID = 1; // ID
+	bool dataTypeBool = 2; // 数据类型 bool
+	int32 dataTypeInt2 = 3; // 数据类型 int2
+	int32 dataTypeInt8 = 4; // 数据类型 int8
+	string dataTypeVarchar = 5; // 数据类型 varchar
+	string dataTypeText = 6; // 数据类型 text
+	string dataTypeJSON = 7; // 数据类型 json
+	google.protobuf.Timestamp createdAt = 8; // 创建时间
+	google.protobuf.Timestamp updatedAt = 9; // 更新时间
+	google.protobuf.Timestamp dataTypeTimeNull = 11; // 数据类型 time null
+	google.protobuf.Timestamp dataTypeTime = 12; // 数据类型 time not null
+	string dataTypeJsonb = 13; // 数据类型 jsonb
+	google.protobuf.Timestamp dataTypeDate = 14; // 
+	float dataTypeFloat4 = 15; // 
+	double dataTypeFloat8 = 16; // 
+	string ulID = 17; // 验证下划线
+	string cacheKey = 18; // 特殊保留字段名称
+	google.protobuf.Timestamp dataTypeTimestamp = 19; // 
+	string dataTypeBytea = 20; // 
+	string dataTypeNumeric = 21; // 
+	string dataTypeInterval = 22; // 
+	string batchAPI = 23; // 
+
+}
+
+//请求-数据类型示例-创建一条数据
+message DataTypeDemoStoreReq {
+	string ID = 1; // ID
+	bool dataTypeBool = 2; // 数据类型 bool
+	int32 dataTypeInt2 = 3; // 数据类型 int2
+	int32 dataTypeInt8 = 4; // 数据类型 int8
+	string dataTypeVarchar = 5; // 数据类型 varchar
+	string dataTypeText = 6; // 数据类型 text
+	string dataTypeJSON = 7; // 数据类型 json
+	google.protobuf.Timestamp dataTypeTimeNull = 11; // 数据类型 time null
+	google.protobuf.Timestamp dataTypeTime = 12; // 数据类型 time not null
+	string dataTypeJsonb = 13; // 数据类型 jsonb
+	google.protobuf.Timestamp dataTypeDate = 14; // 
+	float dataTypeFloat4 = 15; // 
+	double dataTypeFloat8 = 16; // 
+	string ulID = 17; // 验证下划线
+	string cacheKey = 18; // 特殊保留字段名称
+	google.protobuf.Timestamp dataTypeTimestamp = 19; // 
+	string dataTypeBytea = 20; // 
+	string dataTypeNumeric = 21; // 
+	string dataTypeInterval = 22; // 
+	string batchAPI = 23; // 
+
+}
+
+//响应-数据类型示例-创建一条数据
+message DataTypeDemoStoreReply {
+	string ID = 1; // ID
+
+}
+
+//请求-数据类型示例-删除多条数据
+message DataTypeDemoDelReq {
+	string ID = 1; // ID
+
+}
+
+//响应-数据类型示例-删除多条数据
+message DataTypeDemoDelReply {}
+
+//请求-数据类型示例-单条数据查询
+message DataTypeDemoOneReq {
+	string ID = 1; // ID
+
+}
+
+//响应-数据类型示例-单条数据查询
+message DataTypeDemoOneReply {
+  DataTypeDemoInfo info = 1;
+}
+
+//请求-数据类型示例-列表数据查询
+message DataTypeDemoListReq {
+  int32 page = 1 [(validate.rules).int32 = {gte: 1}]; //页码
+  int32 pageSize = 2 [(validate.rules).int32 = {
+    gte: 1,
+    lte: 1000
+  }]; //页数
+}
+
+//响应-数据类型示例-列表数据查询
+message DataTypeDemoListReply {
+  int32 page = 1; // 页码
+  int32 pageSize = 2; // 页数
+  int32 total = 3;// 总数
+  repeated DataTypeDemoInfo list = 4; //列表数据
+}
+

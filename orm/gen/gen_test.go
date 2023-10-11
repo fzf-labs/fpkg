@@ -19,7 +19,7 @@ func TestGenerationPostgres(t *testing.T) {
 	if err != nil {
 		return
 	}
-	NewGeneration(client, "./example/postgres/", WithDataMap(DefaultPostgresDataMap), WithOpts(ModelOptionRemoveDefault(), ModelOptionUnderline("ul_"))).Do()
+	NewGeneration(client, "./example/postgres/", WithDataMap(DefaultPostgresDataMap), WithDBOpts(ModelOptionRemoveDefault(), ModelOptionUnderline("ul_"))).Do()
 	assert.Equal(t, nil, err)
 }
 
@@ -35,6 +35,22 @@ func TestGenerationMysql(t *testing.T) {
 	if err != nil {
 		return
 	}
-	NewGeneration(client, "./example/postgres/", WithDataMap(DefaultPostgresDataMap), WithOpts(ModelOptionRemoveDefault(), ModelOptionUnderline("UL"))).Do()
+	NewGeneration(client, "./example/postgres/", WithDataMap(DefaultPostgresDataMap), WithDBOpts(ModelOptionRemoveDefault(), ModelOptionUnderline("UL"))).Do()
+	assert.Equal(t, nil, err)
+}
+
+func TestNewGenerationPb(t *testing.T) {
+	client, err := orm.NewGormPostgresClient(&orm.GormPostgresClientConfig{
+		DataSourceName:  "host=0.0.0.0 port=5432 user=postgres password=123456 dbname=gorm_gen sslmode=disable TimeZone=Asia/Shanghai",
+		MaxIdleConn:     0,
+		MaxOpenConn:     0,
+		ConnMaxLifeTime: 0,
+		ShowLog:         false,
+		Tracing:         false,
+	})
+	if err != nil {
+		return
+	}
+	NewGenerationPb(client, "./example/postgres/pb", WithPbOpts(ModelOptionRemoveDefault(), ModelOptionUnderline("ul_"))).Do()
 	assert.Equal(t, nil, err)
 }

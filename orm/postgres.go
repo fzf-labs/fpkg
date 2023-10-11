@@ -164,7 +164,7 @@ func remove(str string) string {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if len(line) == 0 || strings.HasPrefix(line, "--") || strings.HasPrefix(line, "SELECT") || strings.HasPrefix(line, "SET") || regexp.MustCompile(`(ALTER TABLE .*? OWNER TO postgres)`).MatchString(line) {
+		if line == "" || strings.HasPrefix(line, "--") || strings.HasPrefix(line, "SELECT") || strings.HasPrefix(line, "SET") || regexp.MustCompile(`(ALTER TABLE .*? OWNER TO postgres)`).MatchString(line) {
 			continue
 		}
 		result += fmt.Sprintln(line)

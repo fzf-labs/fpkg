@@ -1,16 +1,12 @@
-package repo
+package template
 
 import (
 	"bytes"
 	"go/format"
-	"os"
-	"regexp"
 	"text/template"
 
 	"github.com/pkg/errors"
 )
-
-const regularPerm = 0o666
 
 // DefaultTemplate is a tool to provides the text/template operations
 type DefaultTemplate struct {
@@ -38,20 +34,6 @@ func (t *DefaultTemplate) GoFmt(fmt bool) *DefaultTemplate {
 	return t
 }
 
-// SaveTo writes the codes to the target path
-func (t *DefaultTemplate) SaveTo(data any, path string, forceUpdate bool) error {
-	if FileExists(path) && !forceUpdate {
-		return nil
-	}
-
-	output, err := t.Execute(data)
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile(path, output.Bytes(), regularPerm)
-}
-
 // Execute returns the codes after the template executed
 func (t *DefaultTemplate) Execute(data any) (*bytes.Buffer, error) {
 	tem, err := template.New(t.name).Parse(t.text)
@@ -76,19 +58,4 @@ func (t *DefaultTemplate) Execute(data any) (*bytes.Buffer, error) {
 	buf.Reset()
 	buf.Write(formatOutput)
 	return buf, nil
-}
-
-// IsTemplateVariable returns true if the text is a template variable.
-// The text must start with a dot and be a valid template.
-func IsTemplateVariable(text string) bool {
-	match, _ := regexp.MatchString(`(?m)^{{(\.\w+)+}}$`, text)
-	return match
-}
-
-// TemplateVariable returns the variable name of the template.
-func TemplateVariable(text string) string {
-	if IsTemplateVariable(text) {
-		return text[3 : len(text)-2]
-	}
-	return ""
 }

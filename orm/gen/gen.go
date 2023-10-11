@@ -7,7 +7,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/fzf-labs/fpkg/orm/gen/pb"
 	"github.com/fzf-labs/fpkg/orm/gen/repo"
+	"github.com/fzf-labs/fpkg/orm/gen/utils/util"
 	"github.com/iancoleman/strcase"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -21,7 +23,7 @@ const (
 	TimeTime    = "time.Time"
 )
 
-type Generation struct {
+type GenerationDB struct {
 	db         *gorm.DB                                                      // 数据库
 	outPutPath string                                                        // 文件生成链接
 	genRepo    bool                                                          // 是否生成repo
@@ -30,8 +32,8 @@ type Generation struct {
 	opts       []gen.ModelOpt                                                // 特殊处理逻辑函数
 }
 
-func NewGeneration(db *gorm.DB, outPutPath string, opts ...Option) *Generation {
-	g := &Generation{
+func NewGeneration(db *gorm.DB, outPutPath string, opts ...OptionDB) *GenerationDB {
+	g := &GenerationDB{
 		db:         db,
 		outPutPath: outPutPath,
 		genRepo:    true,
@@ -47,38 +49,38 @@ func NewGeneration(db *gorm.DB, outPutPath string, opts ...Option) *Generation {
 	return g
 }
 
-type Option func(gen *Generation)
+type OptionDB func(gen *GenerationDB)
 
 // WithOutRepo 选项函数-不生成repo
-func WithOutRepo() Option {
-	return func(r *Generation) {
+func WithOutRepo() OptionDB {
+	return func(r *GenerationDB) {
 		r.genRepo = false
 	}
 }
 
 // WithTables 选项函数-自定义表
-func WithTables(tables []string) Option {
-	return func(r *Generation) {
+func WithTables(tables []string) OptionDB {
+	return func(r *GenerationDB) {
 		r.tables = tables
 	}
 }
 
 // WithDataMap 选项函数-自定义关系映射
-func WithDataMap(dataMap map[string]func(columnType gorm.ColumnType) (dataType string)) Option {
-	return func(r *Generation) {
+func WithDataMap(dataMap map[string]func(columnType gorm.ColumnType) (dataType string)) OptionDB {
+	return func(r *GenerationDB) {
 		r.dataMap = dataMap
 	}
 }
 
-// WithOpts 选项函数-自定义特殊设置
-func WithOpts(opts ...gen.ModelOpt) Option {
-	return func(r *Generation) {
+// WithDBOpts 选项函数-自定义特殊设置
+func WithDBOpts(opts ...gen.ModelOpt) OptionDB {
+	return func(r *GenerationDB) {
 		r.opts = opts
 	}
 }
 
 // Do 生成
-func (g *Generation) Do() {
+func (g *GenerationDB) Do() {
 	// 路径处理
 	dbName := g.db.Migrator().CurrentDatabase()
 	outPutPath := strings.Trim(g.outPutPath, "/")
@@ -197,7 +199,7 @@ var DefaultPostgresDataMap = map[string]func(columnType gorm.ColumnType) (dataTy
 	"json":  func(columnType gorm.ColumnType) string { return "datatypes.JSON" },
 	"jsonb": func(columnType gorm.ColumnType) string { return "datatypes.JSON" },
 	"timestamptz": func(columnType gorm.ColumnType) string {
-		if repo.StrSliFind([]string{"deleted_at", "deletedAt", "deleted_time", "deleted_time"}, columnType.Name()) {
+		if util.StrSliFind([]string{"deleted_at", "deletedAt", "deleted_time", "deleted_time"}, columnType.Name()) {
 			return "gorm.DeletedAt"
 		}
 		nullable, _ := columnType.Nullable()
@@ -232,4 +234,72 @@ func ConnectDB(dbType, dsn string) *gorm.DB {
 // LowerCamelCase 下划线单词转为小写驼峰单词
 func LowerCamelCase(s string) string {
 	return strcase.ToLowerCamel(s)
+}
+
+type GenerationPb struct {
+	db         *gorm.DB       // 数据库
+	outPutPath string         // 文件生成地址
+	opts       []gen.ModelOpt // 特殊处理逻辑函数
+}
+
+func NewGenerationPb(db *gorm.DB, outPutPath string, opts ...OptionPb) *GenerationPb {
+	g := &GenerationPb{
+		db:         db,
+		outPutPath: outPutPath,
+	}
+	if len(opts) > 0 {
+		for _, v := range opts {
+			v(g)
+		}
+	}
+	return g
+}
+
+type OptionPb func(gen *GenerationPb)
+
+// WithPbOpts 选项函数-自定义特殊设置
+func WithPbOpts(opts ...gen.ModelOpt) OptionPb {
+	return func(r *GenerationPb) {
+		r.opts = opts
+	}
+}
+
+func (g *GenerationPb) Do() {
+	// 初始化
+	generator := gen.NewGenerator(gen.Config{})
+	// 使用数据库
+	generator.UseDB(g.db)
+	// json 小驼峰模型命名
+	generator.WithJSONTagNameStrategy(LowerCamelCase)
+	// 特殊处理逻辑
+	if len(g.opts) > 0 {
+		generator.WithOpts(g.opts...)
+	}
+	// 获取所有表
+	tables, err := g.db.Migrator().GetTables()
+	if err != nil {
+		return
+	}
+	pbRepo := pb.NewPbRepo(g.db, g.outPutPath)
+	var wg sync.WaitGroup
+	wg.Add(len(tables))
+	for _, v := range tables {
+		t := v
+		go func(table string) {
+			defer wg.Done()
+			// 表字段对应的名称
+			columnNameToName := make(map[string]string)
+			queryStructMeta := generator.GenerateModel(table)
+			for _, vv := range queryStructMeta.Fields {
+				columnNameToName[vv.ColumnName] = vv.Name
+			}
+			// 数据表repo代码生成
+			err = pbRepo.GenerationTable(table, columnNameToName)
+			if err != nil {
+				log.Println("repo GenerationTable err:", err)
+				return
+			}
+		}(t)
+	}
+	wg.Wait()
 }

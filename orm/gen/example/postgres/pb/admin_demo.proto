@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+package AdminDemo.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "paginator/paginator.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "validate/validate.proto";
+
+option go_package = "v1;v1";
+
+service AdminDemo {
+  //系统-用户-创建一条数据
+  rpc AdminDemoStore(AdminDemoStoreReq) returns (AdminDemoStoreReply) {
+    option (google.api.http) = {
+      post: "/admin_demo/v1/admin_demo_store"
+      body: "*"
+    };
+  }
+  //系统-用户-删除多条数据
+  rpc AdminDemoDel(AdminDemoDelReq) returns (AdminDemoDelReply) {
+    option (google.api.http) = {
+      post: "/admin_demo/v1/admin_demo_del"
+      body: "*"
+    };
+  }
+  //系统-用户-单条数据查询
+  rpc AdminDemoOne(AdminDemoOneReq) returns (AdminDemoOneReply) {
+    option (google.api.http) = {get: "/admin_demo/v1/admin_demo_info"};
+  }
+  //系统-用户-列表数据查询
+  rpc AdminDemoList(AdminDemoListReq) returns (AdminDemoListReply) {
+    option (google.api.http) = {
+      post: "/admin_demo/v1/admin_demo_list",
+      body: "*"
+    };
+  }
+}
+//系统-用户信息
+message AdminDemoInfo {
+	string ID = 1; // 编号
+	string username = 2; // 用户名
+	string password = 3; // 密码
+	string nickname = 4; // 昵称
+	string avatar = 5; // 头像
+	int32 gender = 6; // 0=保密 1=女 2=男
+	string email = 7; // 邮件
+	string mobile = 8; // 手机号
+	string jobID = 9; // 岗位
+	string deptID = 10; // 部门
+	string roleIds = 11; // 角色集
+	string salt = 12; // 盐值
+	int32 status = 13; // 0=禁用 1=开启
+	string motto = 14; // 个性签名
+	google.protobuf.Timestamp createdAt = 15; // 创建时间
+	google.protobuf.Timestamp updatedAt = 16; // 更新时间
+
+}
+
+//请求-系统-用户-创建一条数据
+message AdminDemoStoreReq {
+	string ID = 1; // 编号
+	string username = 2; // 用户名
+	string password = 3; // 密码
+	string nickname = 4; // 昵称
+	string avatar = 5; // 头像
+	int32 gender = 6; // 0=保密 1=女 2=男
+	string email = 7; // 邮件
+	string mobile = 8; // 手机号
+	string jobID = 9; // 岗位
+	string deptID = 10; // 部门
+	string roleIds = 11; // 角色集
+	string salt = 12; // 盐值
+	int32 status = 13; // 0=禁用 1=开启
+	string motto = 14; // 个性签名
+
+}
+
+//响应-系统-用户-创建一条数据
+message AdminDemoStoreReply {
+	string ID = 1; // 编号
+
+}
+
+//请求-系统-用户-删除多条数据
+message AdminDemoDelReq {
+	string ID = 1; // 编号
+
+}
+
+//响应-系统-用户-删除多条数据
+message AdminDemoDelReply {}
+
+//请求-系统-用户-单条数据查询
+message AdminDemoOneReq {
+	string ID = 1; // 编号
+
+}
+
+//响应-系统-用户-单条数据查询
+message AdminDemoOneReply {
+  AdminDemoInfo info = 1;
+}
+
+//请求-系统-用户-列表数据查询
+message AdminDemoListReq {
+  int32 page = 1 [(validate.rules).int32 = {gte: 1}]; //页码
+  int32 pageSize = 2 [(validate.rules).int32 = {
+    gte: 1,
+    lte: 1000
+  }]; //页数
+}
+
+//响应-系统-用户-列表数据查询
+message AdminDemoListReply {
+  int32 page = 1; // 页码
+  int32 pageSize = 2; // 页数
+  int32 total = 3;// 总数
+  repeated AdminDemoInfo list = 4; //列表数据
+}
+

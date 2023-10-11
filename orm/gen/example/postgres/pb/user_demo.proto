@@ -1,0 +1,126 @@
+syntax = "proto3";
+
+package UserDemo.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "paginator/paginator.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "validate/validate.proto";
+
+option go_package = "v1;v1";
+
+service UserDemo {
+  //用户信息表-创建一条数据
+  rpc UserDemoStore(UserDemoStoreReq) returns (UserDemoStoreReply) {
+    option (google.api.http) = {
+      post: "/user_demo/v1/user_demo_store"
+      body: "*"
+    };
+  }
+  //用户信息表-删除多条数据
+  rpc UserDemoDel(UserDemoDelReq) returns (UserDemoDelReply) {
+    option (google.api.http) = {
+      post: "/user_demo/v1/user_demo_del"
+      body: "*"
+    };
+  }
+  //用户信息表-单条数据查询
+  rpc UserDemoOne(UserDemoOneReq) returns (UserDemoOneReply) {
+    option (google.api.http) = {get: "/user_demo/v1/user_demo_info"};
+  }
+  //用户信息表-列表数据查询
+  rpc UserDemoList(UserDemoListReq) returns (UserDemoListReply) {
+    option (google.api.http) = {
+      post: "/user_demo/v1/user_demo_list",
+      body: "*"
+    };
+  }
+}
+//用户信息表信息
+message UserDemoInfo {
+	int32 ID = 1; // ID
+	string UID = 2; // uid
+	string username = 3; // 用户账号
+	string password = 4; // 密码
+	string nickname = 5; // 用户昵称
+	string remark = 6; // 备注
+	int32 deptID = 7; // 部门ID
+	string postIds = 8; // 岗位编号数组
+	string email = 9; // 用户邮箱
+	string mobile = 10; // 手机号码
+	int32 sex = 11; // 用户性别
+	string avatar = 12; // 头像地址
+	int32 status = 13; // 帐号状态（0正常 -1停用）
+	string loginIP = 14; // 最后登录IP
+	google.protobuf.Timestamp loginDate = 15; // 最后登录时间
+	int32 tenantID = 16; // 租户编号
+	google.protobuf.Timestamp createdAt = 17; // 创建时间
+	google.protobuf.Timestamp updatedAt = 18; // 更新时间
+
+}
+
+//请求-用户信息表-创建一条数据
+message UserDemoStoreReq {
+	int32 ID = 1; // ID
+	string UID = 2; // uid
+	string username = 3; // 用户账号
+	string password = 4; // 密码
+	string nickname = 5; // 用户昵称
+	string remark = 6; // 备注
+	int32 deptID = 7; // 部门ID
+	string postIds = 8; // 岗位编号数组
+	string email = 9; // 用户邮箱
+	string mobile = 10; // 手机号码
+	int32 sex = 11; // 用户性别
+	string avatar = 12; // 头像地址
+	int32 status = 13; // 帐号状态（0正常 -1停用）
+	string loginIP = 14; // 最后登录IP
+	google.protobuf.Timestamp loginDate = 15; // 最后登录时间
+	int32 tenantID = 16; // 租户编号
+
+}
+
+//响应-用户信息表-创建一条数据
+message UserDemoStoreReply {
+	string ID = 1; // ID
+
+}
+
+//请求-用户信息表-删除多条数据
+message UserDemoDelReq {
+	string ID = 1; // ID
+
+}
+
+//响应-用户信息表-删除多条数据
+message UserDemoDelReply {}
+
+//请求-用户信息表-单条数据查询
+message UserDemoOneReq {
+	string ID = 1; // ID
+
+}
+
+//响应-用户信息表-单条数据查询
+message UserDemoOneReply {
+  UserDemoInfo info = 1;
+}
+
+//请求-用户信息表-列表数据查询
+message UserDemoListReq {
+  int32 page = 1 [(validate.rules).int32 = {gte: 1}]; //页码
+  int32 pageSize = 2 [(validate.rules).int32 = {
+    gte: 1,
+    lte: 1000
+  }]; //页数
+}
+
+//响应-用户信息表-列表数据查询
+message UserDemoListReply {
+  int32 page = 1; // 页码
+  int32 pageSize = 2; // 页数
+  int32 total = 3;// 总数
+  repeated UserDemoInfo list = 4; //列表数据
+}
+
