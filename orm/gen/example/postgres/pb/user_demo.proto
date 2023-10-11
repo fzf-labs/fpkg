@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package UserDemo.v1;
+package api.gorm_gen.v1;
 
 import "paginator/paginator.proto";
 import "google/api/annotations.proto";
@@ -9,7 +9,7 @@ import "paginator/paginator.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 import "validate/validate.proto";
 
-option go_package = "v1;v1";
+option go_package = "api/gorm_gen/v1;v1";
 
 service UserDemo {
   //用户信息表-创建一条数据

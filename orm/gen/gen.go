@@ -237,15 +237,19 @@ func LowerCamelCase(s string) string {
 }
 
 type GenerationPb struct {
-	db         *gorm.DB       // 数据库
-	outPutPath string         // 文件生成地址
-	opts       []gen.ModelOpt // 特殊处理逻辑函数
+	db           *gorm.DB       // 数据库
+	outPutPath   string         // 文件生成地址
+	opts         []gen.ModelOpt // 特殊处理逻辑函
+	packageStr   string
+	goPackageStr string
 }
 
-func NewGenerationPb(db *gorm.DB, outPutPath string, opts ...OptionPb) *GenerationPb {
+func NewGenerationPb(db *gorm.DB, outPutPath string, packageStr string, goPackageStr string, opts ...OptionPb) *GenerationPb {
 	g := &GenerationPb{
-		db:         db,
-		outPutPath: outPutPath,
+		db:           db,
+		outPutPath:   outPutPath,
+		packageStr:   packageStr,
+		goPackageStr: goPackageStr,
 	}
 	if len(opts) > 0 {
 		for _, v := range opts {
@@ -280,7 +284,7 @@ func (g *GenerationPb) Do() {
 	if err != nil {
 		return
 	}
-	pbRepo := pb.NewPbRepo(g.db, g.outPutPath)
+	pbRepo := pb.NewPbRepo(g.db, g.outPutPath, g.packageStr, g.goPackageStr)
 	var wg sync.WaitGroup
 	wg.Add(len(tables))
 	for _, v := range tables {

@@ -1,1 +1,1 @@
-package {{.upperTableName}}.v1;
+package {{.packageStr}};

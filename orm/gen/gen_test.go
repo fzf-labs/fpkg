@@ -51,6 +51,6 @@ func TestNewGenerationPb(t *testing.T) {
 	if err != nil {
 		return
 	}
-	NewGenerationPb(client, "./example/postgres/pb", WithPbOpts(ModelOptionRemoveDefault(), ModelOptionUnderline("ul_"))).Do()
+	NewGenerationPb(client, "./example/postgres/pb", "api.gorm_gen.v1", "api/gorm_gen/v1;v1", WithPbOpts(ModelOptionRemoveDefault(), ModelOptionUnderline("ul_"))).Do()
 	assert.Equal(t, nil, err)
 }

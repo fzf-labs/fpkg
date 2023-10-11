@@ -1,1 +1,1 @@
-option go_package = "v1;v1";
+option go_package = "{{.goPackageStr}}";

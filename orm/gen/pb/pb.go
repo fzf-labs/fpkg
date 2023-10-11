@@ -15,14 +15,18 @@ import (
 )
 
 type Pb struct {
-	gorm   *gorm.DB
-	PbPath string
+	gorm         *gorm.DB
+	pbPath       string
+	packageStr   string
+	goPackageStr string
 }
 
-func NewPbRepo(db *gorm.DB, pbPath string) *Pb {
+func NewPbRepo(db *gorm.DB, pbPath, packageStr, goPackageStr string) *Pb {
 	return &Pb{
-		gorm:   db,
-		PbPath: pbPath,
+		gorm:         db,
+		pbPath:       pbPath,
+		packageStr:   packageStr,
+		goPackageStr: goPackageStr,
 	}
 }
 
@@ -37,6 +41,8 @@ func (r *Pb) GenerationTable(table string, columnNameToName map[string]string) e
 		lowerTableName:      "",
 		upperTableName:      "",
 		columnNameToName:    columnNameToName,
+		packageStr:          r.packageStr,
+		goPackageStr:        r.goPackageStr,
 	}
 	g.tableNameComment = g.GetTableComment(table)
 	g.lowerTableName = g.LowerName(table)
@@ -47,7 +53,7 @@ func (r *Pb) GenerationTable(table string, columnNameToName map[string]string) e
 	file += g.GenOption()
 	file += g.GenService()
 	file += g.GenMessage()
-	outputFile := r.PbPath + "/" + table + ".proto"
+	outputFile := r.pbPath + "/" + table + ".proto"
 	return r.output(outputFile, file)
 }
 
@@ -76,6 +82,8 @@ type GenerationPb struct {
 	lowerTableName      string            // 表名称首字母小写
 	upperTableName      string            // 表名称首字母大写
 	columnNameToName    map[string]string // 字段名称对应的Go名称
+	packageStr          string
+	goPackageStr        string
 }
 
 func (g *GenerationPb) GetTableComment(table string) string {
@@ -92,7 +100,7 @@ func (g *GenerationPb) GenSyntax() string {
 
 func (g *GenerationPb) GenPackage() string {
 	str, _ := template.NewTemplate("Package").Parse(Package).Execute(map[string]any{
-		"upperTableName": g.upperTableName,
+		"packageStr": g.packageStr,
 	})
 	return fmt.Sprintln(str.String())
 }
@@ -103,7 +111,9 @@ func (g *GenerationPb) GenImport() string {
 }
 
 func (g *GenerationPb) GenOption() string {
-	str, _ := template.NewTemplate("Option").Parse(Option).Execute(map[string]any{})
+	str, _ := template.NewTemplate("Option").Parse(Option).Execute(map[string]any{
+		"goPackageStr": g.goPackageStr,
+	})
 	return fmt.Sprintln(str.String())
 }
 
