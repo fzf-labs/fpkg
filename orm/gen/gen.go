@@ -32,7 +32,7 @@ type GenerationDB struct {
 	opts       []gen.ModelOpt                                                // 特殊处理逻辑函数
 }
 
-func NewGeneration(db *gorm.DB, outPutPath string, opts ...OptionDB) *GenerationDB {
+func NewGenerationDB(db *gorm.DB, outPutPath string, opts ...OptionDB) *GenerationDB {
 	g := &GenerationDB{
 		db:         db,
 		outPutPath: outPutPath,

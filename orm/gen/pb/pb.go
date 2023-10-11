@@ -92,10 +92,13 @@ type GenerationPb struct {
 }
 
 func (g *GenerationPb) GetTableComment(table string) string {
-	var name string
-	sql := fmt.Sprintf(`SELECT obj_description(relfilenode,'pg_class')AS table_comment FROM pg_class WHERE relname='%s'`, table)
-	g.gorm.Raw(sql).Scan(&name)
-	return name
+	type result struct {
+		Comment string `json:"comment"`
+	}
+	var res result
+	sql := fmt.Sprintf(`SELECT obj_description(relfilenode,'pg_class')AS comment FROM pg_class WHERE relname='%s'`, table)
+	g.gorm.Raw(sql).Scan(&res)
+	return res.Comment
 }
 
 func (g *GenerationPb) GenSyntax() string {

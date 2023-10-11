@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package api.gorm_gen.v1;
 
-import "paginator/paginator.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "paginator/paginator.proto";
@@ -12,25 +11,25 @@ import "validate/validate.proto";
 option go_package = "api/gorm_gen/v1;v1";
 
 service UserDemo {
-  //用户信息表-创建一条数据
+  //用户-创建一条数据
   rpc UserDemoStore(UserDemoStoreReq) returns (UserDemoStoreReply) {
     option (google.api.http) = {
       post: "/user_demo/v1/user_demo_store"
       body: "*"
     };
   }
-  //用户信息表-删除多条数据
+  //用户-删除多条数据
   rpc UserDemoDel(UserDemoDelReq) returns (UserDemoDelReply) {
     option (google.api.http) = {
       post: "/user_demo/v1/user_demo_del"
       body: "*"
     };
   }
-  //用户信息表-单条数据查询
+  //用户-单条数据查询
   rpc UserDemoOne(UserDemoOneReq) returns (UserDemoOneReply) {
     option (google.api.http) = {get: "/user_demo/v1/user_demo_info"};
   }
-  //用户信息表-列表数据查询
+  //用户-列表数据查询
   rpc UserDemoList(UserDemoListReq) returns (UserDemoListReply) {
     option (google.api.http) = {
       post: "/user_demo/v1/user_demo_list",
@@ -38,7 +37,7 @@ service UserDemo {
     };
   }
 }
-//用户信息表信息
+//用户信息
 message UserDemoInfo {
 	int32 ID = 1; // ID
 	string UID = 2; // uid
@@ -61,7 +60,7 @@ message UserDemoInfo {
 
 }
 
-//请求-用户信息表-创建一条数据
+//请求-用户-创建一条数据
 message UserDemoStoreReq {
 	int32 ID = 1; // ID
 	string UID = 2; // uid
@@ -82,38 +81,38 @@ message UserDemoStoreReq {
 
 }
 
-//响应-用户信息表-创建一条数据
+//响应-用户-创建一条数据
 message UserDemoStoreReply {
 	string ID = 1; // ID
 
 }
 
-//请求-用户信息表-删除多条数据
+//请求-用户-删除多条数据
 message UserDemoDelReq {
 	string ID = 1; // ID
 
 }
 
-//响应-用户信息表-删除多条数据
+//响应-用户-删除多条数据
 message UserDemoDelReply {}
 
-//请求-用户信息表-单条数据查询
+//请求-用户-单条数据查询
 message UserDemoOneReq {
 	string ID = 1; // ID
 
 }
 
-//响应-用户信息表-单条数据查询
+//响应-用户-单条数据查询
 message UserDemoOneReply {
   UserDemoInfo info = 1;
 }
 
-//请求-用户信息表-列表数据查询
+//请求-用户-列表数据查询
 message UserDemoListReq {
   paginator.PaginatorReq paginator = 1; //分页
 }
 
-//响应-用户信息表-列表数据查询
+//响应-用户-列表数据查询
 message UserDemoListReply {
   paginator.PaginatorReply paginator = 1; // 分页
   repeated UserDemoInfo list = 2; // 列表数据

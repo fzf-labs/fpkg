@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package api.gorm_gen.v1;
 
-import "paginator/paginator.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "paginator/paginator.proto";
