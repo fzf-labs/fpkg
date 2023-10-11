@@ -8,9 +8,11 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/fzf-labs/fpkg/orm/gen/utils/file"
 	"github.com/fzf-labs/fpkg/orm/gen/utils/template"
 	"github.com/fzf-labs/fpkg/orm/gen/utils/util"
 	"github.com/iancoleman/strcase"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -58,6 +60,9 @@ func (r *Pb) GenerationTable(table string, columnNameToName map[string]string) e
 }
 
 func (r *Pb) output(filePath, content string) error {
+	if file.FileExists(filePath) {
+		return errors.New(fmt.Sprintf("%s exist", filePath))
+	}
 	fileDir := filepath.Dir(filePath)
 	if err := os.MkdirAll(fileDir, 0775); err != nil {
 		return err
