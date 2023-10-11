@@ -244,7 +244,7 @@ type GenerationPb struct {
 	goPackageStr string
 }
 
-func NewGenerationPb(db *gorm.DB, outPutPath string, packageStr string, goPackageStr string, opts ...OptionPb) *GenerationPb {
+func NewGenerationPb(db *gorm.DB, outPutPath, packageStr, goPackageStr string, opts ...OptionPb) *GenerationPb {
 	g := &GenerationPb{
 		db:           db,
 		outPutPath:   outPutPath,
