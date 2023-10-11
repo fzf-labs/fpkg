@@ -33,17 +33,11 @@ message {{.upperTableName}}OneReply {
 
 //请求-{{.tableNameComment}}-列表数据查询
 message {{.upperTableName}}ListReq {
-  int32 page = 1 [(validate.rules).int32 = {gte: 1}]; //页码
-  int32 pageSize = 2 [(validate.rules).int32 = {
-    gte: 1,
-    lte: 1000
-  }]; //页数
+  paginator.PaginatorReq paginator = 1; //分页
 }
 
 //响应-{{.tableNameComment}}-列表数据查询
 message {{.upperTableName}}ListReply {
-  int32 page = 1; // 页码
-  int32 pageSize = 2; // 页数
-  int32 total = 3;// 总数
-  repeated {{.upperTableName}}Info list = 4; //列表数据
+  paginator.PaginatorReply paginator = 1; // 分页
+  repeated {{.upperTableName}}Info list = 2; // 列表数据
 }

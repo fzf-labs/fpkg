@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package DataTypeDemo.v1;
 
+import "paginator/paginator.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "paginator/paginator.proto";
@@ -117,18 +118,12 @@ message DataTypeDemoOneReply {
 
 //请求-数据类型示例-列表数据查询
 message DataTypeDemoListReq {
-  int32 page = 1 [(validate.rules).int32 = {gte: 1}]; //页码
-  int32 pageSize = 2 [(validate.rules).int32 = {
-    gte: 1,
-    lte: 1000
-  }]; //页数
+  paginator.PaginatorReq paginator = 1; //分页
 }
 
 //响应-数据类型示例-列表数据查询
 message DataTypeDemoListReply {
-  int32 page = 1; // 页码
-  int32 pageSize = 2; // 页数
-  int32 total = 3;// 总数
-  repeated DataTypeDemoInfo list = 4; //列表数据
+  paginator.PaginatorReply paginator = 1; // 分页
+  repeated DataTypeDemoInfo list = 2; // 列表数据
 }
 

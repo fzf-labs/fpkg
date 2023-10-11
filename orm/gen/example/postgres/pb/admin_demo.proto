@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package AdminDemo.v1;
 
+import "paginator/paginator.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "paginator/paginator.proto";
@@ -105,18 +106,12 @@ message AdminDemoOneReply {
 
 //请求-系统-用户-列表数据查询
 message AdminDemoListReq {
-  int32 page = 1 [(validate.rules).int32 = {gte: 1}]; //页码
-  int32 pageSize = 2 [(validate.rules).int32 = {
-    gte: 1,
-    lte: 1000
-  }]; //页数
+  paginator.PaginatorReq paginator = 1; //分页
 }
 
 //响应-系统-用户-列表数据查询
 message AdminDemoListReply {
-  int32 page = 1; // 页码
-  int32 pageSize = 2; // 页数
-  int32 total = 3;// 总数
-  repeated AdminDemoInfo list = 4; //列表数据
+  paginator.PaginatorReply paginator = 1; // 分页
+  repeated AdminDemoInfo list = 2; // 列表数据
 }
 
