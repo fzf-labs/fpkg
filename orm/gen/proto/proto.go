@@ -1,4 +1,4 @@
-package pb
+package proto
 
 import (
 	"fmt"
@@ -16,50 +16,49 @@ import (
 	"gorm.io/gorm"
 )
 
-type Pb struct {
-	gorm         *gorm.DB
-	pbPath       string
-	packageStr   string
-	goPackageStr string
-}
-
-func NewPbRepo(db *gorm.DB, pbPath, packageStr, goPackageStr string) *Pb {
-	return &Pb{
-		gorm:         db,
-		pbPath:       pbPath,
-		packageStr:   packageStr,
-		goPackageStr: goPackageStr,
-	}
-}
-
-// GenerationTable 生成
-func (r *Pb) GenerationTable(table string, columnNameToName map[string]string) error {
-	var file string
-	g := &GenerationPb{
-		gorm:                r.gorm,
+// GenerationPB 生成
+func GenerationPB(db *gorm.DB, outPutPath, packageStr, goPackageStr, table string, columnNameToName map[string]string) error {
+	var f string
+	p := &Proto{
+		gorm:                db,
+		outPutPath:          outPutPath,
+		packageStr:          packageStr,
+		goPackageStr:        goPackageStr,
 		tableName:           table,
 		tableNameComment:    "",
 		tableNameUnderScore: strcase.ToSnake(table),
 		lowerTableName:      "",
 		upperTableName:      "",
 		columnNameToName:    columnNameToName,
-		packageStr:          r.packageStr,
-		goPackageStr:        r.goPackageStr,
 	}
-	g.tableNameComment = g.GetTableComment(table)
-	g.lowerTableName = g.LowerName(table)
-	g.upperTableName = g.UpperName(table)
-	file += g.GenSyntax()
-	file += g.GenPackage()
-	file += g.GenImport()
-	file += g.GenOption()
-	file += g.GenService()
-	file += g.GenMessage()
-	outputFile := r.pbPath + "/" + table + ".proto"
-	return r.output(outputFile, file)
+	p.tableNameComment = p.GetTableComment(table)
+	p.lowerTableName = p.LowerName(table)
+	p.upperTableName = p.UpperName(table)
+	f += p.GenSyntax()
+	f += p.GenPackage()
+	f += p.GenImport()
+	f += p.GenOption()
+	f += p.GenService()
+	f += p.GenMessage()
+	outputFile := p.outPutPath + "/" + table + ".proto"
+	return p.output(outputFile, f)
 }
 
-func (r *Pb) output(filePath, content string) error {
+type Proto struct {
+	gorm                *gorm.DB          // 数据库
+	outPutPath          string            // 生成文件路径
+	packageStr          string            // proto中的package名称
+	goPackageStr        string            // proto中的goPackage名称
+	tableName           string            // 表名称
+	tableNameComment    string            // 表注释
+	tableNameUnderScore string            // 表下划线名称
+	lowerTableName      string            // 表名称首字母小写
+	upperTableName      string            // 表名称首字母大写
+	columnNameToName    map[string]string // 字段名称对应的Go名称
+
+}
+
+func (p *Proto) output(filePath, content string) error {
 	if file.FileExists(filePath) {
 		return errors.New(fmt.Sprintf("%s exist", filePath))
 	}
@@ -79,63 +78,51 @@ func (r *Pb) output(filePath, content string) error {
 	return err
 }
 
-type GenerationPb struct {
-	gorm                *gorm.DB
-	tableName           string            // 表名称
-	tableNameComment    string            // 表注释
-	tableNameUnderScore string            // 表下划线名称
-	lowerTableName      string            // 表名称首字母小写
-	upperTableName      string            // 表名称首字母大写
-	columnNameToName    map[string]string // 字段名称对应的Go名称
-	packageStr          string
-	goPackageStr        string
-}
-
-func (g *GenerationPb) GetTableComment(table string) string {
+func (p *Proto) GetTableComment(table string) string {
 	type result struct {
 		Comment string `json:"comment"`
 	}
 	var res result
 	sql := fmt.Sprintf(`SELECT obj_description(relfilenode,'pg_class')AS comment FROM pg_class WHERE relname='%s'`, table)
-	g.gorm.Raw(sql).Scan(&res)
+	p.gorm.Raw(sql).Scan(&res)
 	return res.Comment
 }
 
-func (g *GenerationPb) GenSyntax() string {
+func (p *Proto) GenSyntax() string {
 	str, _ := template.NewTemplate("Syntax").Parse(Syntax).Execute(map[string]any{})
 	return fmt.Sprintln(str.String())
 }
 
-func (g *GenerationPb) GenPackage() string {
+func (p *Proto) GenPackage() string {
 	str, _ := template.NewTemplate("Package").Parse(Package).Execute(map[string]any{
-		"packageStr": g.packageStr,
+		"packageStr": p.packageStr,
 	})
 	return fmt.Sprintln(str.String())
 }
 
-func (g *GenerationPb) GenImport() string {
+func (p *Proto) GenImport() string {
 	str, _ := template.NewTemplate("Import").Parse(Import).Execute(map[string]any{})
 	return fmt.Sprintln(str.String())
 }
 
-func (g *GenerationPb) GenOption() string {
+func (p *Proto) GenOption() string {
 	str, _ := template.NewTemplate("Option").Parse(Option).Execute(map[string]any{
-		"goPackageStr": g.goPackageStr,
+		"goPackageStr": p.goPackageStr,
 	})
 	return fmt.Sprintln(str.String())
 }
 
-func (g *GenerationPb) GenService() string {
+func (p *Proto) GenService() string {
 	str, _ := template.NewTemplate("Service").Parse(Service).Execute(map[string]any{
-		"upperTableName":      g.upperTableName,
-		"tableNameComment":    g.tableNameComment,
-		"tableNameUnderScore": g.tableNameUnderScore,
+		"upperTableName":      p.upperTableName,
+		"tableNameComment":    p.tableNameComment,
+		"tableNameUnderScore": p.tableNameUnderScore,
 	})
 	return fmt.Sprintln(str.String())
 }
 
-func (g *GenerationPb) GenMessage() string {
-	columnTypes, err := g.gorm.Migrator().ColumnTypes(g.tableName)
+func (p *Proto) GenMessage() string {
+	columnTypes, err := p.gorm.Migrator().ColumnTypes(p.tableName)
 	if err != nil {
 		return ""
 	}
@@ -148,7 +135,7 @@ func (g *GenerationPb) GenMessage() string {
 	for k, v := range columnTypes {
 		columnTypeInfo[v.Name()] = v
 		pbType := columnTypeToPbType(v.DatabaseTypeName())
-		pbName := LowerFieldName(g.columnNameToName[v.Name()])
+		pbName := LowerFieldName(p.columnNameToName[v.Name()])
 		comment, _ := v.Comment()
 		if util.StrSliFind([]string{"deletedAt", "deleted_at", "deletedTime", "deleted_time"}, v.Name()) {
 			continue
@@ -159,7 +146,7 @@ func (g *GenerationPb) GenMessage() string {
 		}
 		storeReq += fmt.Sprintf("	%s %s = %d; // %s\n", pbType, pbName, k+1, comment)
 	}
-	indexes, err := g.gorm.Migrator().GetIndexes(g.tableName)
+	indexes, err := p.gorm.Migrator().GetIndexes(p.tableName)
 	if err != nil {
 		return ""
 	}
@@ -175,14 +162,14 @@ func (g *GenerationPb) GenMessage() string {
 		primaryKeyColumnType, _ := columnTypeInfo[primaryKeyColumn].ColumnType()
 		primaryKeyComment, _ := columnTypeInfo[primaryKeyColumn].Comment()
 		pbType := columnTypeToPbType(primaryKeyColumnType)
-		pbName := LowerFieldName(g.columnNameToName[primaryKeyColumn])
+		pbName := LowerFieldName(p.columnNameToName[primaryKeyColumn])
 		storeReply = fmt.Sprintf("	%s %s = %d; // %s\n", pbType, pbName, 1, primaryKeyComment)
 		oneReq = fmt.Sprintf("	%s %s = %d; // %s\n", pbType, pbName, 1, primaryKeyComment)
 		delReq = fmt.Sprintf("	%s %s = %d; // %s\n", pbType, pbName, 1, primaryKeyComment)
 	}
 	str, _ := template.NewTemplate("Message").Parse(Message).Execute(map[string]any{
-		"tableNameComment": g.tableNameComment,
-		"upperTableName":   g.upperTableName,
+		"tableNameComment": p.tableNameComment,
+		"upperTableName":   p.upperTableName,
 		"Info":             info,
 		"StoreReq":         storeReq,
 		"StoreReply":       storeReply,
@@ -193,13 +180,13 @@ func (g *GenerationPb) GenMessage() string {
 }
 
 // UpperName 大写
-func (g *GenerationPb) UpperName(s string) string {
-	return g.gorm.NamingStrategy.SchemaName(s)
+func (p *Proto) UpperName(s string) string {
+	return p.gorm.NamingStrategy.SchemaName(s)
 }
 
 // LowerName 小写
-func (g *GenerationPb) LowerName(s string) string {
-	str := g.UpperName(s)
+func (p *Proto) LowerName(s string) string {
+	str := p.UpperName(s)
 	if str == "" {
 		return str
 	}

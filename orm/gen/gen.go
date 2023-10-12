@@ -7,8 +7,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/fzf-labs/fpkg/orm/gen/pb"
+	"github.com/fzf-labs/fpkg/orm/gen/proto"
 	"github.com/fzf-labs/fpkg/orm/gen/repo"
+	"github.com/fzf-labs/fpkg/orm/gen/utils/file"
 	"github.com/fzf-labs/fpkg/orm/gen/utils/util"
 	"github.com/iancoleman/strcase"
 	"gorm.io/driver/mysql"
@@ -122,10 +123,8 @@ func (g *GenerationDB) Do() {
 	if !g.genRepo {
 		return
 	}
-	// 生成repo
-	generationRepo := repo.NewGenerationRepo(g.db, daoPath, modelPath, repoPath)
 	// 生成repo的文件夹目录文件
-	err = generationRepo.MkdirPath()
+	err = file.MkdirPath(repoPath)
 	if err != nil {
 		log.Println("repo MkdirPath err:", err)
 		return
@@ -133,28 +132,28 @@ func (g *GenerationDB) Do() {
 	var wg sync.WaitGroup
 	wg.Add(len(tables))
 	for _, v := range tables {
-		t := v
-		go func(table string) {
+		table := v
+		// 表字段对应的类型
+		columnNameToDataType := make(map[string]string)
+		// 表字段对应的名称
+		columnNameToName := make(map[string]string)
+		// 表字段对应的dao字段类型
+		columnNameToFieldType := make(map[string]string)
+		queryStructMeta := generator.GenerateModel(table)
+		for _, vv := range queryStructMeta.Fields {
+			columnNameToDataType[vv.ColumnName] = vv.Type
+			columnNameToName[vv.ColumnName] = vv.Name
+			columnNameToFieldType[vv.ColumnName] = vv.GenType()
+		}
+		go func(db *gorm.DB, table string, columnNameToDataType, columnNameToName, columnNameToFieldType map[string]string) {
 			defer wg.Done()
-			// 表字段对应的类型
-			columnNameToDataType := make(map[string]string)
-			// 表字段对应的名称
-			columnNameToName := make(map[string]string)
-			// 表字段对应的dao字段类型
-			columnNameToFieldType := make(map[string]string)
-			queryStructMeta := generator.GenerateModel(table)
-			for _, vv := range queryStructMeta.Fields {
-				columnNameToDataType[vv.ColumnName] = vv.Type
-				columnNameToName[vv.ColumnName] = vv.Name
-				columnNameToFieldType[vv.ColumnName] = vv.GenType()
-			}
 			// 数据表repo代码生成
-			err = generationRepo.GenerationTable(table, columnNameToDataType, columnNameToName, columnNameToFieldType)
-			if err != nil {
-				log.Println("repo GenerationTable err:", err)
+			err2 := repo.GenerationTable(db, daoPath, modelPath, repoPath, table, columnNameToDataType, columnNameToName, columnNameToFieldType)
+			if err2 != nil {
+				log.Println("repo GenerationTable err:", err2)
 				return
 			}
-		}(t)
+		}(g.db, table, columnNameToDataType, columnNameToName, columnNameToFieldType)
 	}
 	wg.Wait()
 }
@@ -236,15 +235,8 @@ func LowerCamelCase(s string) string {
 	return strcase.ToLowerCamel(s)
 }
 
-type GenerationPb struct {
-	db           *gorm.DB       // 数据库
-	outPutPath   string         // 文件生成地址
-	opts         []gen.ModelOpt // 特殊处理逻辑函
-	packageStr   string
-	goPackageStr string
-}
-
-func NewGenerationPb(db *gorm.DB, outPutPath, packageStr, goPackageStr string, opts ...OptionPb) *GenerationPb {
+// NewGenerationPB SQL 生成 proto
+func NewGenerationPB(db *gorm.DB, outPutPath, packageStr, goPackageStr string, opts ...OptionPB) *GenerationPb {
 	g := &GenerationPb{
 		db:           db,
 		outPutPath:   outPutPath,
@@ -259,10 +251,18 @@ func NewGenerationPb(db *gorm.DB, outPutPath, packageStr, goPackageStr string, o
 	return g
 }
 
-type OptionPb func(gen *GenerationPb)
+type GenerationPb struct {
+	db           *gorm.DB       // 数据库
+	outPutPath   string         // 文件生成地址
+	opts         []gen.ModelOpt // 特殊处理逻辑函
+	packageStr   string
+	goPackageStr string
+}
 
-// WithPbOpts 选项函数-自定义特殊设置
-func WithPbOpts(opts ...gen.ModelOpt) OptionPb {
+type OptionPB func(gen *GenerationPb)
+
+// WithPBOpts 选项函数-自定义特殊设置
+func WithPBOpts(opts ...gen.ModelOpt) OptionPB {
 	return func(r *GenerationPb) {
 		r.opts = opts
 	}
@@ -284,26 +284,25 @@ func (g *GenerationPb) Do() {
 	if err != nil {
 		return
 	}
-	pbRepo := pb.NewPbRepo(g.db, g.outPutPath, g.packageStr, g.goPackageStr)
 	var wg sync.WaitGroup
 	wg.Add(len(tables))
 	for _, v := range tables {
-		t := v
-		go func(table string) {
+		table := v
+		// 表字段对应的名称
+		columnNameToName := make(map[string]string)
+		queryStructMeta := generator.GenerateModel(table)
+		for _, vv := range queryStructMeta.Fields {
+			columnNameToName[vv.ColumnName] = vv.Name
+		}
+		go func(db *gorm.DB, outPutPath, packageStr, goPackageStr, table string, columnNameToName map[string]string) {
 			defer wg.Done()
-			// 表字段对应的名称
-			columnNameToName := make(map[string]string)
-			queryStructMeta := generator.GenerateModel(table)
-			for _, vv := range queryStructMeta.Fields {
-				columnNameToName[vv.ColumnName] = vv.Name
-			}
 			// 数据表repo代码生成
-			err = pbRepo.GenerationTable(table, columnNameToName)
-			if err != nil {
-				log.Println("repo GenerationTable err:", err)
+			err2 := proto.GenerationPB(db, outPutPath, packageStr, goPackageStr, table, columnNameToName)
+			if err2 != nil {
+				log.Println("repo GenerationTable err:", err2)
 				return
 			}
-		}(t)
+		}(g.db, g.outPutPath, g.packageStr, g.goPackageStr, table, columnNameToName)
 	}
 	wg.Wait()
 }

@@ -29,80 +29,67 @@ var KeyWords = []string{
 	"marshal",
 }
 
-type Repo struct {
-	gorm         *gorm.DB
-	daoPath      string
-	modelPath    string
-	relativePath string
-}
-
-func NewGenerationRepo(db *gorm.DB, daoPath, modelPath, relativePath string) *Repo {
-	return &Repo{
-		gorm:         db,
-		daoPath:      daoPath,
-		modelPath:    modelPath,
-		relativePath: relativePath,
-	}
-}
-
-func (r *Repo) GenerationTable(table string, columnNameToDataType, columnNameToName, columnNameToFieldType map[string]string) error {
+func GenerationTable(db *gorm.DB, daoPath, modelPath, repoPath, table string, columnNameToDataType, columnNameToName, columnNameToFieldType map[string]string) error {
 	var file string
-	// 查询当前db的索引
-	indexes, err := r.gorm.Migrator().GetIndexes(table)
-	if err != nil {
-		return err
-	}
-	indexes = r.ProcessIndex(indexes)
-	lowerDBName := r.gorm.Migrator().CurrentDatabase()
-	generationRepo := GenerationRepo{
-		gorm:                  r.gorm,
+	g := Repo{
+		gorm:                  db,
+		daoPath:               daoPath,
+		modelPath:             modelPath,
+		repoPath:              repoPath,
 		columnNameToDataType:  columnNameToDataType,
 		columnNameToName:      columnNameToName,
 		columnNameToFieldType: columnNameToFieldType,
 		firstTableChar:        "",
-		lowerDBName:           lowerDBName,
+		lowerDBName:           "",
 		lowerTableName:        "",
 		upperTableName:        "",
-		daoPkgPath:            util.FillModelPkgPath(r.daoPath),
-		modelPkgPath:          util.FillModelPkgPath(r.modelPath),
-		index:                 indexes,
+		daoPkgPath:            util.FillModelPkgPath(daoPath),
+		modelPkgPath:          util.FillModelPkgPath(modelPath),
+		index:                 make([]gorm.Index, 0),
 	}
-	generationRepo.lowerTableName = generationRepo.LowerName(table)
-	generationRepo.upperTableName = generationRepo.UpperName(table)
-	generationRepo.firstTableChar = generationRepo.lowerTableName[0:1]
-	generatePkg, err := generationRepo.generatePkg()
+	// 查询当前db的索引
+	indexes, err := g.gorm.Migrator().GetIndexes(table)
 	if err != nil {
 		return err
 	}
-	generateImport, err := generationRepo.generateImport()
+	g.index = g.ProcessIndex(indexes)
+	g.lowerDBName = g.gorm.Migrator().CurrentDatabase()
+	g.lowerTableName = g.LowerName(table)
+	g.upperTableName = g.UpperName(table)
+	g.firstTableChar = g.lowerTableName[0:1]
+	generatePkg, err := g.generatePkg()
 	if err != nil {
 		return err
 	}
-	generateVar, err := generationRepo.generateVar()
+	generateImport, err := g.generateImport()
 	if err != nil {
 		return err
 	}
-	generateTypes, err := generationRepo.generateTypes()
+	generateVar, err := g.generateVar()
 	if err != nil {
 		return err
 	}
-	generateNew, err := generationRepo.generateNew()
+	generateTypes, err := g.generateTypes()
 	if err != nil {
 		return err
 	}
-	generateCreateFunc, err := generationRepo.generateCreateFunc()
+	generateNew, err := g.generateNew()
 	if err != nil {
 		return err
 	}
-	generateUpdateFunc, err := generationRepo.generateUpdateFunc()
+	generateCreateFunc, err := g.generateCreateFunc()
 	if err != nil {
 		return err
 	}
-	generateDelFunc, err := generationRepo.generateDelFunc()
+	generateUpdateFunc, err := g.generateUpdateFunc()
 	if err != nil {
 		return err
 	}
-	generateReadFunc, err := generationRepo.generateReadFunc()
+	generateDelFunc, err := g.generateDelFunc()
+	if err != nil {
+		return err
+	}
+	generateReadFunc, err := g.generateReadFunc()
 	if err != nil {
 		return err
 	}
@@ -115,20 +102,29 @@ func (r *Repo) GenerationTable(table string, columnNameToDataType, columnNameToN
 	file += fmt.Sprintln(generateUpdateFunc)
 	file += fmt.Sprintln(generateDelFunc)
 	file += fmt.Sprintln(generateReadFunc)
-	outputFile := r.relativePath + "/" + table + ".repo.go"
-	err = r.output(outputFile, []byte(file))
+	outputFile := g.repoPath + "/" + table + ".repo.go"
+	err = g.output(outputFile, []byte(file))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// MkdirPath 生成文件夹
-func (r *Repo) MkdirPath() error {
-	if err := os.MkdirAll(r.relativePath, os.ModePerm); err != nil {
-		return fmt.Errorf("create model pkg path(%s) fail: %s", r.relativePath, err)
-	}
-	return nil
+type Repo struct {
+	gorm                  *gorm.DB          // 数据库
+	daoPath               string            // dao所在的路径
+	modelPath             string            // model所在的路径
+	repoPath              string            // repo所在的路径
+	columnNameToDataType  map[string]string // 字段名称对应的类型
+	columnNameToName      map[string]string // 字段名称对应的Go名称
+	columnNameToFieldType map[string]string // 字段名称对应的dao类型
+	lowerDBName           string            // 数据库名称小写
+	firstTableChar        string            // 表名称第一个字母
+	lowerTableName        string            // 表名称小写
+	upperTableName        string            // 表名称大写
+	daoPkgPath            string            // go文件中daoPkgPath
+	modelPkgPath          string            // go文件中modelPkgPath
+	index                 []gorm.Index      // 索引
 }
 
 // ProcessIndex 索引处理  索引去重和排序
@@ -199,22 +195,8 @@ func (r *Repo) output(fileName string, content []byte) error {
 	return os.WriteFile(fileName, result, 0600)
 }
 
-type GenerationRepo struct {
-	gorm                  *gorm.DB
-	columnNameToDataType  map[string]string // 字段名称对应的类型
-	columnNameToName      map[string]string // 字段名称对应的Go名称
-	columnNameToFieldType map[string]string // 字段名称对应的dao类型
-	firstTableChar        string
-	lowerDBName           string
-	lowerTableName        string
-	upperTableName        string
-	daoPkgPath            string
-	modelPkgPath          string
-	index                 []gorm.Index
-}
-
 // generatePkg
-func (r *GenerationRepo) generatePkg() (string, error) {
+func (r *Repo) generatePkg() (string, error) {
 	tplParams := map[string]any{
 		"lowerDBName": r.lowerDBName,
 	}
@@ -226,7 +208,7 @@ func (r *GenerationRepo) generatePkg() (string, error) {
 }
 
 // generateImport
-func (r *GenerationRepo) generateImport() (string, error) {
+func (r *Repo) generateImport() (string, error) {
 	tplParams := map[string]any{
 		"daoPkgPath":   r.daoPkgPath,
 		"modelPkgPath": r.daoPkgPath,
@@ -239,7 +221,7 @@ func (r *GenerationRepo) generateImport() (string, error) {
 }
 
 // generateVar
-func (r *GenerationRepo) generateVar() (string, error) {
+func (r *Repo) generateVar() (string, error) {
 	var varStr string
 	var cacheKeys string
 	for _, v := range r.index {
@@ -283,7 +265,7 @@ func (r *GenerationRepo) generateVar() (string, error) {
 }
 
 // generateCreateMethods
-func (r *GenerationRepo) generateCreateMethods() (string, error) {
+func (r *Repo) generateCreateMethods() (string, error) {
 	var createMethods string
 	interfaceCreateOne, err := template.NewTemplate("InterfaceCreateOne").Parse(InterfaceCreateOne).Execute(map[string]any{
 		"lowerDBName":    r.lowerDBName,
@@ -329,7 +311,7 @@ func (r *GenerationRepo) generateCreateMethods() (string, error) {
 }
 
 // generateUpdateMethods
-func (r *GenerationRepo) generateUpdateMethods() (string, error) {
+func (r *Repo) generateUpdateMethods() (string, error) {
 	var updateMethods string
 	var primaryKey string
 	for _, index := range r.index {
@@ -379,7 +361,7 @@ func (r *GenerationRepo) generateUpdateMethods() (string, error) {
 }
 
 // generateReadMethods
-func (r *GenerationRepo) generateReadMethods() (string, error) {
+func (r *Repo) generateReadMethods() (string, error) {
 	var readMethods string
 	for _, v := range r.index {
 		if r.CheckDaoFieldType(v.Columns()) {
@@ -542,7 +524,7 @@ func (r *GenerationRepo) generateReadMethods() (string, error) {
 }
 
 // generateDelMethods
-func (r *GenerationRepo) generateDelMethods() (string, error) {
+func (r *Repo) generateDelMethods() (string, error) {
 	var delMethods string
 	var haveUnique bool
 	for _, v := range r.index {
@@ -753,7 +735,7 @@ func (r *GenerationRepo) generateDelMethods() (string, error) {
 }
 
 // generateTypes
-func (r *GenerationRepo) generateTypes() (string, error) {
+func (r *Repo) generateTypes() (string, error) {
 	var methods string
 	createMethods, err := r.generateCreateMethods()
 	if err != nil {
@@ -785,7 +767,7 @@ func (r *GenerationRepo) generateTypes() (string, error) {
 }
 
 // generateNew
-func (r *GenerationRepo) generateNew() (string, error) {
+func (r *Repo) generateNew() (string, error) {
 	newTpl, err := template.NewTemplate("New").Parse(New).Execute(map[string]any{
 		"lowerDBName":    r.lowerDBName,
 		"upperTableName": r.upperTableName,
@@ -798,7 +780,7 @@ func (r *GenerationRepo) generateNew() (string, error) {
 }
 
 // generateCreateFunc
-func (r *GenerationRepo) generateCreateFunc() (string, error) {
+func (r *Repo) generateCreateFunc() (string, error) {
 	var createFunc string
 	createOne, err := template.NewTemplate("CreateOne").Parse(CreateOne).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
@@ -853,7 +835,7 @@ func (r *GenerationRepo) generateCreateFunc() (string, error) {
 }
 
 // generateReadFunc
-func (r *GenerationRepo) generateReadFunc() (string, error) {
+func (r *Repo) generateReadFunc() (string, error) {
 	var readFunc string
 	for _, v := range r.index {
 		if r.CheckDaoFieldType(v.Columns()) {
@@ -1068,7 +1050,7 @@ func (r *GenerationRepo) generateReadFunc() (string, error) {
 }
 
 // generateUpdateFunc
-func (r *GenerationRepo) generateUpdateFunc() (string, error) {
+func (r *Repo) generateUpdateFunc() (string, error) {
 	var updateFunc string
 	var primaryKey string
 	for _, index := range r.index {
@@ -1130,7 +1112,7 @@ func (r *GenerationRepo) generateUpdateFunc() (string, error) {
 }
 
 // generateDelFunc
-func (r *GenerationRepo) generateDelFunc() (string, error) {
+func (r *Repo) generateDelFunc() (string, error) {
 	var delMethods string
 	var varCacheDelKeys string
 	var haveUnique bool
@@ -1381,12 +1363,12 @@ func (r *GenerationRepo) generateDelFunc() (string, error) {
 }
 
 // UpperFieldName 字段名称大写
-func (r *GenerationRepo) UpperFieldName(s string) string {
+func (r *Repo) UpperFieldName(s string) string {
 	return r.columnNameToName[s]
 }
 
 // LowerFieldName 字段名称小写
-func (r *GenerationRepo) LowerFieldName(s string) string {
+func (r *Repo) LowerFieldName(s string) string {
 	str := r.UpperFieldName(s)
 	if str == "" {
 		return str
@@ -1410,12 +1392,12 @@ func (r *GenerationRepo) LowerFieldName(s string) string {
 }
 
 // UpperName 大写
-func (r *GenerationRepo) UpperName(s string) string {
+func (r *Repo) UpperName(s string) string {
 	return r.gorm.NamingStrategy.SchemaName(s)
 }
 
 // LowerName 小写
-func (r *GenerationRepo) LowerName(s string) string {
+func (r *Repo) LowerName(s string) string {
 	str := r.UpperName(s)
 	if str == "" {
 		return str
@@ -1436,7 +1418,7 @@ func (r *GenerationRepo) LowerName(s string) string {
 }
 
 // Plural 复数形式
-func (r *GenerationRepo) Plural(s string) string {
+func (r *Repo) Plural(s string) string {
 	str := inflection.Plural(s)
 	if str == s {
 		str += "Plural"
@@ -1445,7 +1427,7 @@ func (r *GenerationRepo) Plural(s string) string {
 }
 
 // CheckDaoFieldType  检查字段状态
-func (r *GenerationRepo) CheckDaoFieldType(s []string) bool {
+func (r *Repo) CheckDaoFieldType(s []string) bool {
 	for _, v := range s {
 		if r.columnNameToFieldType[v] == "Field" {
 			return true
