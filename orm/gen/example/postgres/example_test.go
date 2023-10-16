@@ -73,7 +73,7 @@ func Test_FindMultiByPaginator(t *testing.T) {
 	result, total, err := repo.FindMultiByPaginator(ctx, &orm.PaginatorReq{
 		Page:     1,
 		PageSize: 1,
-		Order:    "created_at DESC",
+		Order:    "created_at,DESC",
 		Search: []*orm.SearchColumn{
 			{
 				Field: "nickname",
@@ -81,6 +81,12 @@ func Test_FindMultiByPaginator(t *testing.T) {
 				Exp:   "=",
 				Logic: "",
 			},
+			//{
+			//	Field: "status",
+			//	Value: "0,-1",
+			//	Exp:   "IN",
+			//	Logic: "",
+			//},
 		},
 	})
 	jsonutil.Dump(result)

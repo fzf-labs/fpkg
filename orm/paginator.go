@@ -4,22 +4,24 @@ import (
 	"fmt"
 	"math"
 	"strings"
+
+	"gorm.io/gorm/clause"
 )
 
-var expMap = map[string]string{
-	"=":    " = ",
-	"!=":   " <> ",
-	">":    " > ",
-	">=":   " >= ",
-	"<":    " < ",
-	"<=":   " <= ",
-	"IN":   " IN ",
-	"Like": " LIKE ",
+var expMap = map[string]struct{}{
+	"=":    {},
+	"!=":   {},
+	">":    {},
+	">=":   {},
+	"<":    {},
+	"<=":   {},
+	"IN":   {},
+	"Like": {},
 }
 
-var logicMap = map[string]string{
-	"AND": " AND ",
-	"OR":  " OR ",
+var logicMap = map[string]struct{}{
+	"AND": {},
+	"OR":  {},
 }
 
 type PaginatorReq struct {
@@ -43,60 +45,118 @@ type PaginatorReply struct {
 type SearchColumn struct {
 	Field string `json:"field"` // 字段
 	Value string `json:"value"` // 值
-	Exp   string `json:"exp"`   // 表达式 =, ! =, >, >=, <, <=, like
-	Logic string `json:"logic"` // 逻辑关系 and,or
+	Exp   string `json:"exp"`   // 表达式 expMap
+	Logic string `json:"logic"` // 逻辑关系 logicMap
 }
 
-// convert 字段数据转换
-func (s *SearchColumn) convert() error {
-	if s.Field == "" {
-		return fmt.Errorf("field 'name' cannot be empty")
+// Check 字段校验
+func (p *PaginatorReq) Check() error {
+	if p.Page <= 0 {
+		p.Page = 1
 	}
-	if s.Exp == "" {
-		s.Exp = "="
+	if p.PageSize <= 0 {
+		p.PageSize = 10
 	}
-	if v, ok := expMap[strings.TrimSpace(s.Exp)]; ok {
-		s.Exp = v
-		if s.Exp == " LIKE " {
-			s.Value = fmt.Sprintf("%%%v%%", s.Value)
+	if p.Order != "" {
+		split := strings.Split(p.Order, ",")
+		if len(split) != 2 {
+			return fmt.Errorf("order format error")
 		}
-	} else {
-		return fmt.Errorf("unknown s expression type '%s'", s.Exp)
+		if split[1] != "ASC" && split[1] != "DESC" {
+			return fmt.Errorf("order format error")
+		}
 	}
-	if s.Logic == "" {
-		s.Logic = "AND"
-	}
-	if v, ok := logicMap[strings.TrimSpace(s.Logic)]; ok {
-		s.Logic = v
-	} else {
-		return fmt.Errorf("unknown logic type '%s'", s.Logic)
+	if len(p.Search) > 0 {
+		for k := range p.Search {
+			if p.Search[k].Field == "" {
+				return fmt.Errorf("field 'name' cannot be empty")
+			}
+			if p.Search[k].Exp == "" {
+				p.Search[k].Exp = "="
+			}
+			if p.Search[k].Logic == "" {
+				p.Search[k].Logic = "AND"
+			}
+			if _, ok := expMap[strings.TrimSpace(p.Search[k].Exp)]; !ok {
+				return fmt.Errorf("unknown s exp type '%s'", p.Search[k].Exp)
+			}
+			if _, ok := logicMap[strings.TrimSpace(p.Search[k].Logic)]; !ok {
+				return fmt.Errorf("unknown logic type '%s'", p.Search[k].Logic)
+			}
+		}
 	}
 	return nil
 }
 
-// ConvertToGormConditions 根据SearchColumn参数转换为符合gorm的参数
-func (p *PaginatorReq) ConvertToGormConditions() (str string, args []any, err error) {
+// ConvertToGormWhereExpression 根据SearchColumn参数转换为符合gorm where clause.Expression
+func (p *PaginatorReq) ConvertToGormWhereExpression() []clause.Expression {
+	expressions := make([]clause.Expression, 0)
 	l := len(p.Search)
 	if l == 0 {
-		return "", nil, nil
+		return expressions
 	}
-	for _, column := range p.Search {
-		if column.Exp == "IN" {
-			str = column.Field + " IN (?)" + column.Logic
-			args = []any{args}
-		} else {
-			err := column.convert()
-			if err != nil {
-				return "", nil, err
+	cols := make([]clause.Expression, 0)
+	for _, v := range p.Search {
+		if v.Exp == "=" {
+			cols = append(cols, clause.Eq{Column: v.Field, Value: v.Value})
+		}
+		if v.Exp == "!=" {
+			cols = append(cols, clause.Neq{Column: v.Field, Value: v.Value})
+		}
+		if v.Exp == ">" {
+			cols = append(cols, clause.Gt{Column: v.Field, Value: v.Value})
+		}
+		if v.Exp == ">=" {
+			cols = append(cols, clause.Gte{Column: v.Field, Value: v.Value})
+		}
+		if v.Exp == "<" {
+			cols = append(cols, clause.Lt{Column: v.Field, Value: v.Value})
+		}
+		if v.Exp == "<=" {
+			cols = append(cols, clause.Lte{Column: v.Field, Value: v.Value})
+		}
+		if v.Exp == "IN" {
+			split := strings.Split(v.Value, ",")
+			if len(split) > 0 {
+				values := make([]interface{}, 0)
+				for _, vv := range split {
+					values = append(values, vv)
+				}
+				cols = append(cols, clause.IN{Column: v.Field, Values: values})
 			}
-			str += column.Field + column.Exp + "?" + column.Logic
-			args = append(args, column.Value)
+		}
+		if v.Exp == "Like" {
+			cols = append(cols, clause.Like{Column: v.Field, Value: v.Value})
+		}
+		if v.Logic == "AND" {
+			expressions = append(expressions, clause.And(cols...))
+		} else {
+			expressions = append(expressions, clause.Or(cols...))
 		}
 	}
-	for _, v := range logicMap {
-		str = strings.TrimRight(str, v)
+	return expressions
+}
+
+// ConvertToGormOrderExpression 根据SearchColumn参数转换为符合gorm order clause.Expression
+func (p *PaginatorReq) ConvertToGormOrderExpression() []clause.Expression {
+	expressions := make([]clause.Expression, 0)
+	if p.Order != "" {
+		split := strings.Split(p.Order, ",")
+		desc := false
+		if split[1] == "DESC" {
+			desc = true
+		}
+		expressions = append(expressions, clause.OrderBy{
+			Columns: []clause.OrderByColumn{
+				{
+					Column:  clause.Column{Name: split[0]},
+					Desc:    desc,
+					Reorder: false,
+				},
+			},
+		})
 	}
-	return str, args, nil
+	return expressions
 }
 
 // ConvertToPage 转换为page
@@ -129,9 +189,4 @@ func (p *PaginatorReq) ConvertToPage(total int) *PaginatorReply {
 		Limit:     pageSize,
 		Offset:    (page - 1) * pageSize,
 	}
-}
-
-// ConvertToOrder 转换为page
-func (p *PaginatorReq) ConvertToOrder() string {
-	return p.Order
 }

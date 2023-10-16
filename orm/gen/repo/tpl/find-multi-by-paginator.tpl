@@ -2,24 +2,21 @@
 func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiByPaginator(ctx context.Context, paginatorReq *orm.PaginatorReq) ([]*{{.lowerDBName}}_model.{{.upperTableName}}, *orm.PaginatorReply, error) {
 	result := make([]*{{.lowerDBName}}_model.{{.upperTableName}}, 0)
 	var total int64
-	queryStr, args, err := paginatorReq.ConvertToGormConditions()
+	err := paginatorReq.Check()
 	if err != nil {
 		return result, nil, err
 	}
-	err = {{.firstTableChar}}.db.WithContext(ctx).Model(&{{.lowerDBName}}_model.{{.upperTableName}}{}).Select([]string{"id"}).Where(queryStr, args...).Count(&total).Error
+	whereExpressions := paginatorReq.ConvertToGormWhereExpression()
+	orderExpressions := paginatorReq.ConvertToGormOrderExpression()
+	err = {{.firstTableChar}}.db.WithContext(ctx).Model(&{{.lowerDBName}}_model.{{.upperTableName}}{}).Select([]string{"id"}).Clauses(whereExpressions...).Count(&total).Error
 	if err != nil {
 		return result, nil, err
 	}
 	if total == 0 {
 		return result, nil, nil
 	}
-	query := {{.firstTableChar}}.db.WithContext(ctx)
-	order := paginatorReq.ConvertToOrder()
-	if(order != ""){
-	    query = query.Order(order)
-	}
 	paginatorReply := paginatorReq.ConvertToPage(int(total))
-	err = query.Limit(paginatorReply.Limit).Offset(paginatorReply.Offset).Where(queryStr, args...).Find(&result).Error
+	err = {{.firstTableChar}}.db.WithContext(ctx).Model(&{{.lowerDBName}}_model.{{.upperTableName}}{}).Limit(paginatorReply.Limit).Offset(paginatorReply.Offset).Clauses(whereExpressions...).Clauses(orderExpressions...).Find(&result).Error
 	if err != nil {
 		return result, nil, err
 	}

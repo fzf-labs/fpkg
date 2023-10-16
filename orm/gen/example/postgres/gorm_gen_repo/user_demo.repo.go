@@ -816,24 +816,21 @@ func (u *UserDemoRepo) FindMultiByIDS(ctx context.Context, IDS []int64) ([]*gorm
 func (u *UserDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorReq *orm.PaginatorReq) ([]*gorm_gen_model.UserDemo, *orm.PaginatorReply, error) {
 	result := make([]*gorm_gen_model.UserDemo, 0)
 	var total int64
-	queryStr, args, err := paginatorReq.ConvertToGormConditions()
+	err := paginatorReq.Check()
 	if err != nil {
 		return result, nil, err
 	}
-	err = u.db.WithContext(ctx).Model(&gorm_gen_model.UserDemo{}).Select([]string{"id"}).Where(queryStr, args...).Count(&total).Error
+	whereExpressions := paginatorReq.ConvertToGormWhereExpression()
+	orderExpressions := paginatorReq.ConvertToGormOrderExpression()
+	err = u.db.WithContext(ctx).Model(&gorm_gen_model.UserDemo{}).Select([]string{"id"}).Clauses(whereExpressions...).Count(&total).Error
 	if err != nil {
 		return result, nil, err
 	}
 	if total == 0 {
 		return result, nil, nil
 	}
-	query := u.db.WithContext(ctx)
-	order := paginatorReq.ConvertToOrder()
-	if order != "" {
-		query = query.Order(order)
-	}
 	paginatorReply := paginatorReq.ConvertToPage(int(total))
-	err = query.Limit(paginatorReply.Limit).Offset(paginatorReply.Offset).Where(queryStr, args...).Find(&result).Error
+	err = u.db.WithContext(ctx).Model(&gorm_gen_model.UserDemo{}).Limit(paginatorReply.Limit).Offset(paginatorReply.Offset).Clauses(whereExpressions...).Clauses(orderExpressions...).Find(&result).Error
 	if err != nil {
 		return result, nil, err
 	}
