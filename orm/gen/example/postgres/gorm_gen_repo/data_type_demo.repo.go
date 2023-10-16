@@ -203,7 +203,7 @@ func (d *DataTypeDemoRepo) UpdateOneByTx(ctx context.Context, tx *gorm_gen_dao.Q
 // UpdateOneWithZero 更新一条数据,包含零值
 func (d *DataTypeDemoRepo) UpdateOneWithZero(ctx context.Context, data *gorm_gen_model.DataTypeDemo) error {
 	dao := gorm_gen_dao.Use(d.db).DataTypeDemo
-	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Select(dao.ALL).Updates(data)
+	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Select(dao.ALL.WithTable("")).Updates(data)
 	if err != nil {
 		return err
 	}
@@ -217,7 +217,7 @@ func (d *DataTypeDemoRepo) UpdateOneWithZero(ctx context.Context, data *gorm_gen
 // UpdateOneWithZeroByTx 更新一条数据(事务),包含零值
 func (d *DataTypeDemoRepo) UpdateOneWithZeroByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.DataTypeDemo) error {
 	dao := tx.DataTypeDemo
-	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Select(dao.ALL).Updates(data)
+	_, err := dao.WithContext(ctx).Where(dao.ID.Eq(data.ID)).Select(dao.ALL.WithTable("")).Updates(data)
 	if err != nil {
 		return err
 	}
