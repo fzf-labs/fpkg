@@ -741,12 +741,10 @@ func (d *DataTypeDemoRepo) FindMultiByUlIDS(ctx context.Context, ulIDS []string)
 func (d *DataTypeDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorReq *orm.PaginatorReq) ([]*gorm_gen_model.DataTypeDemo, *orm.PaginatorReply, error) {
 	result := make([]*gorm_gen_model.DataTypeDemo, 0)
 	var total int64
-	err := paginatorReq.Check()
+	whereExpressions, orderExpressions, err := paginatorReq.ConvertToGormExpression(gorm_gen_model.DataTypeDemo{})
 	if err != nil {
-		return result, nil, err
+		return nil, nil, err
 	}
-	whereExpressions := paginatorReq.ConvertToGormWhereExpression()
-	orderExpressions := paginatorReq.ConvertToGormOrderExpression()
 	err = d.db.WithContext(ctx).Model(&gorm_gen_model.DataTypeDemo{}).Select([]string{"id"}).Clauses(whereExpressions...).Count(&total).Error
 	if err != nil {
 		return result, nil, err

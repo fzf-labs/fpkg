@@ -668,12 +668,10 @@ func (a *AdminDemoRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([]*go
 func (a *AdminDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorReq *orm.PaginatorReq) ([]*gorm_gen_model.AdminDemo, *orm.PaginatorReply, error) {
 	result := make([]*gorm_gen_model.AdminDemo, 0)
 	var total int64
-	err := paginatorReq.Check()
+	whereExpressions, orderExpressions, err := paginatorReq.ConvertToGormExpression(gorm_gen_model.AdminDemo{})
 	if err != nil {
-		return result, nil, err
+		return nil, nil, err
 	}
-	whereExpressions := paginatorReq.ConvertToGormWhereExpression()
-	orderExpressions := paginatorReq.ConvertToGormOrderExpression()
 	err = a.db.WithContext(ctx).Model(&gorm_gen_model.AdminDemo{}).Select([]string{"id"}).Clauses(whereExpressions...).Count(&total).Error
 	if err != nil {
 		return result, nil, err

@@ -3,6 +3,7 @@ package orm
 import (
 	"fmt"
 	"math"
+	"reflect"
 	"strings"
 
 	"gorm.io/gorm/clause"
@@ -49,104 +50,89 @@ type SearchColumn struct {
 	Logic string `json:"logic"` // 逻辑关系 logicMap
 }
 
-// Check 字段校验
-func (p *PaginatorReq) Check() error {
+// ConvertToGormExpression 根据SearchColumn参数转换为符合gorm where clause.Expression
+func (p *PaginatorReq) ConvertToGormExpression(model interface{}) ([]clause.Expression, []clause.Expression, error) {
+	whereExpressions := make([]clause.Expression, 0)
+	orderExpressions := make([]clause.Expression, 0)
+	jsonToColumn := p.jsonToColumn(model)
 	if p.Page <= 0 {
 		p.Page = 1
 	}
 	if p.PageSize <= 0 {
 		p.PageSize = 10
 	}
+	if len(p.Search) > 0 {
+		cols := make([]clause.Expression, 0)
+		for _, v := range p.Search {
+			if v.Field == "" {
+				return whereExpressions, orderExpressions, fmt.Errorf("field cannot be empty")
+			}
+			if _, ok := jsonToColumn[v.Field]; !ok {
+				return whereExpressions, orderExpressions, fmt.Errorf("field is not exist")
+			}
+			if v.Exp == "" {
+				v.Exp = "="
+			}
+			if v.Logic == "" {
+				v.Logic = "AND"
+			}
+			if _, ok := expMap[strings.TrimSpace(v.Exp)]; !ok {
+				return whereExpressions, orderExpressions, fmt.Errorf("unknown s exp type '%s'", v.Exp)
+			}
+			if _, ok := logicMap[strings.TrimSpace(v.Logic)]; !ok {
+				return whereExpressions, orderExpressions, fmt.Errorf("unknown logic type '%s'", v.Logic)
+			}
+			if v.Exp == "=" {
+				cols = append(cols, clause.Eq{Column: v.Field, Value: v.Value})
+			}
+			if v.Exp == "!=" {
+				cols = append(cols, clause.Neq{Column: v.Field, Value: v.Value})
+			}
+			if v.Exp == ">" {
+				cols = append(cols, clause.Gt{Column: v.Field, Value: v.Value})
+			}
+			if v.Exp == ">=" {
+				cols = append(cols, clause.Gte{Column: v.Field, Value: v.Value})
+			}
+			if v.Exp == "<" {
+				cols = append(cols, clause.Lt{Column: v.Field, Value: v.Value})
+			}
+			if v.Exp == "<=" {
+				cols = append(cols, clause.Lte{Column: v.Field, Value: v.Value})
+			}
+			if v.Exp == "IN" {
+				split := strings.Split(v.Value, ",")
+				if len(split) > 0 {
+					values := make([]interface{}, 0)
+					for _, vv := range split {
+						values = append(values, vv)
+					}
+					cols = append(cols, clause.IN{Column: v.Field, Values: values})
+				}
+			}
+			if v.Exp == "Like" {
+				cols = append(cols, clause.Like{Column: v.Field, Value: v.Value})
+			}
+			if v.Logic == "AND" {
+				whereExpressions = append(whereExpressions, clause.And(cols...))
+			} else {
+				whereExpressions = append(whereExpressions, clause.Or(cols...))
+			}
+		}
+	}
 	if p.Order != "" {
 		split := strings.Split(p.Order, ",")
 		if len(split) != 2 {
-			return fmt.Errorf("order format error")
+			return whereExpressions, orderExpressions, fmt.Errorf("order format error")
 		}
 		if split[1] != "ASC" && split[1] != "DESC" {
-			return fmt.Errorf("order format error")
+			return whereExpressions, orderExpressions, fmt.Errorf("order format error")
 		}
-	}
-	if len(p.Search) > 0 {
-		for k := range p.Search {
-			if p.Search[k].Field == "" {
-				return fmt.Errorf("field 'name' cannot be empty")
-			}
-			if p.Search[k].Exp == "" {
-				p.Search[k].Exp = "="
-			}
-			if p.Search[k].Logic == "" {
-				p.Search[k].Logic = "AND"
-			}
-			if _, ok := expMap[strings.TrimSpace(p.Search[k].Exp)]; !ok {
-				return fmt.Errorf("unknown s exp type '%s'", p.Search[k].Exp)
-			}
-			if _, ok := logicMap[strings.TrimSpace(p.Search[k].Logic)]; !ok {
-				return fmt.Errorf("unknown logic type '%s'", p.Search[k].Logic)
-			}
-		}
-	}
-	return nil
-}
-
-// ConvertToGormWhereExpression 根据SearchColumn参数转换为符合gorm where clause.Expression
-func (p *PaginatorReq) ConvertToGormWhereExpression() []clause.Expression {
-	expressions := make([]clause.Expression, 0)
-	l := len(p.Search)
-	if l == 0 {
-		return expressions
-	}
-	cols := make([]clause.Expression, 0)
-	for _, v := range p.Search {
-		if v.Exp == "=" {
-			cols = append(cols, clause.Eq{Column: v.Field, Value: v.Value})
-		}
-		if v.Exp == "!=" {
-			cols = append(cols, clause.Neq{Column: v.Field, Value: v.Value})
-		}
-		if v.Exp == ">" {
-			cols = append(cols, clause.Gt{Column: v.Field, Value: v.Value})
-		}
-		if v.Exp == ">=" {
-			cols = append(cols, clause.Gte{Column: v.Field, Value: v.Value})
-		}
-		if v.Exp == "<" {
-			cols = append(cols, clause.Lt{Column: v.Field, Value: v.Value})
-		}
-		if v.Exp == "<=" {
-			cols = append(cols, clause.Lte{Column: v.Field, Value: v.Value})
-		}
-		if v.Exp == "IN" {
-			split := strings.Split(v.Value, ",")
-			if len(split) > 0 {
-				values := make([]interface{}, 0)
-				for _, vv := range split {
-					values = append(values, vv)
-				}
-				cols = append(cols, clause.IN{Column: v.Field, Values: values})
-			}
-		}
-		if v.Exp == "Like" {
-			cols = append(cols, clause.Like{Column: v.Field, Value: v.Value})
-		}
-		if v.Logic == "AND" {
-			expressions = append(expressions, clause.And(cols...))
-		} else {
-			expressions = append(expressions, clause.Or(cols...))
-		}
-	}
-	return expressions
-}
-
-// ConvertToGormOrderExpression 根据SearchColumn参数转换为符合gorm order clause.Expression
-func (p *PaginatorReq) ConvertToGormOrderExpression() []clause.Expression {
-	expressions := make([]clause.Expression, 0)
-	if p.Order != "" {
-		split := strings.Split(p.Order, ",")
 		desc := false
 		if split[1] == "DESC" {
 			desc = true
 		}
-		expressions = append(expressions, clause.OrderBy{
+		orderExpressions = append(orderExpressions, clause.OrderBy{
 			Columns: []clause.OrderByColumn{
 				{
 					Column:  clause.Column{Name: split[0]},
@@ -156,7 +142,7 @@ func (p *PaginatorReq) ConvertToGormOrderExpression() []clause.Expression {
 			},
 		})
 	}
-	return expressions
+	return whereExpressions, orderExpressions, nil
 }
 
 // ConvertToPage 转换为page
@@ -189,4 +175,27 @@ func (p *PaginatorReq) ConvertToPage(total int) *PaginatorReply {
 		Limit:     pageSize,
 		Offset:    (page - 1) * pageSize,
 	}
+}
+
+// jsonToColumn 将model的tag中json和gorm的tag的Column转换为map[string]string
+func (p *PaginatorReq) jsonToColumn(model interface{}) map[string]string {
+	m := make(map[string]string)
+	t := reflect.TypeOf(model)
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		json := field.Tag.Get("json")
+		gorm := field.Tag.Get("gorm")
+		if json != "" && gorm != "" {
+			gorms := strings.Split(gorm, ";")
+			for _, v := range gorms {
+				if strings.Contains(v, "column") {
+					column := strings.Split(v, ":")
+					if len(column) == 2 {
+						m[json] = column[1]
+					}
+				}
+			}
+		}
+	}
+	return m
 }

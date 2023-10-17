@@ -2,12 +2,10 @@
 func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiByPaginator(ctx context.Context, paginatorReq *orm.PaginatorReq) ([]*{{.lowerDBName}}_model.{{.upperTableName}}, *orm.PaginatorReply, error) {
 	result := make([]*{{.lowerDBName}}_model.{{.upperTableName}}, 0)
 	var total int64
-	err := paginatorReq.Check()
+	whereExpressions, orderExpressions, err := paginatorReq.ConvertToGormExpression({{.lowerDBName}}_model.{{.upperTableName}}{})
 	if err != nil {
-		return result, nil, err
+		return nil, nil, err
 	}
-	whereExpressions := paginatorReq.ConvertToGormWhereExpression()
-	orderExpressions := paginatorReq.ConvertToGormOrderExpression()
 	err = {{.firstTableChar}}.db.WithContext(ctx).Model(&{{.lowerDBName}}_model.{{.upperTableName}}{}).Select([]string{"id"}).Clauses(whereExpressions...).Count(&total).Error
 	if err != nil {
 		return result, nil, err
