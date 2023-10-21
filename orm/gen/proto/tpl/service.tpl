@@ -1,3 +1,7 @@
+// 变量的命名一律使用小驼峰命名法，例如：firstName、lastName等。
+// 后缀定义:请求req,响应reply
+
+
 service {{.upperTableName}} {
   //{{.tableNameComment}}-创建一条数据
   rpc {{.upperTableName}}Store({{.upperTableName}}StoreReq) returns ({{.upperTableName}}StoreReply) {

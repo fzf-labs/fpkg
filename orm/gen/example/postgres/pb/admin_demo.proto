@@ -85,7 +85,7 @@ message AdminDemoStoreReply {
 
 //请求-系统-用户-删除多条数据
 message AdminDemoDelReq {
-	string ID = 1; // 编号
+repeated string IDS = 1; // 编号集合
 
 }
 
