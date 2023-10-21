@@ -12,6 +12,7 @@ import (
 	"github.com/fzf-labs/fpkg/orm/gen/utils/template"
 	"github.com/fzf-labs/fpkg/orm/gen/utils/util"
 	"github.com/iancoleman/strcase"
+	"github.com/jinzhu/inflection"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -165,7 +166,7 @@ func (p *Proto) GenMessage() string {
 		pbName := LowerFieldName(p.columnNameToName[primaryKeyColumn])
 		storeReply = fmt.Sprintf("	%s %s = %d; // %s\n", pbType, pbName, 1, primaryKeyComment)
 		oneReq = fmt.Sprintf("	%s %s = %d; // %s\n", pbType, pbName, 1, primaryKeyComment)
-		delReq = fmt.Sprintf("	%s %s = %d; // %s\n", pbType, pbName, 1, primaryKeyComment)
+		delReq = fmt.Sprintf("repeated %s %s = %d; // %s\n", pbType, Plural(pbName), 1, primaryKeyComment+"集合")
 	}
 	str, _ := template.NewTemplate("Message").Parse(Message).Execute(map[string]any{
 		"tableNameComment": p.tableNameComment,
@@ -244,4 +245,13 @@ func columnTypeToPbType(columnType string) string {
 		fieldType = "string"
 	}
 	return fieldType
+}
+
+// Plural 复数形式
+func Plural(s string) string {
+	str := inflection.Plural(s)
+	if str == s {
+		str += "Plural"
+	}
+	return str
 }

@@ -89,7 +89,7 @@ message UserDemoStoreReply {
 
 //请求-用户-删除多条数据
 message UserDemoDelReq {
-	string ID = 1; // ID
+repeated string IDS = 1; // ID集合
 
 }
 

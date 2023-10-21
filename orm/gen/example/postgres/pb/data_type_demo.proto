@@ -97,7 +97,7 @@ message DataTypeDemoStoreReply {
 
 //请求-数据类型示例-删除多条数据
 message DataTypeDemoDelReq {
-	string ID = 1; // ID
+repeated string IDS = 1; // ID集合
 
 }
 
