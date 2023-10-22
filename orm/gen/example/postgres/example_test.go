@@ -81,12 +81,6 @@ func Test_FindMultiByPaginator(t *testing.T) {
 				Exp:   "=",
 				Logic: "",
 			},
-			//{
-			//	Field: "status",
-			//	Value: "0,-1",
-			//	Exp:   "IN",
-			//	Logic: "",
-			//},
 		},
 	})
 	jsonutil.Dump(result)

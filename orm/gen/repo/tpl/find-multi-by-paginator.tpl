@@ -4,7 +4,7 @@ func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiByPaginator(ctx con
 	var total int64
 	whereExpressions, orderExpressions, err := paginatorReq.ConvertToGormExpression({{.lowerDBName}}_model.{{.upperTableName}}{})
 	if err != nil {
-		return nil, nil, err
+		return result, nil, err
 	}
 	err = {{.firstTableChar}}.db.WithContext(ctx).Model(&{{.lowerDBName}}_model.{{.upperTableName}}{}).Select([]string{"*"}).Clauses(whereExpressions...).Count(&total).Error
 	if err != nil {

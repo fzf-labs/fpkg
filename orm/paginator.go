@@ -51,9 +51,9 @@ type SearchColumn struct {
 }
 
 // ConvertToGormExpression 根据SearchColumn参数转换为符合gorm where clause.Expression
-func (p *PaginatorReq) ConvertToGormExpression(model interface{}) ([]clause.Expression, []clause.Expression, error) {
-	whereExpressions := make([]clause.Expression, 0)
-	orderExpressions := make([]clause.Expression, 0)
+func (p *PaginatorReq) ConvertToGormExpression(model any) (whereExpressions, orderExpressions []clause.Expression, err error) {
+	whereExpressions = make([]clause.Expression, 0)
+	orderExpressions = make([]clause.Expression, 0)
 	jsonToColumn := p.jsonToColumn(model)
 	if p.Page <= 0 {
 		p.Page = 1
@@ -103,7 +103,7 @@ func (p *PaginatorReq) ConvertToGormExpression(model interface{}) ([]clause.Expr
 			if v.Exp == "IN" {
 				split := strings.Split(v.Value, ",")
 				if len(split) > 0 {
-					values := make([]interface{}, 0)
+					values := make([]any, 0)
 					for _, vv := range split {
 						values = append(values, vv)
 					}
@@ -178,7 +178,7 @@ func (p *PaginatorReq) ConvertToPage(total int) *PaginatorReply {
 }
 
 // jsonToColumn 将model的tag中json和gorm的tag的Column转换为map[string]string
-func (p *PaginatorReq) jsonToColumn(model interface{}) map[string]string {
+func (p *PaginatorReq) jsonToColumn(model any) map[string]string {
 	m := make(map[string]string)
 	t := reflect.TypeOf(model)
 	for i := 0; i < t.NumField(); i++ {
