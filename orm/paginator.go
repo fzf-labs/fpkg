@@ -83,22 +83,22 @@ func (p *PaginatorReq) ConvertToGormExpression(model any) (whereExpressions, ord
 				return whereExpressions, orderExpressions, fmt.Errorf("unknown logic type '%s'", v.Logic)
 			}
 			if v.Exp == "=" {
-				cols = append(cols, clause.Eq{Column: v.Field, Value: v.Value})
+				cols = append(cols, clause.Eq{Column: jsonToColumn[v.Field], Value: v.Value})
 			}
 			if v.Exp == "!=" {
-				cols = append(cols, clause.Neq{Column: v.Field, Value: v.Value})
+				cols = append(cols, clause.Neq{Column: jsonToColumn[v.Field], Value: v.Value})
 			}
 			if v.Exp == ">" {
-				cols = append(cols, clause.Gt{Column: v.Field, Value: v.Value})
+				cols = append(cols, clause.Gt{Column: jsonToColumn[v.Field], Value: v.Value})
 			}
 			if v.Exp == ">=" {
-				cols = append(cols, clause.Gte{Column: v.Field, Value: v.Value})
+				cols = append(cols, clause.Gte{Column: jsonToColumn[v.Field], Value: v.Value})
 			}
 			if v.Exp == "<" {
-				cols = append(cols, clause.Lt{Column: v.Field, Value: v.Value})
+				cols = append(cols, clause.Lt{Column: jsonToColumn[v.Field], Value: v.Value})
 			}
 			if v.Exp == "<=" {
-				cols = append(cols, clause.Lte{Column: v.Field, Value: v.Value})
+				cols = append(cols, clause.Lte{Column: jsonToColumn[v.Field], Value: v.Value})
 			}
 			if v.Exp == "IN" {
 				split := strings.Split(v.Value, ",")
@@ -107,11 +107,11 @@ func (p *PaginatorReq) ConvertToGormExpression(model any) (whereExpressions, ord
 					for _, vv := range split {
 						values = append(values, vv)
 					}
-					cols = append(cols, clause.IN{Column: v.Field, Values: values})
+					cols = append(cols, clause.IN{Column: jsonToColumn[v.Field], Values: values})
 				}
 			}
 			if v.Exp == "Like" {
-				cols = append(cols, clause.Like{Column: v.Field, Value: v.Value})
+				cols = append(cols, clause.Like{Column: jsonToColumn[v.Field], Value: v.Value})
 			}
 			if v.Logic == "AND" {
 				whereExpressions = append(whereExpressions, clause.And(cols...))
@@ -125,6 +125,9 @@ func (p *PaginatorReq) ConvertToGormExpression(model any) (whereExpressions, ord
 		if len(split) != 2 {
 			return whereExpressions, orderExpressions, fmt.Errorf("order format error")
 		}
+		if _, ok := jsonToColumn[split[0]]; !ok {
+			return whereExpressions, orderExpressions, fmt.Errorf("field is not exist")
+		}
 		if split[1] != "ASC" && split[1] != "DESC" {
 			return whereExpressions, orderExpressions, fmt.Errorf("order format error")
 		}
@@ -135,7 +138,7 @@ func (p *PaginatorReq) ConvertToGormExpression(model any) (whereExpressions, ord
 		orderExpressions = append(orderExpressions, clause.OrderBy{
 			Columns: []clause.OrderByColumn{
 				{
-					Column:  clause.Column{Name: split[0]},
+					Column:  clause.Column{Name: jsonToColumn[split[0]]},
 					Desc:    desc,
 					Reorder: false,
 				},
