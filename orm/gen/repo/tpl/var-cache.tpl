@@ -1,1 +1,1 @@
-	cache{{.upperTableName}}By{{.cacheField}}Prefix = "DBCache:{{.lowerDBName}}:{{.upperTableName}}By{{.cacheField}}"
+	cache{{.upperTableName}}By{{.cacheField}}Prefix = "DBCache:{{.dbName}}:{{.upperTableName}}By{{.cacheField}}"

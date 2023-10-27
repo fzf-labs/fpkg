@@ -29,7 +29,7 @@ var KeyWords = []string{
 	"marshal",
 }
 
-func GenerationTable(db *gorm.DB, daoPath, modelPath, repoPath, table string, columnNameToDataType, columnNameToName, columnNameToFieldType map[string]string) error {
+func GenerationTable(db *gorm.DB, dbname, daoPath, modelPath, repoPath, table string, columnNameToDataType, columnNameToName, columnNameToFieldType map[string]string) error {
 	var file string
 	g := Repo{
 		gorm:                  db,
@@ -40,7 +40,7 @@ func GenerationTable(db *gorm.DB, daoPath, modelPath, repoPath, table string, co
 		columnNameToName:      columnNameToName,
 		columnNameToFieldType: columnNameToFieldType,
 		firstTableChar:        "",
-		lowerDBName:           "",
+		dbName:                dbname,
 		lowerTableName:        "",
 		upperTableName:        "",
 		daoPkgPath:            util.FillModelPkgPath(daoPath),
@@ -53,7 +53,6 @@ func GenerationTable(db *gorm.DB, daoPath, modelPath, repoPath, table string, co
 		return err
 	}
 	g.index = g.ProcessIndex(indexes)
-	g.lowerDBName = g.gorm.Migrator().CurrentDatabase()
 	g.lowerTableName = g.LowerName(table)
 	g.upperTableName = g.UpperName(table)
 	g.firstTableChar = g.lowerTableName[0:1]
@@ -118,7 +117,7 @@ type Repo struct {
 	columnNameToDataType  map[string]string // 字段名称对应的类型
 	columnNameToName      map[string]string // 字段名称对应的Go名称
 	columnNameToFieldType map[string]string // 字段名称对应的dao类型
-	lowerDBName           string            // 数据库名称小写
+	dbName                string            // 数据库名称
 	firstTableChar        string            // 表名称第一个字母
 	lowerTableName        string            // 表名称小写
 	upperTableName        string            // 表名称大写
@@ -198,7 +197,7 @@ func (r *Repo) output(fileName string, content []byte) error {
 // generatePkg
 func (r *Repo) generatePkg() (string, error) {
 	tplParams := map[string]any{
-		"lowerDBName": r.lowerDBName,
+		"dbName": r.dbName,
 	}
 	tpl, err := template.NewTemplate("Pkg").Parse(Pkg).Execute(tplParams)
 	if err != nil {
@@ -235,7 +234,7 @@ func (r *Repo) generateVar() (string, error) {
 				cacheField += r.UpperFieldName(column)
 			}
 			varCacheTpl, err := template.NewTemplate("VarCache").Parse(VarCache).Execute(map[string]any{
-				"lowerDBName":    r.lowerDBName,
+				"dbName":         r.dbName,
 				"upperTableName": r.upperTableName,
 				"cacheField":     cacheField,
 			})
@@ -268,7 +267,7 @@ func (r *Repo) generateVar() (string, error) {
 func (r *Repo) generateCreateMethods() (string, error) {
 	var createMethods string
 	interfaceCreateOne, err := template.NewTemplate("InterfaceCreateOne").Parse(InterfaceCreateOne).Execute(map[string]any{
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 	})
 	if err != nil {
@@ -276,7 +275,7 @@ func (r *Repo) generateCreateMethods() (string, error) {
 	}
 	createMethods += fmt.Sprintln(interfaceCreateOne.String())
 	interfaceCreateOneByTx, err := template.NewTemplate("InterfaceCreateOneByTx").Parse(InterfaceCreateOneByTx).Execute(map[string]any{
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 	})
 	if err != nil {
@@ -284,7 +283,7 @@ func (r *Repo) generateCreateMethods() (string, error) {
 	}
 	createMethods += fmt.Sprintln(interfaceCreateOneByTx.String())
 	interfaceUpsertOne, err := template.NewTemplate("InterfaceUpsertOne").Parse(InterfaceUpsertOne).Execute(map[string]any{
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 	})
 	if err != nil {
@@ -292,7 +291,7 @@ func (r *Repo) generateCreateMethods() (string, error) {
 	}
 	createMethods += fmt.Sprintln(interfaceUpsertOne.String())
 	interfaceUpsertOneByTx, err := template.NewTemplate("InterfaceUpsertOneByTx").Parse(InterfaceUpsertOneByTx).Execute(map[string]any{
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 	})
 	if err != nil {
@@ -300,7 +299,7 @@ func (r *Repo) generateCreateMethods() (string, error) {
 	}
 	createMethods += fmt.Sprintln(interfaceUpsertOneByTx.String())
 	interfaceCreateBatch, err := template.NewTemplate("InterfaceCreateBatch").Parse(InterfaceCreateBatch).Execute(map[string]any{
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 	})
 	if err != nil {
@@ -326,7 +325,7 @@ func (r *Repo) generateUpdateMethods() (string, error) {
 		return "", nil
 	}
 	interfaceUpdateOne, err := template.NewTemplate("InterfaceUpdateOne").Parse(InterfaceUpdateOne).Execute(map[string]any{
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 	})
 	if err != nil {
@@ -334,7 +333,7 @@ func (r *Repo) generateUpdateMethods() (string, error) {
 	}
 	updateMethods += fmt.Sprintln(interfaceUpdateOne.String())
 	interfaceUpdateOneByTx, err := template.NewTemplate("InterfaceUpdateOneByTx").Parse(InterfaceUpdateOneByTx).Execute(map[string]any{
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 	})
 	if err != nil {
@@ -342,7 +341,7 @@ func (r *Repo) generateUpdateMethods() (string, error) {
 	}
 	updateMethods += fmt.Sprintln(interfaceUpdateOneByTx.String())
 	interfaceUpdateOneWithZero, err := template.NewTemplate("InterfaceUpdateOneWithZero").Parse(InterfaceUpdateOneWithZero).Execute(map[string]any{
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 	})
 	if err != nil {
@@ -350,7 +349,7 @@ func (r *Repo) generateUpdateMethods() (string, error) {
 	}
 	updateMethods += fmt.Sprintln(interfaceUpdateOneWithZero.String())
 	interfaceUpdateOneWithZeroByTx, err := template.NewTemplate("InterfaceUpdateOneWithZeroByTx").Parse(InterfaceUpdateOneWithZeroByTx).Execute(map[string]any{
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 	})
 	if err != nil {
@@ -372,7 +371,7 @@ func (r *Repo) generateReadMethods() (string, error) {
 		if unique && len(v.Columns()) == 1 {
 			columnNameToDataType := r.columnNameToDataType[v.Columns()[0]]
 			interfaceFindOneCacheByField, err := template.NewTemplate("InterfaceFindOneCacheByField").Parse(InterfaceFindOneCacheByField).Execute(map[string]any{
-				"lowerDBName":    r.lowerDBName,
+				"dbName":         r.dbName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
 				"upperField":     r.UpperFieldName(v.Columns()[0]),
@@ -384,7 +383,7 @@ func (r *Repo) generateReadMethods() (string, error) {
 			}
 			readMethods += fmt.Sprintln(interfaceFindOneCacheByField.String())
 			interfaceFindOneByField, err := template.NewTemplate("InterfaceFindOneByField").Parse(InterfaceFindOneByField).Execute(map[string]any{
-				"lowerDBName":    r.lowerDBName,
+				"dbName":         r.dbName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
 				"upperField":     r.UpperFieldName(v.Columns()[0]),
@@ -399,7 +398,7 @@ func (r *Repo) generateReadMethods() (string, error) {
 			case "bool":
 			default:
 				interfaceFindMultiCacheByFieldPlural, err := template.NewTemplate("InterfaceFindMultiCacheByFieldPlural").Parse(InterfaceFindMultiCacheByFieldPlural).Execute(map[string]any{
-					"lowerDBName":      r.lowerDBName,
+					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
 					"upperField":       r.UpperFieldName(v.Columns()[0]),
@@ -413,7 +412,7 @@ func (r *Repo) generateReadMethods() (string, error) {
 				}
 				readMethods += fmt.Sprintln(interfaceFindMultiCacheByFieldPlural.String())
 				interfaceFindMultiByFieldPlural, err := template.NewTemplate("InterfaceFindMultiByFieldPlural").Parse(InterfaceFindMultiByFieldPlural).Execute(map[string]any{
-					"lowerDBName":      r.lowerDBName,
+					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
 					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
@@ -436,7 +435,7 @@ func (r *Repo) generateReadMethods() (string, error) {
 				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(vv), r.columnNameToDataType[vv])
 			}
 			interfaceFindOneCacheByFields, err := template.NewTemplate("InterfaceFindOneCacheByFields").Parse(InterfaceFindOneCacheByFields).Execute(map[string]any{
-				"lowerDBName":       r.lowerDBName,
+				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperFields":       upperFields,
@@ -447,7 +446,7 @@ func (r *Repo) generateReadMethods() (string, error) {
 				return "", err
 			}
 			interfaceFindOneByFields, err := template.NewTemplate("InterfaceFindOneByFields").Parse(InterfaceFindOneByFields).Execute(map[string]any{
-				"lowerDBName":       r.lowerDBName,
+				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperFields":       upperFields,
@@ -465,7 +464,7 @@ func (r *Repo) generateReadMethods() (string, error) {
 			case "bool":
 			default:
 				interfaceFindMultiByField, err := template.NewTemplate("InterfaceFindMultiByField").Parse(InterfaceFindMultiByField).Execute(map[string]any{
-					"lowerDBName":    r.lowerDBName,
+					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
 					"upperField":     r.UpperFieldName(v.Columns()[0]),
@@ -477,7 +476,7 @@ func (r *Repo) generateReadMethods() (string, error) {
 				}
 				readMethods += fmt.Sprintln(interfaceFindMultiByField.String())
 				interfaceFindMultiByFieldPlural, err := template.NewTemplate("InterfaceFindMultiByFieldPlural").Parse(InterfaceFindMultiByFieldPlural).Execute(map[string]any{
-					"lowerDBName":      r.lowerDBName,
+					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
 					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
@@ -499,7 +498,7 @@ func (r *Repo) generateReadMethods() (string, error) {
 				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(v), r.columnNameToDataType[v])
 			}
 			interfaceFindMultiByFields, err := template.NewTemplate("InterfaceFindMultiByFields").Parse(InterfaceFindMultiByFields).Execute(map[string]any{
-				"lowerDBName":       r.lowerDBName,
+				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperFields":       upperFields,
@@ -512,7 +511,7 @@ func (r *Repo) generateReadMethods() (string, error) {
 		}
 	}
 	interfaceFindMultiByPaginator, err := template.NewTemplate("InterfaceFindMultiByPaginator").Parse(InterfaceFindMultiByPaginator).Execute(map[string]any{
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
 	})
@@ -541,7 +540,7 @@ func (r *Repo) generateDelMethods() (string, error) {
 			case "bool":
 			default:
 				interfaceDeleteOneCacheByField, err := template.NewTemplate("InterfaceDeleteOneCacheByField").Parse(InterfaceDeleteOneCacheByField).Execute(map[string]any{
-					"lowerDBName":    r.lowerDBName,
+					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
 					"upperField":     r.UpperFieldName(v.Columns()[0]),
@@ -553,7 +552,7 @@ func (r *Repo) generateDelMethods() (string, error) {
 				}
 				delMethods += fmt.Sprintln(interfaceDeleteOneCacheByField.String())
 				interfaceDeleteOneCacheByFieldTx, err := template.NewTemplate("InterfaceDeleteOneCacheByFieldTx").Parse(InterfaceDeleteOneCacheByFieldTx).Execute(map[string]any{
-					"lowerDBName":    r.lowerDBName,
+					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
 					"upperField":     r.UpperFieldName(v.Columns()[0]),
@@ -565,7 +564,7 @@ func (r *Repo) generateDelMethods() (string, error) {
 				}
 				delMethods += fmt.Sprintln(interfaceDeleteOneCacheByFieldTx.String())
 				interfaceDeleteOneByField, err := template.NewTemplate("InterfaceDeleteOneByField").Parse(InterfaceDeleteOneByField).Execute(map[string]any{
-					"lowerDBName":    r.lowerDBName,
+					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
 					"upperField":     r.UpperFieldName(v.Columns()[0]),
@@ -577,7 +576,7 @@ func (r *Repo) generateDelMethods() (string, error) {
 				}
 				delMethods += fmt.Sprintln(interfaceDeleteOneByField.String())
 				interfaceDeleteOneByFieldTx, err := template.NewTemplate("InterfaceDeleteOneByFieldTx").Parse(InterfaceDeleteOneByFieldTx).Execute(map[string]any{
-					"lowerDBName":    r.lowerDBName,
+					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
 					"upperField":     r.UpperFieldName(v.Columns()[0]),
@@ -589,7 +588,7 @@ func (r *Repo) generateDelMethods() (string, error) {
 				}
 				delMethods += fmt.Sprintln(interfaceDeleteOneByFieldTx.String())
 				interfaceDeleteMultiCacheByFieldPlural, err := template.NewTemplate("InterfaceDeleteMultiCacheByFieldPlural").Parse(InterfaceDeleteMultiCacheByFieldPlural).Execute(map[string]any{
-					"lowerDBName":      r.lowerDBName,
+					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
 					"upperField":       r.UpperFieldName(v.Columns()[0]),
@@ -603,7 +602,7 @@ func (r *Repo) generateDelMethods() (string, error) {
 				}
 				delMethods += fmt.Sprintln(interfaceDeleteMultiCacheByFieldPlural.String())
 				interfaceDeleteMultiCacheByFieldPluralTx, err := template.NewTemplate("InterfaceDeleteMultiCacheByFieldPluralTx").Parse(InterfaceDeleteMultiCacheByFieldPluralTx).Execute(map[string]any{
-					"lowerDBName":      r.lowerDBName,
+					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
 					"upperField":       r.UpperFieldName(v.Columns()[0]),
@@ -617,7 +616,7 @@ func (r *Repo) generateDelMethods() (string, error) {
 				}
 				delMethods += fmt.Sprintln(interfaceDeleteMultiCacheByFieldPluralTx.String())
 				interfaceDeleteMultiByFieldPlural, err := template.NewTemplate("InterfaceDeleteMultiByFieldPlural").Parse(InterfaceDeleteMultiByFieldPlural).Execute(map[string]any{
-					"lowerDBName":      r.lowerDBName,
+					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
 					"upperField":       r.UpperFieldName(v.Columns()[0]),
@@ -631,7 +630,7 @@ func (r *Repo) generateDelMethods() (string, error) {
 				}
 				delMethods += fmt.Sprintln(interfaceDeleteMultiByFieldPlural.String())
 				interfaceDeleteMultiByFieldPluralTx, err := template.NewTemplate("InterfaceDeleteMultiByFieldPluralTx").Parse(InterfaceDeleteMultiByFieldPluralTx).Execute(map[string]any{
-					"lowerDBName":      r.lowerDBName,
+					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
 					"upperField":       r.UpperFieldName(v.Columns()[0]),
@@ -655,7 +654,7 @@ func (r *Repo) generateDelMethods() (string, error) {
 				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(vv), r.columnNameToDataType[vv])
 			}
 			interfaceDeleteOneCacheByFields, err := template.NewTemplate("InterfaceDeleteOneCacheByFields").Parse(InterfaceDeleteOneCacheByFields).Execute(map[string]any{
-				"lowerDBName":       r.lowerDBName,
+				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperField":        r.UpperFieldName(v.Columns()[0]),
@@ -669,7 +668,7 @@ func (r *Repo) generateDelMethods() (string, error) {
 			}
 			delMethods += fmt.Sprintln(interfaceDeleteOneCacheByFields.String())
 			interfaceDeleteOneCacheByFieldsTx, err := template.NewTemplate("InterfaceDeleteOneCacheByFieldsTx").Parse(InterfaceDeleteOneCacheByFieldsTx).Execute(map[string]any{
-				"lowerDBName":       r.lowerDBName,
+				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperField":        r.UpperFieldName(v.Columns()[0]),
@@ -683,7 +682,7 @@ func (r *Repo) generateDelMethods() (string, error) {
 			}
 			delMethods += fmt.Sprintln(interfaceDeleteOneCacheByFieldsTx.String())
 			interfaceDeleteOneByFields, err := template.NewTemplate("InterfaceDeleteOneByFields").Parse(InterfaceDeleteOneByFields).Execute(map[string]any{
-				"lowerDBName":       r.lowerDBName,
+				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperField":        r.UpperFieldName(v.Columns()[0]),
@@ -697,7 +696,7 @@ func (r *Repo) generateDelMethods() (string, error) {
 			}
 			delMethods += fmt.Sprintln(interfaceDeleteOneByFields.String())
 			interfaceDeleteOneByFieldsTx, err := template.NewTemplate("InterfaceDeleteOneByFieldsTx").Parse(InterfaceDeleteOneByFieldsTx).Execute(map[string]any{
-				"lowerDBName":       r.lowerDBName,
+				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperField":        r.UpperFieldName(v.Columns()[0]),
@@ -724,7 +723,7 @@ func (r *Repo) generateDelMethods() (string, error) {
 		return "", nil
 	}
 	interfaceDeleteUniqueIndexCacheTpl, err := template.NewTemplate("InterfaceDeleteUniqueIndexCache").Parse(InterfaceDeleteUniqueIndexCache).Execute(map[string]any{
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 	})
 	if err != nil {
@@ -758,7 +757,7 @@ func (r *Repo) generateTypes() (string, error) {
 	methods += readMethods
 	methods += delMethods
 	typesTpl, err := template.NewTemplate("Types").Parse(Types).Execute(map[string]any{
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
 		"methods":        methods,
@@ -769,7 +768,7 @@ func (r *Repo) generateTypes() (string, error) {
 // generateNew
 func (r *Repo) generateNew() (string, error) {
 	newTpl, err := template.NewTemplate("New").Parse(New).Execute(map[string]any{
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
 	})
@@ -784,7 +783,7 @@ func (r *Repo) generateCreateFunc() (string, error) {
 	var createFunc string
 	createOne, err := template.NewTemplate("CreateOne").Parse(CreateOne).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
 	})
@@ -794,7 +793,7 @@ func (r *Repo) generateCreateFunc() (string, error) {
 	createFunc += fmt.Sprintln(createOne.String())
 	createOneByTx, err := template.NewTemplate("CreateOneByTx").Parse(CreateOneByTx).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
 	})
@@ -804,7 +803,7 @@ func (r *Repo) generateCreateFunc() (string, error) {
 	createFunc += fmt.Sprintln(createOneByTx.String())
 	upsertOne, err := template.NewTemplate("UpsertOne").Parse(UpsertOne).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
 	})
@@ -814,7 +813,7 @@ func (r *Repo) generateCreateFunc() (string, error) {
 	createFunc += fmt.Sprintln(upsertOne.String())
 	upsertOneByTx, err := template.NewTemplate("UpsertOneByTx").Parse(UpsertOneByTx).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
 	})
@@ -824,7 +823,7 @@ func (r *Repo) generateCreateFunc() (string, error) {
 	createFunc += fmt.Sprintln(upsertOneByTx.String())
 	createBatch, err := template.NewTemplate("CreateBatch").Parse(CreateBatch).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 	})
 	if err != nil {
@@ -854,7 +853,7 @@ func (r *Repo) generateReadFunc() (string, error) {
 			}
 			findOneCacheByField, err := template.NewTemplate("findOneCacheByField").Parse(FindOneCacheByField).Execute(map[string]any{
 				"firstTableChar": r.firstTableChar,
-				"lowerDBName":    r.lowerDBName,
+				"dbName":         r.dbName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
 				"upperField":     r.UpperFieldName(v.Columns()[0]),
@@ -868,7 +867,7 @@ func (r *Repo) generateReadFunc() (string, error) {
 			readFunc += fmt.Sprintln(findOneCacheByField.String())
 			findOneByField, err := template.NewTemplate("findOneByField").Parse(FindOneByField).Execute(map[string]any{
 				"firstTableChar": r.firstTableChar,
-				"lowerDBName":    r.lowerDBName,
+				"dbName":         r.dbName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
 				"upperField":     r.UpperFieldName(v.Columns()[0]),
@@ -886,7 +885,7 @@ func (r *Repo) generateReadFunc() (string, error) {
 			default:
 				findMultiCacheByFieldPlural, err := template.NewTemplate("findMultiCacheByFieldPlural").Parse(FindMultiCacheByFieldPlural).Execute(map[string]any{
 					"firstTableChar":   r.firstTableChar,
-					"lowerDBName":      r.lowerDBName,
+					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
 					"upperField":       r.UpperFieldName(v.Columns()[0]),
@@ -902,7 +901,7 @@ func (r *Repo) generateReadFunc() (string, error) {
 				readFunc += fmt.Sprintln(findMultiCacheByFieldPlural.String())
 				findMultiByFieldPlural, err := template.NewTemplate("findMultiByFieldPlural").Parse(FindMultiByFieldPlural).Execute(map[string]any{
 					"firstTableChar":   r.firstTableChar,
-					"lowerDBName":      r.lowerDBName,
+					"dbName":           r.dbName,
 					"upperField":       r.UpperFieldName(v.Columns()[0]),
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
@@ -936,7 +935,7 @@ func (r *Repo) generateReadFunc() (string, error) {
 			}
 			findOneCacheByFields, err := template.NewTemplate("findOneCacheByFields").Parse(FindOneCacheByFields).Execute(map[string]any{
 				"firstTableChar":    r.firstTableChar,
-				"lowerDBName":       r.lowerDBName,
+				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperFields":       upperFields,
@@ -950,7 +949,7 @@ func (r *Repo) generateReadFunc() (string, error) {
 			}
 			findOneByFields, err := template.NewTemplate("findOneByFields").Parse(FindOneByFields).Execute(map[string]any{
 				"firstTableChar":    r.firstTableChar,
-				"lowerDBName":       r.lowerDBName,
+				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperFields":       upperFields,
@@ -974,7 +973,7 @@ func (r *Repo) generateReadFunc() (string, error) {
 			}
 			findMultiByField, err := template.NewTemplate("findMultiByField").Parse(FindMultiByField).Execute(map[string]any{
 				"firstTableChar": r.firstTableChar,
-				"lowerDBName":    r.lowerDBName,
+				"dbName":         r.dbName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
 				"upperField":     r.UpperFieldName(v.Columns()[0]),
@@ -991,7 +990,7 @@ func (r *Repo) generateReadFunc() (string, error) {
 			default:
 				findMultiByFieldPlural, err := template.NewTemplate("findMultiByFieldPlural").Parse(FindMultiByFieldPlural).Execute(map[string]any{
 					"firstTableChar":   r.firstTableChar,
-					"lowerDBName":      r.lowerDBName,
+					"dbName":           r.dbName,
 					"upperField":       r.UpperFieldName(v.Columns()[0]),
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
@@ -1023,7 +1022,7 @@ func (r *Repo) generateReadFunc() (string, error) {
 			}
 			findMultiByFields, err := template.NewTemplate("findMultiByFields").Parse(FindMultiByFields).Execute(map[string]any{
 				"firstTableChar":    r.firstTableChar,
-				"lowerDBName":       r.lowerDBName,
+				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperFields":       upperFields,
@@ -1038,7 +1037,7 @@ func (r *Repo) generateReadFunc() (string, error) {
 	}
 	findMultiByPaginator, err := template.NewTemplate("FindMultiByPaginator").Parse(FindMultiByPaginator).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
 	})
@@ -1065,7 +1064,7 @@ func (r *Repo) generateUpdateFunc() (string, error) {
 	}
 	updateOneTpl, err := template.NewTemplate("UpdateOne").Parse(UpdateOne).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
 		"upperField":     r.UpperFieldName(primaryKey),
@@ -1076,7 +1075,7 @@ func (r *Repo) generateUpdateFunc() (string, error) {
 	updateFunc += fmt.Sprintln(updateOneTpl.String())
 	updateOneByTx, err := template.NewTemplate("UpdateOneByTx").Parse(UpdateOneByTx).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
 		"upperField":     r.UpperFieldName(primaryKey),
@@ -1088,7 +1087,7 @@ func (r *Repo) generateUpdateFunc() (string, error) {
 
 	updateOneWithZero, err := template.NewTemplate("UpdateOneWithZero").Parse(UpdateOneWithZero).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
 		"upperField":     r.UpperFieldName(primaryKey),
@@ -1099,7 +1098,7 @@ func (r *Repo) generateUpdateFunc() (string, error) {
 	updateFunc += fmt.Sprintln(updateOneWithZero.String())
 	updateOneWithZeroByTx, err := template.NewTemplate("UpdateOneWithZeroByTx").Parse(UpdateOneWithZeroByTx).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
-		"lowerDBName":    r.lowerDBName,
+		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
 		"upperField":     r.UpperFieldName(primaryKey),
@@ -1148,7 +1147,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 			default:
 				deleteOneCacheByField, err := template.NewTemplate("DeleteOneCacheByField").Parse(DeleteOneCacheByField).Execute(map[string]any{
 					"firstTableChar": r.firstTableChar,
-					"lowerDBName":    r.lowerDBName,
+					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
 					"upperField":     r.UpperFieldName(v.Columns()[0]),
@@ -1161,7 +1160,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 				delMethods += fmt.Sprintln(deleteOneCacheByField.String())
 				deleteOneCacheByFieldTx, err := template.NewTemplate("DeleteOneCacheByFieldTx").Parse(DeleteOneCacheByFieldTx).Execute(map[string]any{
 					"firstTableChar": r.firstTableChar,
-					"lowerDBName":    r.lowerDBName,
+					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
 					"upperField":     r.UpperFieldName(v.Columns()[0]),
@@ -1174,7 +1173,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 				delMethods += fmt.Sprintln(deleteOneCacheByFieldTx.String())
 				deleteOneByField, err := template.NewTemplate("DeleteOneByField").Parse(DeleteOneByField).Execute(map[string]any{
 					"firstTableChar": r.firstTableChar,
-					"lowerDBName":    r.lowerDBName,
+					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
 					"upperField":     r.UpperFieldName(v.Columns()[0]),
@@ -1187,7 +1186,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 				delMethods += fmt.Sprintln(deleteOneByField.String())
 				deleteOneByFieldTx, err := template.NewTemplate("DeleteOneByFieldTx").Parse(DeleteOneByFieldTx).Execute(map[string]any{
 					"firstTableChar": r.firstTableChar,
-					"lowerDBName":    r.lowerDBName,
+					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
 					"upperField":     r.UpperFieldName(v.Columns()[0]),
@@ -1200,7 +1199,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 				delMethods += fmt.Sprintln(deleteOneByFieldTx.String())
 				deleteMultiCacheByFieldPlural, err := template.NewTemplate("DeleteMultiCacheByFieldPlural").Parse(DeleteMultiCacheByFieldPlural).Execute(map[string]any{
 					"firstTableChar":   r.firstTableChar,
-					"lowerDBName":      r.lowerDBName,
+					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
 					"upperField":       r.UpperFieldName(v.Columns()[0]),
@@ -1215,7 +1214,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 				delMethods += fmt.Sprintln(deleteMultiCacheByFieldPlural.String())
 				deleteMultiCacheByFieldPluralTx, err := template.NewTemplate("DeleteMultiCacheByFieldPluralTx").Parse(DeleteMultiCacheByFieldPluralTx).Execute(map[string]any{
 					"firstTableChar":   r.firstTableChar,
-					"lowerDBName":      r.lowerDBName,
+					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
 					"upperField":       r.UpperFieldName(v.Columns()[0]),
@@ -1230,7 +1229,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 				delMethods += fmt.Sprintln(deleteMultiCacheByFieldPluralTx.String())
 				deleteMultiByFieldPlural, err := template.NewTemplate("DeleteMultiByFieldPlural").Parse(DeleteMultiByFieldPlural).Execute(map[string]any{
 					"firstTableChar":   r.firstTableChar,
-					"lowerDBName":      r.lowerDBName,
+					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
 					"upperField":       r.UpperFieldName(v.Columns()[0]),
@@ -1245,7 +1244,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 				delMethods += fmt.Sprintln(deleteMultiByFieldPlural.String())
 				deleteMultiByFieldPluralTx, err := template.NewTemplate("DeleteMultiByFieldPluralTx").Parse(DeleteMultiByFieldPluralTx).Execute(map[string]any{
 					"firstTableChar":   r.firstTableChar,
-					"lowerDBName":      r.lowerDBName,
+					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
 					"upperField":       r.UpperFieldName(v.Columns()[0]),
@@ -1277,7 +1276,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 			}
 			deleteOneCacheByFields, err := template.NewTemplate("DeleteOneCacheByFields").Parse(DeleteOneCacheByFields).Execute(map[string]any{
 				"firstTableChar":    r.firstTableChar,
-				"lowerDBName":       r.lowerDBName,
+				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperField":        r.UpperFieldName(v.Columns()[0]),
@@ -1293,7 +1292,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 			delMethods += fmt.Sprintln(deleteOneCacheByFields.String())
 			deleteOneCacheByFieldsTx, err := template.NewTemplate("DeleteOneCacheByFields").Parse(DeleteOneCacheByFieldsTx).Execute(map[string]any{
 				"firstTableChar":    r.firstTableChar,
-				"lowerDBName":       r.lowerDBName,
+				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperField":        r.UpperFieldName(v.Columns()[0]),
@@ -1309,7 +1308,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 			delMethods += fmt.Sprintln(deleteOneCacheByFieldsTx.String())
 			deleteOneByFields, err := template.NewTemplate("DeleteOneByFields").Parse(DeleteOneByFields).Execute(map[string]any{
 				"firstTableChar":    r.firstTableChar,
-				"lowerDBName":       r.lowerDBName,
+				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperFields":       upperFields,
@@ -1323,7 +1322,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 			delMethods += fmt.Sprintln(deleteOneByFields.String())
 			deleteOneByFieldsTx, err := template.NewTemplate("DeleteOneByFieldsTx").Parse(DeleteOneByFieldsTx).Execute(map[string]any{
 				"firstTableChar":    r.firstTableChar,
-				"lowerDBName":       r.lowerDBName,
+				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperFields":       upperFields,
@@ -1350,7 +1349,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 	}
 	deleteUniqueIndexCacheTpl, err := template.NewTemplate("DeleteUniqueIndexCache").Parse(DeleteUniqueIndexCache).Execute(map[string]any{
 		"firstTableChar":  r.firstTableChar,
-		"lowerDBName":     r.lowerDBName,
+		"dbName":          r.dbName,
 		"upperTableName":  r.upperTableName,
 		"lowerTableName":  r.lowerTableName,
 		"varCacheDelKeys": varCacheDelKeys,

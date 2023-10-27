@@ -743,7 +743,7 @@ func (d *DataTypeDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorRe
 	var total int64
 	whereExpressions, orderExpressions, err := paginatorReq.ConvertToGormExpression(gorm_gen_model.DataTypeDemo{})
 	if err != nil {
-		return nil, nil, err
+		return result, nil, err
 	}
 	err = d.db.WithContext(ctx).Model(&gorm_gen_model.DataTypeDemo{}).Select([]string{"*"}).Clauses(whereExpressions...).Count(&total).Error
 	if err != nil {

@@ -17,6 +17,7 @@ import (
 	"gorm.io/gen"
 	"gorm.io/gen/field"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
 const (
@@ -31,6 +32,7 @@ type GenerationDB struct {
 	dataMap    map[string]func(columnType gorm.ColumnType) (dataType string) // 自定义字段类型映射
 	tables     []string                                                      // 指定表集合
 	opts       []gen.ModelOpt                                                // 特殊处理逻辑函数
+	dbNameOpt  func(*gorm.DB) string                                         // 指定数据库名
 }
 
 func NewGenerationDB(db *gorm.DB, outPutPath string, opts ...OptionDB) *GenerationDB {
@@ -80,10 +82,17 @@ func WithDBOpts(opts ...gen.ModelOpt) OptionDB {
 	}
 }
 
+// WithDBNameOpts 选项函数-自定义数据库名
+func WithDBNameOpts(fn func(*gorm.DB) string) OptionDB {
+	return func(r *GenerationDB) {
+		r.dbNameOpt = fn
+	}
+}
+
 // Do 生成
 func (g *GenerationDB) Do() {
 	// 路径处理
-	dbName := g.db.Migrator().CurrentDatabase()
+	dbName := g.DBName()
 	outPutPath := strings.Trim(g.outPutPath, "/")
 	daoPath := fmt.Sprintf("%s/%s_dao", outPutPath, dbName)
 	modelPath := fmt.Sprintf("%s/%s_model", outPutPath, dbName)
@@ -95,6 +104,10 @@ func (g *GenerationDB) Do() {
 	})
 	// 使用数据库
 	generator.UseDB(g.db)
+	// 指定数据库名
+	if g.dbNameOpt != nil {
+		generator.WithDbNameOpts(g.dbNameOpt)
+	}
 	// 自定义字段类型映射
 	generator.WithDataTypeMap(g.dataMap)
 	// json 小驼峰模型命名
@@ -148,7 +161,7 @@ func (g *GenerationDB) Do() {
 		go func(db *gorm.DB, table string, columnNameToDataType, columnNameToName, columnNameToFieldType map[string]string) {
 			defer wg.Done()
 			// 数据表repo代码生成
-			err2 := repo.GenerationTable(db, daoPath, modelPath, repoPath, table, columnNameToDataType, columnNameToName, columnNameToFieldType)
+			err2 := repo.GenerationTable(db, dbName, daoPath, modelPath, repoPath, table, columnNameToDataType, columnNameToName, columnNameToFieldType)
 			if err2 != nil {
 				log.Println("repo GenerationTable err:", err2)
 				return
@@ -156,6 +169,27 @@ func (g *GenerationDB) Do() {
 		}(g.db, table, columnNameToDataType, columnNameToName, columnNameToFieldType)
 	}
 	wg.Wait()
+}
+
+// DBName 获取数据库名
+func (g *GenerationDB) DBName() string {
+	tableName := g.db.Migrator().CurrentDatabase()
+	if g.dbNameOpt != nil {
+		tableName = g.dbNameOpt(g.db)
+	}
+	tablePrefix := GetTablePrefix(g.db)
+	if !strings.HasPrefix(tableName, tablePrefix) {
+		tableName = tablePrefix + tableName
+	}
+	return tableName
+}
+
+// GetTablePrefix 获取表前缀
+func GetTablePrefix(db *gorm.DB) string {
+	if ns, ok := db.NamingStrategy.(schema.NamingStrategy); ok {
+		return ns.TablePrefix
+	}
+	return ""
 }
 
 // ModelOptionUnderline 前缀是下划线重命名

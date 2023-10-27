@@ -1,6 +1,6 @@
 // FindMultiCacheBy{{.upperFieldPlural}} 根据{{.lowerFieldPlural}}查询多条数据并设置缓存
-func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiCacheBy{{.upperFieldPlural}}(ctx context.Context, {{.lowerFieldPlural}} []{{.dataType}}) ([]*{{.lowerDBName}}_model.{{.upperTableName}}, error) {
-	resp := make([]*{{.lowerDBName}}_model.{{.upperTableName}}, 0)
+func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiCacheBy{{.upperFieldPlural}}(ctx context.Context, {{.lowerFieldPlural}} []{{.dataType}}) ([]*{{.dbName}}_model.{{.upperTableName}}, error) {
+	resp := make([]*{{.dbName}}_model.{{.upperTableName}}, 0)
 	cacheKeys := make([]string, 0)
 	keyToParam := make(map[string]{{.dataType}})
 	for _, v := range {{.lowerFieldPlural}} {
@@ -13,7 +13,7 @@ func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiCacheBy{{.upperFiel
         for _, v := range miss {
             parameters = append(parameters, keyToParam[v])
         }
-		dao := {{.lowerDBName}}_dao.Use({{.firstTableChar}}.db).{{.upperTableName}}
+		dao := {{.dbName}}_dao.Use({{.firstTableChar}}.db).{{.upperTableName}}
 		result, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.In(parameters...)).Find()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
@@ -35,7 +35,7 @@ func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiCacheBy{{.upperFiel
 		return nil, err
 	}
 	for _, v := range cacheValue {
-		tmp := new({{.lowerDBName}}_model.{{.upperTableName}})
+		tmp := new({{.dbName}}_model.{{.upperTableName}})
 		err := json.Unmarshal([]byte(v), tmp)
 		if err != nil {
 			return nil, err

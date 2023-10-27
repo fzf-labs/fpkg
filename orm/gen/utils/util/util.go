@@ -79,3 +79,7 @@ func StrSliFind(collection []string, element string) bool {
 	}
 	return false
 }
+
+func DBName(db string) string {
+	return strings.ReplaceAll(db, "-", "_")
+}

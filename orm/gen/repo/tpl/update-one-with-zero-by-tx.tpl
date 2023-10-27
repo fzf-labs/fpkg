@@ -1,11 +1,11 @@
 // UpdateOneWithZeroByTx 更新一条数据(事务),包含零值
-func ({{.firstTableChar}} *{{.upperTableName}}Repo) UpdateOneWithZeroByTx(ctx context.Context, tx *{{.lowerDBName}}_dao.Query, data *{{.lowerDBName}}_model.{{.upperTableName}}) error {
+func ({{.firstTableChar}} *{{.upperTableName}}Repo) UpdateOneWithZeroByTx(ctx context.Context, tx *{{.dbName}}_dao.Query, data *{{.dbName}}_model.{{.upperTableName}}) error {
 	dao := tx.{{.upperTableName}}
 	_, err := dao.WithContext(ctx).Where(dao.{{.upperField}}.Eq(data.{{.upperField}})).Select(dao.ALL.WithTable("")).Updates(data)
 	if err != nil {
 		return err
 	}
-    err = {{.firstTableChar}}.DeleteUniqueIndexCache(ctx, []*{{.lowerDBName}}_model.{{.upperTableName}}{data})
+    err = {{.firstTableChar}}.DeleteUniqueIndexCache(ctx, []*{{.dbName}}_model.{{.upperTableName}}{data})
     if err != nil {
         return err
     }

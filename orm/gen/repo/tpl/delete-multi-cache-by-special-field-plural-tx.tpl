@@ -1,5 +1,5 @@
 // DeleteMultiCacheBy{{.upperFieldPlural}} 根据{{.lowerFieldPlural}}删除多条数据并清理缓存
-func ({{.firstTableChar}} *{{.upperTableName}}Repo) DeleteMultiCacheBy{{.upperFieldPlural}}Tx(ctx context.Context,tx *{{.lowerDBName}}_dao.Query, {{.lowerFieldPlural}} []{{.dataType}}) error {
+func ({{.firstTableChar}} *{{.upperTableName}}Repo) DeleteMultiCacheBy{{.upperFieldPlural}}Tx(ctx context.Context,tx *{{.dbName}}_dao.Query, {{.lowerFieldPlural}} []{{.dataType}}) error {
 	dao := tx.{{.upperTableName}}
     parameters := make([]driver.Valuer, len({{.lowerFieldPlural}}))
     for k, v := range {{.lowerFieldPlural}} {

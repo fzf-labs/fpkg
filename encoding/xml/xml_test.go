@@ -1,3 +1,4 @@
+//nolint:all // Test file
 package xml
 
 import (

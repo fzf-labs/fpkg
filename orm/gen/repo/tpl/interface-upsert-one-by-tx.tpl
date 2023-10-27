@@ -1,2 +1,2 @@
 // UpsertOneByTx Upsert一条数据(事务)
-UpsertOneByTx(ctx context.Context, tx *{{.lowerDBName}}_dao.Query, data *{{.lowerDBName}}_model.{{.upperTableName}}) error
+UpsertOneByTx(ctx context.Context, tx *{{.dbName}}_dao.Query, data *{{.dbName}}_model.{{.upperTableName}}) error
