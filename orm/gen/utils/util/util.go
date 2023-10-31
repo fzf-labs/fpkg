@@ -2,7 +2,6 @@ package util
 
 import (
 	"os"
-	"sort"
 	"strings"
 
 	"golang.org/x/tools/go/packages"
@@ -63,12 +62,6 @@ func FillModelPkgPath(filePath string) string {
 		return ""
 	}
 	return pkg[0].PkgPath
-}
-
-// SliToStr 结构体排序后转string
-func SliToStr(sli []string) string {
-	sort.Strings(sli)
-	return strings.Join(sli, "")
 }
 
 func StrSliFind(collection []string, element string) bool {
