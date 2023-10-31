@@ -60,18 +60,18 @@ type (
 		FindMultiCacheByUlIDS(ctx context.Context, ulIDS []string) ([]*gorm_gen_model.DataTypeDemo, error)
 		// FindMultiByUlIDS 根据ulIDS查询多条数据
 		FindMultiByUlIDS(ctx context.Context, ulIDS []string) ([]*gorm_gen_model.DataTypeDemo, error)
-		// FindMultiByDataTypeTime 根据dataTypeTime查询多条数据
-		FindMultiByDataTypeTime(ctx context.Context, dataTypeTime time.Time) ([]*gorm_gen_model.DataTypeDemo, error)
-		// FindMultiByDataTypeTimes 根据dataTypeTimes查询多条数据
-		FindMultiByDataTypeTimes(ctx context.Context, dataTypeTimes []time.Time) ([]*gorm_gen_model.DataTypeDemo, error)
-		// FindMultiByCacheKey 根据_cacheKey查询多条数据
-		FindMultiByCacheKey(ctx context.Context, _cacheKey string) ([]*gorm_gen_model.DataTypeDemo, error)
-		// FindMultiByCacheKeys 根据_cacheKeys查询多条数据
-		FindMultiByCacheKeys(ctx context.Context, _cacheKeys []string) ([]*gorm_gen_model.DataTypeDemo, error)
 		// FindMultiByBatchAPI 根据batchAPI查询多条数据
 		FindMultiByBatchAPI(ctx context.Context, batchAPI string) ([]*gorm_gen_model.DataTypeDemo, error)
 		// FindMultiByBatchAPIS 根据batchAPIS查询多条数据
 		FindMultiByBatchAPIS(ctx context.Context, batchAPIS []string) ([]*gorm_gen_model.DataTypeDemo, error)
+		// FindMultiByCacheKey 根据_cacheKey查询多条数据
+		FindMultiByCacheKey(ctx context.Context, _cacheKey string) ([]*gorm_gen_model.DataTypeDemo, error)
+		// FindMultiByCacheKeys 根据_cacheKeys查询多条数据
+		FindMultiByCacheKeys(ctx context.Context, _cacheKeys []string) ([]*gorm_gen_model.DataTypeDemo, error)
+		// FindMultiByDataTypeTime 根据dataTypeTime查询多条数据
+		FindMultiByDataTypeTime(ctx context.Context, dataTypeTime time.Time) ([]*gorm_gen_model.DataTypeDemo, error)
+		// FindMultiByDataTypeTimes 根据dataTypeTimes查询多条数据
+		FindMultiByDataTypeTimes(ctx context.Context, dataTypeTimes []time.Time) ([]*gorm_gen_model.DataTypeDemo, error)
 		// FindMultiByPaginator 查询分页数据(通用)
 		FindMultiByPaginator(ctx context.Context, paginatorReq *orm.PaginatorReq) ([]*gorm_gen_model.DataTypeDemo, *orm.PaginatorReply, error)
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
@@ -677,20 +677,20 @@ func (d *DataTypeDemoRepo) FindMultiByUlIDS(ctx context.Context, ulIDS []string)
 	return result, nil
 }
 
-// FindMultiByDataTypeTime 根据dataTypeTime查询多条数据
-func (d *DataTypeDemoRepo) FindMultiByDataTypeTime(ctx context.Context, dataTypeTime time.Time) ([]*gorm_gen_model.DataTypeDemo, error) {
+// FindMultiByBatchAPI 根据batchAPI查询多条数据
+func (d *DataTypeDemoRepo) FindMultiByBatchAPI(ctx context.Context, batchAPI string) ([]*gorm_gen_model.DataTypeDemo, error) {
 	dao := gorm_gen_dao.Use(d.db).DataTypeDemo
-	result, err := dao.WithContext(ctx).Where(dao.DataTypeTime.Eq(dataTypeTime)).Find()
+	result, err := dao.WithContext(ctx).Where(dao.BatchAPI.Eq(batchAPI)).Find()
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-// FindMultiByDataTypeTimes 根据dataTypeTimes查询多条数据
-func (d *DataTypeDemoRepo) FindMultiByDataTypeTimes(ctx context.Context, dataTypeTimes []time.Time) ([]*gorm_gen_model.DataTypeDemo, error) {
+// FindMultiByBatchAPIS 根据batchAPIS查询多条数据
+func (d *DataTypeDemoRepo) FindMultiByBatchAPIS(ctx context.Context, batchAPIS []string) ([]*gorm_gen_model.DataTypeDemo, error) {
 	dao := gorm_gen_dao.Use(d.db).DataTypeDemo
-	result, err := dao.WithContext(ctx).Where(dao.DataTypeTime.In(dataTypeTimes...)).Find()
+	result, err := dao.WithContext(ctx).Where(dao.BatchAPI.In(batchAPIS...)).Find()
 	if err != nil {
 		return nil, err
 	}
@@ -717,20 +717,20 @@ func (d *DataTypeDemoRepo) FindMultiByCacheKeys(ctx context.Context, _cacheKeys 
 	return result, nil
 }
 
-// FindMultiByBatchAPI 根据batchAPI查询多条数据
-func (d *DataTypeDemoRepo) FindMultiByBatchAPI(ctx context.Context, batchAPI string) ([]*gorm_gen_model.DataTypeDemo, error) {
+// FindMultiByDataTypeTime 根据dataTypeTime查询多条数据
+func (d *DataTypeDemoRepo) FindMultiByDataTypeTime(ctx context.Context, dataTypeTime time.Time) ([]*gorm_gen_model.DataTypeDemo, error) {
 	dao := gorm_gen_dao.Use(d.db).DataTypeDemo
-	result, err := dao.WithContext(ctx).Where(dao.BatchAPI.Eq(batchAPI)).Find()
+	result, err := dao.WithContext(ctx).Where(dao.DataTypeTime.Eq(dataTypeTime)).Find()
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-// FindMultiByBatchAPIS 根据batchAPIS查询多条数据
-func (d *DataTypeDemoRepo) FindMultiByBatchAPIS(ctx context.Context, batchAPIS []string) ([]*gorm_gen_model.DataTypeDemo, error) {
+// FindMultiByDataTypeTimes 根据dataTypeTimes查询多条数据
+func (d *DataTypeDemoRepo) FindMultiByDataTypeTimes(ctx context.Context, dataTypeTimes []time.Time) ([]*gorm_gen_model.DataTypeDemo, error) {
 	dao := gorm_gen_dao.Use(d.db).DataTypeDemo
-	result, err := dao.WithContext(ctx).Where(dao.BatchAPI.In(batchAPIS...)).Find()
+	result, err := dao.WithContext(ctx).Where(dao.DataTypeTime.In(dataTypeTimes...)).Find()
 	if err != nil {
 		return nil, err
 	}

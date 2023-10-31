@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go/token"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode"
@@ -128,10 +129,11 @@ type Repo struct {
 }
 
 type DBIndex struct {
-	ColumnKey  string
-	PrimaryKey bool
-	Unique     bool
-	Columns    []string
+	Name       string   // 索引名称
+	ColumnKey  string   // 索引字段KEY
+	PrimaryKey bool     // 是否是主键
+	Unique     bool     // 是否是唯一索引
+	Columns    []string // 索引字段
 }
 
 // ProcessIndex 索引处理  索引去重和排序
@@ -154,13 +156,16 @@ func (r *Repo) ProcessIndex() ([]DBIndex, error) {
 		unique, _ := v.Unique()
 		columns := sortIndexColumns[v.Name()]
 		tmp = append(tmp, DBIndex{
+			Name:       v.Name(),
 			ColumnKey:  strings.Join(columns, "_"),
 			PrimaryKey: primaryKey,
 			Unique:     unique,
 			Columns:    columns,
 		})
 	}
-
+	sort.Slice(tmp, func(i, j int) bool {
+		return tmp[i].ColumnKey < tmp[j].ColumnKey
+	})
 	// 主键索引
 	for _, v := range tmp {
 		if v.PrimaryKey {
@@ -201,6 +206,7 @@ func (r *Repo) ProcessIndex() ([]DBIndex, error) {
 				if !ok {
 					repeat[columnKey] = struct{}{}
 					result = append(result, DBIndex{
+						Name:       v.Name,
 						ColumnKey:  columnKey,
 						PrimaryKey: false,
 						Unique:     false,
