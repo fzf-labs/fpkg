@@ -44,6 +44,11 @@ func newAdminDemo(db *gorm.DB, opts ...gen.DOOption) adminDemo {
 	_adminDemo.CreatedAt = field.NewTime(tableName, "created_at")
 	_adminDemo.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_adminDemo.DeletedAt = field.NewField(tableName, "deleted_at")
+	_adminDemo.AdminLogDemos = adminDemoHasManyAdminLogDemos{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("AdminLogDemos", "gorm_gen_model.AdminLogDemo"),
+	}
 
 	_adminDemo.fillFieldMap()
 
@@ -53,24 +58,25 @@ func newAdminDemo(db *gorm.DB, opts ...gen.DOOption) adminDemo {
 type adminDemo struct {
 	adminDemoDo adminDemoDo
 
-	ALL       field.Asterisk
-	ID        field.String // 编号
-	Username  field.String // 用户名
-	Password  field.String // 密码
-	Nickname  field.String // 昵称
-	Avatar    field.String // 头像
-	Gender    field.Int16  // 0=保密 1=女 2=男
-	Email     field.String // 邮件
-	Mobile    field.String // 手机号
-	JobID     field.String // 岗位
-	DeptID    field.String // 部门
-	RoleIds   field.Field  // 角色集
-	Salt      field.String // 盐值
-	Status    field.Int16  // 0=禁用 1=开启
-	Motto     field.String // 个性签名
-	CreatedAt field.Time   // 创建时间
-	UpdatedAt field.Time   // 更新时间
-	DeletedAt field.Field  // 删除时间
+	ALL           field.Asterisk
+	ID            field.String // 编号
+	Username      field.String // 用户名
+	Password      field.String // 密码
+	Nickname      field.String // 昵称
+	Avatar        field.String // 头像
+	Gender        field.Int16  // 0=保密 1=女 2=男
+	Email         field.String // 邮件
+	Mobile        field.String // 手机号
+	JobID         field.String // 岗位
+	DeptID        field.String // 部门
+	RoleIds       field.Field  // 角色集
+	Salt          field.String // 盐值
+	Status        field.Int16  // 0=禁用 1=开启
+	Motto         field.String // 个性签名
+	CreatedAt     field.Time   // 创建时间
+	UpdatedAt     field.Time   // 更新时间
+	DeletedAt     field.Field  // 删除时间
+	AdminLogDemos adminDemoHasManyAdminLogDemos
 
 	fieldMap map[string]field.Expr
 }
@@ -130,7 +136,7 @@ func (a *adminDemo) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (a *adminDemo) fillFieldMap() {
-	a.fieldMap = make(map[string]field.Expr, 17)
+	a.fieldMap = make(map[string]field.Expr, 18)
 	a.fieldMap["id"] = a.ID
 	a.fieldMap["username"] = a.Username
 	a.fieldMap["password"] = a.Password
@@ -148,6 +154,7 @@ func (a *adminDemo) fillFieldMap() {
 	a.fieldMap["created_at"] = a.CreatedAt
 	a.fieldMap["updated_at"] = a.UpdatedAt
 	a.fieldMap["deleted_at"] = a.DeletedAt
+
 }
 
 func (a adminDemo) clone(db *gorm.DB) adminDemo {
@@ -158,6 +165,77 @@ func (a adminDemo) clone(db *gorm.DB) adminDemo {
 func (a adminDemo) replaceDB(db *gorm.DB) adminDemo {
 	a.adminDemoDo.ReplaceDB(db)
 	return a
+}
+
+type adminDemoHasManyAdminLogDemos struct {
+	db *gorm.DB
+
+	field.RelationField
+}
+
+func (a adminDemoHasManyAdminLogDemos) Where(conds ...field.Expr) *adminDemoHasManyAdminLogDemos {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a adminDemoHasManyAdminLogDemos) WithContext(ctx context.Context) *adminDemoHasManyAdminLogDemos {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a adminDemoHasManyAdminLogDemos) Session(session *gorm.Session) *adminDemoHasManyAdminLogDemos {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a adminDemoHasManyAdminLogDemos) Model(m *gorm_gen_model.AdminDemo) *adminDemoHasManyAdminLogDemosTx {
+	return &adminDemoHasManyAdminLogDemosTx{a.db.Model(m).Association(a.Name())}
+}
+
+type adminDemoHasManyAdminLogDemosTx struct{ tx *gorm.Association }
+
+func (a adminDemoHasManyAdminLogDemosTx) Find() (result []*gorm_gen_model.AdminLogDemo, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a adminDemoHasManyAdminLogDemosTx) Append(values ...*gorm_gen_model.AdminLogDemo) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a adminDemoHasManyAdminLogDemosTx) Replace(values ...*gorm_gen_model.AdminLogDemo) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a adminDemoHasManyAdminLogDemosTx) Delete(values ...*gorm_gen_model.AdminLogDemo) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a adminDemoHasManyAdminLogDemosTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a adminDemoHasManyAdminLogDemosTx) Count() int64 {
+	return a.tx.Count()
 }
 
 type adminDemoDo struct{ gen.DO }

@@ -8,6 +8,7 @@ import (
 	"github.com/fzf-labs/fpkg/cache/rueidiscache"
 	"github.com/fzf-labs/fpkg/orm"
 	"github.com/fzf-labs/fpkg/orm/gen/cache/rueidisdbcache"
+	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_dao"
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_repo"
 	"github.com/fzf-labs/fpkg/util/jsonutil"
 	"github.com/redis/rueidis"
@@ -16,7 +17,7 @@ import (
 
 func Test_main(t *testing.T) {
 	gormPostgresClient, err := orm.NewGormPostgresClient(&orm.GormPostgresClientConfig{
-		DataSourceName:  "host=0.0.0.0 port=5432 user=postgres password=123456 dbname=user sslmode=disable TimeZone=Asia/Shanghai",
+		DataSourceName:  "host=0.0.0.0 port=5432 user=postgres password=123456 dbname=gorm_gen sslmode=disable TimeZone=Asia/Shanghai",
 		MaxIdleConn:     0,
 		MaxOpenConn:     0,
 		ConnMaxLifeTime: 0,
@@ -48,7 +49,7 @@ func Test_main(t *testing.T) {
 
 func Test_FindMultiByPaginator(t *testing.T) {
 	gormPostgresClient, err := orm.NewGormPostgresClient(&orm.GormPostgresClientConfig{
-		DataSourceName:  "host=0.0.0.0 port=5432 user=postgres password=123456 dbname=user sslmode=disable TimeZone=Asia/Shanghai",
+		DataSourceName:  "host=0.0.0.0 port=5432 user=postgres password=123456 dbname=gorm_gen sslmode=disable TimeZone=Asia/Shanghai",
 		MaxIdleConn:     0,
 		MaxOpenConn:     0,
 		ConnMaxLifeTime: 0,
@@ -85,5 +86,26 @@ func Test_FindMultiByPaginator(t *testing.T) {
 	})
 	jsonutil.Dump(result)
 	fmt.Println(total)
+	assert.Equal(t, nil, err)
+}
+
+func Test_FindMultiByRelate(t *testing.T) {
+	gormPostgresClient, err := orm.NewGormPostgresClient(&orm.GormPostgresClientConfig{
+		DataSourceName:  "host=0.0.0.0 port=5432 user=postgres password=123456 dbname=gorm_gen sslmode=disable TimeZone=Asia/Shanghai",
+		MaxIdleConn:     0,
+		MaxOpenConn:     0,
+		ConnMaxLifeTime: 0,
+		ShowLog:         true,
+		Tracing:         false,
+	})
+	if err != nil {
+		return
+	}
+	adminDemoDao := gorm_gen_dao.Use(gormPostgresClient).AdminDemo
+	find, err := adminDemoDao.WithContext(context.Background()).Preload(adminDemoDao.AdminLogDemos).Find()
+	if err != nil {
+		return
+	}
+	jsonutil.Dump(find)
 	assert.Equal(t, nil, err)
 }

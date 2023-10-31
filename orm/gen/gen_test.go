@@ -5,6 +5,8 @@ import (
 
 	"github.com/fzf-labs/fpkg/orm"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gen"
+	"gorm.io/gen/field"
 )
 
 func TestGenerationPostgres(t *testing.T) {
@@ -19,7 +21,19 @@ func TestGenerationPostgres(t *testing.T) {
 	if err != nil {
 		return
 	}
-	NewGenerationDB(client, "./example/postgres/", WithDataMap(DefaultPostgresDataMap), WithDBOpts(ModelOptionRemoveDefault(), ModelOptionUnderline("ul_"))).Do()
+	NewGenerationDB(client, "./example/postgres/", WithGenerateModel(func(g *gen.Generator) map[string]any {
+		adminLogDemo := g.GenerateModel("admin_log_demo")
+		adminDemo := g.GenerateModel("admin_demo", gen.FieldRelate(field.HasMany, "AdminLogDemos", adminLogDemo,
+			&field.RelateConfig{
+				RelateSlicePointer: true,
+				GORMTag:            field.GormTag{"foreignKey": []string{"admin_id"}},
+			}),
+		)
+		return map[string]any{
+			"admin_demo":     adminDemo,
+			"admin_log_demo": adminLogDemo,
+		}
+	}), WithDataMap(DataTypeMap()), WithDBOpts(ModelOptionRemoveDefault(), ModelOptionUnderline("ul_"))).Do()
 	assert.Equal(t, nil, err)
 }
 
@@ -35,7 +49,7 @@ func TestGenerationMysql(t *testing.T) {
 	if err != nil {
 		return
 	}
-	NewGenerationDB(client, "./example/postgres/", WithDataMap(DefaultPostgresDataMap), WithDBOpts(ModelOptionRemoveDefault(), ModelOptionUnderline("UL"))).Do()
+	NewGenerationDB(client, "./example/postgres/", WithDataMap(DataTypeMap()), WithDBOpts(ModelOptionRemoveDefault(), ModelOptionUnderline("UL"))).Do()
 	assert.Equal(t, nil, err)
 }
 

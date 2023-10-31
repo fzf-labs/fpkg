@@ -19,6 +19,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
 		db:           db,
 		AdminDemo:    newAdminDemo(db, opts...),
+		AdminLogDemo: newAdminLogDemo(db, opts...),
 		DataTypeDemo: newDataTypeDemo(db, opts...),
 		UserDemo:     newUserDemo(db, opts...),
 	}
@@ -28,6 +29,7 @@ type Query struct {
 	db *gorm.DB
 
 	AdminDemo    adminDemo
+	AdminLogDemo adminLogDemo
 	DataTypeDemo dataTypeDemo
 	UserDemo     userDemo
 }
@@ -38,6 +40,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
 		db:           db,
 		AdminDemo:    q.AdminDemo.clone(db),
+		AdminLogDemo: q.AdminLogDemo.clone(db),
 		DataTypeDemo: q.DataTypeDemo.clone(db),
 		UserDemo:     q.UserDemo.clone(db),
 	}
@@ -55,6 +58,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
 		db:           db,
 		AdminDemo:    q.AdminDemo.replaceDB(db),
+		AdminLogDemo: q.AdminLogDemo.replaceDB(db),
 		DataTypeDemo: q.DataTypeDemo.replaceDB(db),
 		UserDemo:     q.UserDemo.replaceDB(db),
 	}
@@ -62,6 +66,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 
 type queryCtx struct {
 	AdminDemo    *adminDemoDo
+	AdminLogDemo *adminLogDemoDo
 	DataTypeDemo *dataTypeDemoDo
 	UserDemo     *userDemoDo
 }
@@ -69,6 +74,7 @@ type queryCtx struct {
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
 		AdminDemo:    q.AdminDemo.WithContext(ctx),
+		AdminLogDemo: q.AdminLogDemo.WithContext(ctx),
 		DataTypeDemo: q.DataTypeDemo.WithContext(ctx),
 		UserDemo:     q.UserDemo.WithContext(ctx),
 	}

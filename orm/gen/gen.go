@@ -20,19 +20,23 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+// //////////////////////////////////////
+// NewGenerationDB SQL 生成 dao,model,repo
+// //////////////////////////////////////
 const (
 	SQLNullTime = "sql.NullTime"
 	TimeTime    = "time.Time"
 )
 
 type GenerationDB struct {
-	db         *gorm.DB                                                      // 数据库
-	outPutPath string                                                        // 文件生成链接
-	genRepo    bool                                                          // 是否生成repo
-	dataMap    map[string]func(columnType gorm.ColumnType) (dataType string) // 自定义字段类型映射
-	tables     []string                                                      // 指定表集合
-	opts       []gen.ModelOpt                                                // 特殊处理逻辑函数
-	dbNameOpt  func(*gorm.DB) string                                         // 指定数据库名
+	db               *gorm.DB                                                      // 数据库
+	outPutPath       string                                                        // 文件生成路径
+	genRepo          bool                                                          // 是否生成repo文件
+	dataMap          map[string]func(columnType gorm.ColumnType) (dataType string) // 自定义字段类型映射
+	tables           []string                                                      // 指定表集合
+	opts             []gen.ModelOpt                                                // 特殊处理逻辑函数
+	dbNameOpt        func(*gorm.DB) string                                         // 指定数据库名
+	generateModelOpt func(g *gen.Generator) map[string]any                         // 指定表对应的model
 }
 
 func NewGenerationDB(db *gorm.DB, outPutPath string, opts ...OptionDB) *GenerationDB {
@@ -89,10 +93,18 @@ func WithDBNameOpts(fn func(*gorm.DB) string) OptionDB {
 	}
 }
 
+// WithGenerateModel 选项函数-自定义表对应的model
+func WithGenerateModel(fn func(g *gen.Generator) map[string]any) OptionDB {
+	return func(r *GenerationDB) {
+		r.generateModelOpt = fn
+	}
+}
+
 // Do 生成
 func (g *GenerationDB) Do() {
-	// 路径处理
-	dbName := g.DBName()
+	// 获取数据库名
+	dbName := GetDBName(g.db, g.dbNameOpt)
+	// 文件夹目录
 	outPutPath := strings.Trim(g.outPutPath, "/")
 	daoPath := fmt.Sprintf("%s/%s_dao", outPutPath, dbName)
 	modelPath := fmt.Sprintf("%s/%s_model", outPutPath, dbName)
@@ -109,9 +121,11 @@ func (g *GenerationDB) Do() {
 		generator.WithDbNameOpts(g.dbNameOpt)
 	}
 	// 自定义字段类型映射
-	generator.WithDataTypeMap(g.dataMap)
+	if g.dataMap != nil {
+		generator.WithDataTypeMap(g.dataMap)
+	}
 	// json 小驼峰模型命名
-	generator.WithJSONTagNameStrategy(LowerCamelCase)
+	generator.WithJSONTagNameStrategy(JSONTagNameStrategy)
 	// 特殊处理逻辑
 	if len(g.opts) > 0 {
 		generator.WithOpts(g.opts...)
@@ -125,11 +139,21 @@ func (g *GenerationDB) Do() {
 	if len(g.tables) > 0 {
 		tables = g.tables
 	}
-	models := make([]any, len(tables))
-	for i, tableName := range tables {
-		models[i] = generator.GenerateModel(tableName)
+	models := make(map[string]any, len(tables))
+	for _, tableName := range tables {
+		models[tableName] = generator.GenerateModel(tableName)
 	}
-	generator.ApplyBasic(models...)
+	if g.generateModelOpt != nil {
+		customModels := g.generateModelOpt(generator)
+		for k, v := range customModels {
+			models[k] = v
+		}
+	}
+	applyModels := make([]any, 0)
+	for _, v := range models {
+		applyModels = append(applyModels, v)
+	}
+	generator.ApplyBasic(applyModels...)
 	// 生成model,dao
 	generator.Execute()
 	// 判断是否生成repo
@@ -171,25 +195,26 @@ func (g *GenerationDB) Do() {
 	wg.Wait()
 }
 
-// DBName 获取数据库名
-func (g *GenerationDB) DBName() string {
-	tableName := g.db.Migrator().CurrentDatabase()
-	if g.dbNameOpt != nil {
-		tableName = g.dbNameOpt(g.db)
+// GetDBName 获取数据库名
+func GetDBName(db *gorm.DB, fn func(*gorm.DB) string) string {
+	tableName := db.Migrator().CurrentDatabase()
+	if fn != nil {
+		tableName = fn(db)
 	}
-	tablePrefix := GetTablePrefix(g.db)
+	tablePrefix := ""
+	if ns, ok := db.NamingStrategy.(schema.NamingStrategy); ok {
+		tablePrefix = ns.TablePrefix
+	}
 	if !strings.HasPrefix(tableName, tablePrefix) {
 		tableName = tablePrefix + tableName
 	}
 	return tableName
 }
 
-// GetTablePrefix 获取表前缀
-func GetTablePrefix(db *gorm.DB) string {
-	if ns, ok := db.NamingStrategy.(schema.NamingStrategy); ok {
-		return ns.TablePrefix
-	}
-	return ""
+// JSONTagNameStrategy json tag 命名
+func JSONTagNameStrategy(s string) string {
+	// 下划线单词转为小写驼峰单词
+	return strcase.ToLowerCamel(s)
 }
 
 // ModelOptionUnderline 前缀是下划线重命名
@@ -227,20 +252,32 @@ func ModelOptionRemoveDefault() gen.ModelOpt {
 	})
 }
 
-// DefaultPostgresDataMap 默认Postgres字段类型映射
-var DefaultPostgresDataMap = map[string]func(columnType gorm.ColumnType) (dataType string){
-	"json":  func(columnType gorm.ColumnType) string { return "datatypes.JSON" },
-	"jsonb": func(columnType gorm.ColumnType) string { return "datatypes.JSON" },
-	"timestamptz": func(columnType gorm.ColumnType) string {
-		if util.StrSliFind([]string{"deleted_at", "deletedAt", "deleted_time", "deleted_time"}, columnType.Name()) {
-			return "gorm.DeletedAt"
-		}
-		nullable, _ := columnType.Nullable()
-		if nullable {
-			return SQLNullTime
-		}
-		return TimeTime
-	},
+// DataTypeMap 自定义字段类型映射
+func DataTypeMap() map[string]func(columnType gorm.ColumnType) (dataType string) {
+	return map[string]func(columnType gorm.ColumnType) (dataType string){
+		"json":  func(columnType gorm.ColumnType) string { return "datatypes.JSON" },
+		"jsonb": func(columnType gorm.ColumnType) string { return "datatypes.JSON" },
+		"timestamptz": func(columnType gorm.ColumnType) string {
+			if util.StrSliFind([]string{"deleted_at", "deletedAt", "deleted_time", "deleted_time"}, columnType.Name()) {
+				return "gorm.DeletedAt"
+			}
+			nullable, _ := columnType.Nullable()
+			if nullable {
+				return SQLNullTime
+			}
+			return TimeTime
+		},
+	}
+}
+
+// DBNameOpts 自定义数据库名函数
+func DBNameOpts() func(*gorm.DB) string {
+	return func(db *gorm.DB) string {
+		tableName := db.Migrator().CurrentDatabase()
+		tableName = strings.ReplaceAll(tableName, "-", "_")
+		tableName = strings.ReplaceAll(tableName, " ", "")
+		return tableName
+	}
 }
 
 // ConnectDB 数据库连接
@@ -264,10 +301,9 @@ func ConnectDB(dbType, dsn string) *gorm.DB {
 	return db
 }
 
-// LowerCamelCase 下划线单词转为小写驼峰单词
-func LowerCamelCase(s string) string {
-	return strcase.ToLowerCamel(s)
-}
+////////////////////////////////////////
+// NewGenerationPB SQL 生成 proto
+////////////////////////////////////////
 
 // NewGenerationPB SQL 生成 proto
 func NewGenerationPB(db *gorm.DB, outPutPath, packageStr, goPackageStr string, opts ...OptionPB) *GenerationPb {
@@ -308,7 +344,7 @@ func (g *GenerationPb) Do() {
 	// 使用数据库
 	generator.UseDB(g.db)
 	// json 小驼峰模型命名
-	generator.WithJSONTagNameStrategy(LowerCamelCase)
+	generator.WithJSONTagNameStrategy(JSONTagNameStrategy)
 	// 特殊处理逻辑
 	if len(g.opts) > 0 {
 		generator.WithOpts(g.opts...)
