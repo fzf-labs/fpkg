@@ -19,7 +19,7 @@ import (
 var _ IUserDemoRepo = (*UserDemoRepo)(nil)
 
 var (
-	cacheUserDemoByStatusUIDPrefix = "DBCache:gorm_gen:UserDemoByStatusUID"
+	cacheUserDemoByUIDStatusPrefix = "DBCache:gorm_gen:UserDemoByUIDStatus"
 	cacheUserDemoByUIDPrefix       = "DBCache:gorm_gen:UserDemoByUID"
 	cacheUserDemoByIDPrefix        = "DBCache:gorm_gen:UserDemoByID"
 )
@@ -48,10 +48,10 @@ type (
 		FindMultiByUsername(ctx context.Context, username string) ([]*gorm_gen_model.UserDemo, error)
 		// FindMultiByUsernames 根据usernames查询多条数据
 		FindMultiByUsernames(ctx context.Context, usernames []string) ([]*gorm_gen_model.UserDemo, error)
-		// FindOneCacheByStatusUID 根据StatusUID查询一条数据并设置缓存
-		FindOneCacheByStatusUID(ctx context.Context, status int16, UID string) (*gorm_gen_model.UserDemo, error)
-		// FindOneByStatusUID 根据StatusUID查询一条数据
-		FindOneByStatusUID(ctx context.Context, status int16, UID string) (*gorm_gen_model.UserDemo, error)
+		// FindOneCacheByUIDStatus 根据UIDStatus查询一条数据并设置缓存
+		FindOneCacheByUIDStatus(ctx context.Context, UID string, status int16) (*gorm_gen_model.UserDemo, error)
+		// FindOneByUIDStatus 根据UIDStatus查询一条数据
+		FindOneByUIDStatus(ctx context.Context, UID string, status int16) (*gorm_gen_model.UserDemo, error)
 		// FindOneCacheByUID 根据UID查询一条数据并设置缓存
 		FindOneCacheByUID(ctx context.Context, UID string) (*gorm_gen_model.UserDemo, error)
 		// FindOneByUID 根据UID查询一条数据
@@ -60,8 +60,8 @@ type (
 		FindMultiCacheByUIDS(ctx context.Context, UIDS []string) ([]*gorm_gen_model.UserDemo, error)
 		// FindMultiByUIDS 根据UIDS查询多条数据
 		FindMultiByUIDS(ctx context.Context, UIDS []string) ([]*gorm_gen_model.UserDemo, error)
-		// FindMultiByDeptIDTenantID 根据DeptIDTenantID查询多条数据
-		FindMultiByDeptIDTenantID(ctx context.Context, deptID int64, tenantID int64) ([]*gorm_gen_model.UserDemo, error)
+		// FindMultiByTenantIDDeptID 根据TenantIDDeptID查询多条数据
+		FindMultiByTenantIDDeptID(ctx context.Context, tenantID int64, deptID int64) ([]*gorm_gen_model.UserDemo, error)
 		// FindOneCacheByID 根据ID查询一条数据并设置缓存
 		FindOneCacheByID(ctx context.Context, ID int64) (*gorm_gen_model.UserDemo, error)
 		// FindOneByID 根据ID查询一条数据
@@ -72,14 +72,14 @@ type (
 		FindMultiByIDS(ctx context.Context, IDS []int64) ([]*gorm_gen_model.UserDemo, error)
 		// FindMultiByPaginator 查询分页数据(通用)
 		FindMultiByPaginator(ctx context.Context, paginatorReq *orm.PaginatorReq) ([]*gorm_gen_model.UserDemo, *orm.PaginatorReply, error)
-		// DeleteOneCacheByStatusUID 根据StatusUID删除一条数据并清理缓存
-		DeleteOneCacheByStatusUID(ctx context.Context, status int16, UID string) error
-		// DeleteOneCacheByStatusUID 根据StatusUID删除一条数据并清理缓存
-		DeleteOneCacheByStatusUIDTx(ctx context.Context, tx *gorm_gen_dao.Query, status int16, UID string) error
-		// DeleteOneByStatusUID 根据StatusUID删除一条数据
-		DeleteOneByStatusUID(ctx context.Context, status int16, UID string) error
-		// DeleteOneByStatusUID 根据StatusUID删除一条数据
-		DeleteOneByStatusUIDTx(ctx context.Context, tx *gorm_gen_dao.Query, status int16, UID string) error
+		// DeleteOneCacheByUIDStatus 根据UIDStatus删除一条数据并清理缓存
+		DeleteOneCacheByUIDStatus(ctx context.Context, UID string, status int16) error
+		// DeleteOneCacheByUIDStatus 根据UIDStatus删除一条数据并清理缓存
+		DeleteOneCacheByUIDStatusTx(ctx context.Context, tx *gorm_gen_dao.Query, UID string, status int16) error
+		// DeleteOneByUIDStatus 根据UIDStatus删除一条数据
+		DeleteOneByUIDStatus(ctx context.Context, UID string, status int16) error
+		// DeleteOneByUIDStatus 根据UIDStatus删除一条数据
+		DeleteOneByUIDStatusTx(ctx context.Context, tx *gorm_gen_dao.Query, UID string, status int16) error
 		// DeleteOneCacheByUID 根据UID删除一条数据并清理缓存
 		DeleteOneCacheByUID(ctx context.Context, UID string) error
 		// DeleteOneCacheByUID 根据UID删除一条数据并清理缓存
@@ -234,17 +234,17 @@ func (u *UserDemoRepo) UpdateOneWithZeroByTx(ctx context.Context, tx *gorm_gen_d
 	return err
 }
 
-// DeleteOneCacheByStatusUID 根据status删除一条数据并清理缓存
-func (u *UserDemoRepo) DeleteOneCacheByStatusUID(ctx context.Context, status int16, UID string) error {
+// DeleteOneCacheByUIDStatus 根据UID删除一条数据并清理缓存
+func (u *UserDemoRepo) DeleteOneCacheByUIDStatus(ctx context.Context, UID string, status int16) error {
 	dao := gorm_gen_dao.Use(u.db).UserDemo
-	result, err := dao.WithContext(ctx).Where(dao.Status.Eq(status), dao.UID.Eq(UID)).First()
+	result, err := dao.WithContext(ctx).Where(dao.UID.Eq(UID), dao.Status.Eq(status)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 	if result == nil {
 		return nil
 	}
-	_, err = dao.WithContext(ctx).Where(dao.Status.Eq(status), dao.UID.Eq(UID)).Delete()
+	_, err = dao.WithContext(ctx).Where(dao.UID.Eq(UID), dao.Status.Eq(status)).Delete()
 	if err != nil {
 		return err
 	}
@@ -255,17 +255,17 @@ func (u *UserDemoRepo) DeleteOneCacheByStatusUID(ctx context.Context, status int
 	return nil
 }
 
-// DeleteOneCacheByStatusUID 根据status删除一条数据并清理缓存
-func (u *UserDemoRepo) DeleteOneCacheByStatusUIDTx(ctx context.Context, tx *gorm_gen_dao.Query, status int16, UID string) error {
+// DeleteOneCacheByUIDStatus 根据UID删除一条数据并清理缓存
+func (u *UserDemoRepo) DeleteOneCacheByUIDStatusTx(ctx context.Context, tx *gorm_gen_dao.Query, UID string, status int16) error {
 	dao := tx.UserDemo
-	result, err := dao.WithContext(ctx).Where(dao.Status.Eq(status), dao.UID.Eq(UID)).First()
+	result, err := dao.WithContext(ctx).Where(dao.UID.Eq(UID), dao.Status.Eq(status)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 	if result == nil {
 		return nil
 	}
-	_, err = dao.WithContext(ctx).Where(dao.Status.Eq(status), dao.UID.Eq(UID)).Delete()
+	_, err = dao.WithContext(ctx).Where(dao.UID.Eq(UID), dao.Status.Eq(status)).Delete()
 	if err != nil {
 		return err
 	}
@@ -276,20 +276,20 @@ func (u *UserDemoRepo) DeleteOneCacheByStatusUIDTx(ctx context.Context, tx *gorm
 	return nil
 }
 
-// DeleteOneByStatusUID 根据status删除一条数据
-func (u *UserDemoRepo) DeleteOneByStatusUID(ctx context.Context, status int16, UID string) error {
+// DeleteOneByUIDStatus 根据UID删除一条数据
+func (u *UserDemoRepo) DeleteOneByUIDStatus(ctx context.Context, UID string, status int16) error {
 	dao := gorm_gen_dao.Use(u.db).UserDemo
-	_, err := dao.WithContext(ctx).Where(dao.Status.Eq(status), dao.UID.Eq(UID)).Delete()
+	_, err := dao.WithContext(ctx).Where(dao.UID.Eq(UID), dao.Status.Eq(status)).Delete()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// DeleteOneByStatusUID 根据status删除一条数据
-func (u *UserDemoRepo) DeleteOneByStatusUIDTx(ctx context.Context, tx *gorm_gen_dao.Query, status int16, UID string) error {
+// DeleteOneByUIDStatus 根据UID删除一条数据
+func (u *UserDemoRepo) DeleteOneByUIDStatusTx(ctx context.Context, tx *gorm_gen_dao.Query, UID string, status int16) error {
 	dao := tx.UserDemo
-	_, err := dao.WithContext(ctx).Where(dao.Status.Eq(status), dao.UID.Eq(UID)).Delete()
+	_, err := dao.WithContext(ctx).Where(dao.UID.Eq(UID), dao.Status.Eq(status)).Delete()
 	if err != nil {
 		return err
 	}
@@ -548,7 +548,7 @@ func (u *UserDemoRepo) DeleteMultiByIDSTx(ctx context.Context, tx *gorm_gen_dao.
 func (u *UserDemoRepo) DeleteUniqueIndexCache(ctx context.Context, data []*gorm_gen_model.UserDemo) error {
 	keys := make([]string, 0)
 	for _, v := range data {
-		keys = append(keys, u.cache.Key(cacheUserDemoByStatusUIDPrefix, v.Status, v.UID))
+		keys = append(keys, u.cache.Key(cacheUserDemoByUIDStatusPrefix, v.UID, v.Status))
 		keys = append(keys, u.cache.Key(cacheUserDemoByUIDPrefix, v.UID))
 		keys = append(keys, u.cache.Key(cacheUserDemoByIDPrefix, v.ID))
 
@@ -580,13 +580,13 @@ func (u *UserDemoRepo) FindMultiByUsernames(ctx context.Context, usernames []str
 	return result, nil
 }
 
-// FindOneCacheByStatusUID 根据StatusUID查询一条数据并设置缓存
-func (u *UserDemoRepo) FindOneCacheByStatusUID(ctx context.Context, status int16, UID string) (*gorm_gen_model.UserDemo, error) {
+// FindOneCacheByUIDStatus 根据UIDStatus查询一条数据并设置缓存
+func (u *UserDemoRepo) FindOneCacheByUIDStatus(ctx context.Context, UID string, status int16) (*gorm_gen_model.UserDemo, error) {
 	resp := new(gorm_gen_model.UserDemo)
-	cacheKey := u.cache.Key(cacheUserDemoByStatusUIDPrefix, status, UID)
+	cacheKey := u.cache.Key(cacheUserDemoByUIDStatusPrefix, UID, status)
 	cacheValue, err := u.cache.Fetch(ctx, cacheKey, func() (string, error) {
 		dao := gorm_gen_dao.Use(u.db).UserDemo
-		result, err := dao.WithContext(ctx).Where(dao.Status.Eq(status), dao.UID.Eq(UID)).First()
+		result, err := dao.WithContext(ctx).Where(dao.UID.Eq(UID), dao.Status.Eq(status)).First()
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", err
 		}
@@ -606,10 +606,10 @@ func (u *UserDemoRepo) FindOneCacheByStatusUID(ctx context.Context, status int16
 	return resp, nil
 }
 
-// FindOneByStatusUID 根据StatusUID查询一条数据
-func (u *UserDemoRepo) FindOneByStatusUID(ctx context.Context, status int16, UID string) (*gorm_gen_model.UserDemo, error) {
+// FindOneByUIDStatus 根据UIDStatus查询一条数据
+func (u *UserDemoRepo) FindOneByUIDStatus(ctx context.Context, UID string, status int16) (*gorm_gen_model.UserDemo, error) {
 	dao := gorm_gen_dao.Use(u.db).UserDemo
-	result, err := dao.WithContext(ctx).Where(dao.Status.Eq(status), dao.UID.Eq(UID)).First()
+	result, err := dao.WithContext(ctx).Where(dao.UID.Eq(UID), dao.Status.Eq(status)).First()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
@@ -709,10 +709,10 @@ func (u *UserDemoRepo) FindMultiByUIDS(ctx context.Context, UIDS []string) ([]*g
 	return result, nil
 }
 
-// FindMultiByDeptIDTenantID 根据DeptIDTenantID查询多条数据
-func (u *UserDemoRepo) FindMultiByDeptIDTenantID(ctx context.Context, deptID int64, tenantID int64) ([]*gorm_gen_model.UserDemo, error) {
+// FindMultiByTenantIDDeptID 根据TenantIDDeptID查询多条数据
+func (u *UserDemoRepo) FindMultiByTenantIDDeptID(ctx context.Context, tenantID int64, deptID int64) ([]*gorm_gen_model.UserDemo, error) {
 	dao := gorm_gen_dao.Use(u.db).UserDemo
-	result, err := dao.WithContext(ctx).Where(dao.DeptID.Eq(deptID), dao.TenantID.Eq(tenantID)).Find()
+	result, err := dao.WithContext(ctx).Where(dao.TenantID.Eq(tenantID), dao.DeptID.Eq(deptID)).Find()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}

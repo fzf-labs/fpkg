@@ -19,7 +19,7 @@ CREATE TABLE public.user_demo (
     updated_at timestamp with time zone NOT NULL,
     deleted_at timestamp with time zone
 );
-COMMENT ON TABLE public.user_demo IS '用户信息表';
+COMMENT ON TABLE public.user_demo IS '用户';
 COMMENT ON COLUMN public.user_demo.id IS 'ID';
 COMMENT ON COLUMN public.user_demo.uid IS 'uid';
 COMMENT ON COLUMN public.user_demo.username IS '用户账号';

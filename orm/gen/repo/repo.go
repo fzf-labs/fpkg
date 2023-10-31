@@ -36,6 +36,7 @@ func GenerationTable(db *gorm.DB, dbname, daoPath, modelPath, repoPath, table st
 		daoPath:               daoPath,
 		modelPath:             modelPath,
 		repoPath:              repoPath,
+		table:                 table,
 		columnNameToDataType:  columnNameToDataType,
 		columnNameToName:      columnNameToName,
 		columnNameToFieldType: columnNameToFieldType,
@@ -53,6 +54,10 @@ func GenerationTable(db *gorm.DB, dbname, daoPath, modelPath, repoPath, table st
 		return err
 	}
 	g.index = g.ProcessIndex(indexes)
+	g.sortIndexColumns, err = g.SortIndexColumns()
+	if err != nil {
+		return err
+	}
 	g.lowerTableName = g.LowerName(table)
 	g.upperTableName = g.UpperName(table)
 	g.firstTableChar = g.lowerTableName[0:1]
@@ -110,20 +115,22 @@ func GenerationTable(db *gorm.DB, dbname, daoPath, modelPath, repoPath, table st
 }
 
 type Repo struct {
-	gorm                  *gorm.DB          // 数据库
-	daoPath               string            // dao所在的路径
-	modelPath             string            // model所在的路径
-	repoPath              string            // repo所在的路径
-	columnNameToDataType  map[string]string // 字段名称对应的类型
-	columnNameToName      map[string]string // 字段名称对应的Go名称
-	columnNameToFieldType map[string]string // 字段名称对应的dao类型
-	dbName                string            // 数据库名称
-	firstTableChar        string            // 表名称第一个字母
-	lowerTableName        string            // 表名称小写
-	upperTableName        string            // 表名称大写
-	daoPkgPath            string            // go文件中daoPkgPath
-	modelPkgPath          string            // go文件中modelPkgPath
-	index                 []gorm.Index      // 索引
+	gorm                  *gorm.DB            // 数据库
+	daoPath               string              // dao所在的路径
+	modelPath             string              // model所在的路径
+	repoPath              string              // repo所在的路径
+	table                 string              // 表名称
+	columnNameToDataType  map[string]string   // 字段名称对应的类型
+	columnNameToName      map[string]string   // 字段名称对应的Go名称
+	columnNameToFieldType map[string]string   // 字段名称对应的dao类型
+	dbName                string              // 数据库名称
+	firstTableChar        string              // 表名称第一个字母
+	lowerTableName        string              // 表名称小写
+	upperTableName        string              // 表名称大写
+	daoPkgPath            string              // go文件中daoPkgPath
+	modelPkgPath          string              // go文件中modelPkgPath
+	index                 []gorm.Index        // 索引
+	sortIndexColumns      map[string][]string // 排序后的索引字段
 }
 
 // ProcessIndex 索引处理  索引去重和排序
@@ -170,6 +177,52 @@ func (r *Repo) ProcessIndex(indexes []gorm.Index) []gorm.Index {
 		return result[i].Name() > result[j].Name()
 	})
 	return result
+}
+
+// GetSortIndexColumns 获取排序后的索引字段
+func (r *Repo) GetSortIndexColumns(indexName string, columns []string) []string {
+	if _, ok := r.sortIndexColumns[indexName]; !ok {
+		return columns
+	}
+	return r.sortIndexColumns[indexName]
+}
+
+func (r *Repo) SortIndexColumns() (map[string][]string, error) {
+	resp := make(map[string][]string)
+	var err error
+	switch r.gorm.Dialector.Name() {
+	case "postgres":
+		resp, err = r.postgresSortIndexColumns()
+		if err != nil {
+			return nil, err
+		}
+	default:
+
+	}
+	return resp, nil
+}
+
+// postgresSortIndexColumns  postgres索引字段排序
+func (r *Repo) postgresSortIndexColumns() (map[string][]string, error) {
+	resp := make(map[string][]string)
+	type Tmp struct {
+		TableName  string `gorm:"column:table_name" json:"table_name"`
+		IndexName  string `gorm:"column:index_name" json:"index_name"`
+		ColumnName string `gorm:"column:column_name" json:"column_name"`
+	}
+	result := make([]Tmp, 0)
+	sql := fmt.Sprintf(`SELECT t.relname AS table_name,i.relname AS index_name,a.attname AS column_name,ix.indisunique AS non_unique,ix.indisprimary AS PRIMARY FROM pg_class t JOIN pg_index ix ON t.oid=ix.indrelid JOIN pg_class i ON i.oid=ix.indexrelid JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=ANY(ix.indkey)WHERE t.relkind='r' AND t.relname='%s' ORDER BY ix.indrelid,(array_position(ix.indkey,a.attnum))`, r.table)
+	err := r.gorm.Raw(sql).Scan(&result).Error
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range result {
+		if _, ok := resp[v.IndexName]; !ok {
+			resp[v.IndexName] = make([]string, 0)
+		}
+		resp[v.IndexName] = append(resp[v.IndexName], v.ColumnName)
+	}
+	return resp, nil
 }
 
 // output 导出文件
@@ -224,13 +277,13 @@ func (r *Repo) generateVar() (string, error) {
 	var varStr string
 	var cacheKeys string
 	for _, v := range r.index {
-		if r.CheckDaoFieldType(v.Columns()) {
+		if r.CheckDaoFieldType(r.GetSortIndexColumns(v.Name(), v.Columns())) {
 			continue
 		}
 		unique, _ := v.Unique()
 		if unique {
 			var cacheField string
-			for _, column := range v.Columns() {
+			for _, column := range r.GetSortIndexColumns(v.Name(), v.Columns()) {
 				cacheField += r.UpperFieldName(column)
 			}
 			varCacheTpl, err := template.NewTemplate("VarCache").Parse(VarCache).Execute(map[string]any{
@@ -363,20 +416,20 @@ func (r *Repo) generateUpdateMethods() (string, error) {
 func (r *Repo) generateReadMethods() (string, error) {
 	var readMethods string
 	for _, v := range r.index {
-		if r.CheckDaoFieldType(v.Columns()) {
+		if r.CheckDaoFieldType(r.GetSortIndexColumns(v.Name(), v.Columns())) {
 			continue
 		}
 		unique, _ := v.Unique()
 		// 唯一 && 字段数于1
-		if unique && len(v.Columns()) == 1 {
-			columnNameToDataType := r.columnNameToDataType[v.Columns()[0]]
+		if unique && len(r.GetSortIndexColumns(v.Name(), v.Columns())) == 1 {
+			columnNameToDataType := r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]]
 			interfaceFindOneCacheByField, err := template.NewTemplate("InterfaceFindOneCacheByField").Parse(InterfaceFindOneCacheByField).Execute(map[string]any{
 				"dbName":         r.dbName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperFieldName(v.Columns()[0]),
-				"lowerField":     r.LowerFieldName(v.Columns()[0]),
-				"dataType":       r.columnNameToDataType[v.Columns()[0]],
+				"upperField":     r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+				"lowerField":     r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+				"dataType":       r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 			})
 			if err != nil {
 				return "", err
@@ -386,9 +439,9 @@ func (r *Repo) generateReadMethods() (string, error) {
 				"dbName":         r.dbName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperFieldName(v.Columns()[0]),
-				"lowerField":     r.LowerFieldName(v.Columns()[0]),
-				"dataType":       r.columnNameToDataType[v.Columns()[0]],
+				"upperField":     r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+				"lowerField":     r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+				"dataType":       r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 			})
 			if err != nil {
 				return "", err
@@ -401,11 +454,11 @@ func (r *Repo) generateReadMethods() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns()[0]),
-					"lowerField":       r.LowerFieldName(v.Columns()[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
-					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+					"upperField":       r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":       r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"dataType":         r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -415,9 +468,9 @@ func (r *Repo) generateReadMethods() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
-					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+					"upperFieldPlural": r.Plural(r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"dataType":         r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -427,10 +480,10 @@ func (r *Repo) generateReadMethods() (string, error) {
 
 		}
 		// 唯一 && 字段数大于1
-		if unique && len(v.Columns()) > 1 {
+		if unique && len(r.GetSortIndexColumns(v.Name(), v.Columns())) > 1 {
 			var upperFields string
 			var fieldAndDataTypes string
-			for _, vv := range v.Columns() {
+			for _, vv := range r.GetSortIndexColumns(v.Name(), v.Columns()) {
 				upperFields += r.UpperFieldName(vv)
 				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(vv), r.columnNameToDataType[vv])
 			}
@@ -458,8 +511,8 @@ func (r *Repo) generateReadMethods() (string, error) {
 			readMethods += fmt.Sprintln(interfaceFindOneByFields.String())
 		}
 		// 不唯一 && 字段数等于1
-		if !unique && len(v.Columns()) == 1 {
-			columnNameToDataType := r.columnNameToDataType[v.Columns()[0]]
+		if !unique && len(r.GetSortIndexColumns(v.Name(), v.Columns())) == 1 {
+			columnNameToDataType := r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]]
 			switch columnNameToDataType {
 			case "bool":
 			default:
@@ -467,9 +520,9 @@ func (r *Repo) generateReadMethods() (string, error) {
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns()[0]),
-					"lowerField":     r.LowerFieldName(v.Columns()[0]),
-					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+					"upperField":     r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":     r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"dataType":       r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -479,9 +532,9 @@ func (r *Repo) generateReadMethods() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
-					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+					"upperFieldPlural": r.Plural(r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"dataType":         r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -490,10 +543,10 @@ func (r *Repo) generateReadMethods() (string, error) {
 			}
 		}
 		// 不唯一 && 字段数大于1
-		if !unique && len(v.Columns()) > 1 {
+		if !unique && len(r.GetSortIndexColumns(v.Name(), v.Columns())) > 1 {
 			var upperFields string
 			var fieldAndDataTypes string
-			for _, v := range v.Columns() {
+			for _, v := range r.GetSortIndexColumns(v.Name(), v.Columns()) {
 				upperFields += r.UpperFieldName(v)
 				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(v), r.columnNameToDataType[v])
 			}
@@ -527,7 +580,7 @@ func (r *Repo) generateDelMethods() (string, error) {
 	var delMethods string
 	var haveUnique bool
 	for _, v := range r.index {
-		if r.CheckDaoFieldType(v.Columns()) {
+		if r.CheckDaoFieldType(r.GetSortIndexColumns(v.Name(), v.Columns())) {
 			continue
 		}
 		unique, _ := v.Unique()
@@ -535,17 +588,17 @@ func (r *Repo) generateDelMethods() (string, error) {
 			haveUnique = true
 		}
 		// 唯一 && 字段数于1
-		if unique && len(v.Columns()) == 1 {
-			switch r.columnNameToDataType[v.Columns()[0]] {
+		if unique && len(r.GetSortIndexColumns(v.Name(), v.Columns())) == 1 {
+			switch r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]] {
 			case "bool":
 			default:
 				interfaceDeleteOneCacheByField, err := template.NewTemplate("InterfaceDeleteOneCacheByField").Parse(InterfaceDeleteOneCacheByField).Execute(map[string]any{
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns()[0]),
-					"lowerField":     r.LowerFieldName(v.Columns()[0]),
-					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+					"upperField":     r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":     r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"dataType":       r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -555,9 +608,9 @@ func (r *Repo) generateDelMethods() (string, error) {
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns()[0]),
-					"lowerField":     r.LowerFieldName(v.Columns()[0]),
-					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+					"upperField":     r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":     r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"dataType":       r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -567,9 +620,9 @@ func (r *Repo) generateDelMethods() (string, error) {
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns()[0]),
-					"lowerField":     r.LowerFieldName(v.Columns()[0]),
-					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+					"upperField":     r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":     r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"dataType":       r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -579,9 +632,9 @@ func (r *Repo) generateDelMethods() (string, error) {
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns()[0]),
-					"lowerField":     r.LowerFieldName(v.Columns()[0]),
-					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+					"upperField":     r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":     r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"dataType":       r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -591,11 +644,11 @@ func (r *Repo) generateDelMethods() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns()[0]),
-					"lowerField":       r.LowerFieldName(v.Columns()[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
-					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+					"upperField":       r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":       r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"dataType":         r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -605,11 +658,11 @@ func (r *Repo) generateDelMethods() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns()[0]),
-					"lowerField":       r.LowerFieldName(v.Columns()[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
-					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+					"upperField":       r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":       r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"dataType":         r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -619,11 +672,11 @@ func (r *Repo) generateDelMethods() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns()[0]),
-					"lowerField":       r.LowerFieldName(v.Columns()[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
-					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+					"upperField":       r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":       r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"dataType":         r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -633,11 +686,11 @@ func (r *Repo) generateDelMethods() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns()[0]),
-					"lowerField":       r.LowerFieldName(v.Columns()[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
-					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+					"upperField":       r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":       r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"dataType":         r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -646,10 +699,10 @@ func (r *Repo) generateDelMethods() (string, error) {
 			}
 		}
 		// 唯一 && 字段数大于1
-		if unique && len(v.Columns()) > 1 {
+		if unique && len(r.GetSortIndexColumns(v.Name(), v.Columns())) > 1 {
 			var upperFields string
 			var fieldAndDataTypes string
-			for _, vv := range v.Columns() {
+			for _, vv := range r.GetSortIndexColumns(v.Name(), v.Columns()) {
 				upperFields += r.UpperFieldName(vv)
 				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(vv), r.columnNameToDataType[vv])
 			}
@@ -657,10 +710,10 @@ func (r *Repo) generateDelMethods() (string, error) {
 				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperFieldName(v.Columns()[0]),
-				"lowerField":        r.LowerFieldName(v.Columns()[0]),
+				"upperField":        r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+				"lowerField":        r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
 				"upperFields":       upperFields,
-				"dataType":          r.columnNameToDataType[v.Columns()[0]],
+				"dataType":          r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
 			})
 			if err != nil {
@@ -671,10 +724,10 @@ func (r *Repo) generateDelMethods() (string, error) {
 				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperFieldName(v.Columns()[0]),
-				"lowerField":        r.LowerFieldName(v.Columns()[0]),
+				"upperField":        r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+				"lowerField":        r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
 				"upperFields":       upperFields,
-				"dataType":          r.columnNameToDataType[v.Columns()[0]],
+				"dataType":          r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
 			})
 			if err != nil {
@@ -685,10 +738,10 @@ func (r *Repo) generateDelMethods() (string, error) {
 				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperFieldName(v.Columns()[0]),
-				"lowerField":        r.LowerFieldName(v.Columns()[0]),
+				"upperField":        r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+				"lowerField":        r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
 				"upperFields":       upperFields,
-				"dataType":          r.columnNameToDataType[v.Columns()[0]],
+				"dataType":          r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
 			})
 			if err != nil {
@@ -699,10 +752,10 @@ func (r *Repo) generateDelMethods() (string, error) {
 				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperFieldName(v.Columns()[0]),
-				"lowerField":        r.LowerFieldName(v.Columns()[0]),
+				"upperField":        r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+				"lowerField":        r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
 				"upperFields":       upperFields,
-				"dataType":          r.columnNameToDataType[v.Columns()[0]],
+				"dataType":          r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
 			})
 			if err != nil {
@@ -711,11 +764,11 @@ func (r *Repo) generateDelMethods() (string, error) {
 			delMethods += fmt.Sprintln(interfaceDeleteOneByFieldsTx.String())
 		}
 		// 不唯一 && 字段数等于1
-		if !unique && len(v.Columns()) == 1 {
+		if !unique && len(r.GetSortIndexColumns(v.Name(), v.Columns())) == 1 {
 
 		}
 		// 不唯一 && 字段数大于1
-		if !unique && len(v.Columns()) > 1 {
+		if !unique && len(r.GetSortIndexColumns(v.Name(), v.Columns())) > 1 {
 
 		}
 	}
@@ -837,28 +890,28 @@ func (r *Repo) generateCreateFunc() (string, error) {
 func (r *Repo) generateReadFunc() (string, error) {
 	var readFunc string
 	for _, v := range r.index {
-		if r.CheckDaoFieldType(v.Columns()) {
+		if r.CheckDaoFieldType(r.GetSortIndexColumns(v.Name(), v.Columns())) {
 			continue
 		}
 		unique, _ := v.Unique()
 		// 唯一 && 字段数于1
-		if unique && len(v.Columns()) == 1 {
+		if unique && len(r.GetSortIndexColumns(v.Name(), v.Columns())) == 1 {
 			var whereField string
-			columnNameToDataType := r.columnNameToDataType[v.Columns()[0]]
+			columnNameToDataType := r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]]
 			switch columnNameToDataType {
 			case "bool":
-				whereField += fmt.Sprintf("dao.%s.Is(%s),", r.UpperFieldName(v.Columns()[0]), r.LowerFieldName(v.Columns()[0]))
+				whereField += fmt.Sprintf("dao.%s.Is(%s),", r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]), r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]))
 			default:
-				whereField += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperFieldName(v.Columns()[0]), r.LowerFieldName(v.Columns()[0]))
+				whereField += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]), r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]))
 			}
 			findOneCacheByField, err := template.NewTemplate("findOneCacheByField").Parse(FindOneCacheByField).Execute(map[string]any{
 				"firstTableChar": r.firstTableChar,
 				"dbName":         r.dbName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperFieldName(v.Columns()[0]),
-				"lowerField":     r.LowerFieldName(v.Columns()[0]),
-				"dataType":       r.columnNameToDataType[v.Columns()[0]],
+				"upperField":     r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+				"lowerField":     r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+				"dataType":       r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				"whereField":     whereField,
 			})
 			if err != nil {
@@ -870,9 +923,9 @@ func (r *Repo) generateReadFunc() (string, error) {
 				"dbName":         r.dbName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperFieldName(v.Columns()[0]),
-				"lowerField":     r.LowerFieldName(v.Columns()[0]),
-				"dataType":       r.columnNameToDataType[v.Columns()[0]],
+				"upperField":     r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+				"lowerField":     r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+				"dataType":       r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				"whereField":     whereField,
 			})
 			if err != nil {
@@ -888,11 +941,11 @@ func (r *Repo) generateReadFunc() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns()[0]),
-					"lowerField":       r.LowerFieldName(v.Columns()[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
-					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+					"upperField":       r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":       r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"dataType":         r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 					"whereField":       whereField,
 				})
 				if err != nil {
@@ -902,12 +955,12 @@ func (r *Repo) generateReadFunc() (string, error) {
 				findMultiByFieldPlural, err := template.NewTemplate("findMultiByFieldPlural").Parse(FindMultiByFieldPlural).Execute(map[string]any{
 					"firstTableChar":   r.firstTableChar,
 					"dbName":           r.dbName,
-					"upperField":       r.UpperFieldName(v.Columns()[0]),
+					"upperField":       r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
-					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+					"upperFieldPlural": r.Plural(r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"dataType":         r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 					"whereField":       whereField,
 				})
 				if err != nil {
@@ -917,12 +970,12 @@ func (r *Repo) generateReadFunc() (string, error) {
 			}
 		}
 		// 唯一 && 字段数大于1
-		if unique && len(v.Columns()) > 1 {
+		if unique && len(r.GetSortIndexColumns(v.Name(), v.Columns())) > 1 {
 			var upperFields string
 			var fieldAndDataTypes string
 			var lowerFieldsJoin string
 			var whereFields string
-			for _, v := range v.Columns() {
+			for _, v := range r.GetSortIndexColumns(v.Name(), v.Columns()) {
 				upperFields += r.UpperFieldName(v)
 				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(v), r.columnNameToDataType[v])
 				lowerFieldsJoin += fmt.Sprintf("%s,", r.LowerFieldName(v))
@@ -962,23 +1015,23 @@ func (r *Repo) generateReadFunc() (string, error) {
 			readFunc += fmt.Sprintln(findOneByFields.String())
 		}
 		// 不唯一 && 字段数等于1
-		if !unique && len(v.Columns()) == 1 {
+		if !unique && len(r.GetSortIndexColumns(v.Name(), v.Columns())) == 1 {
 			var whereField string
-			columnNameToDataType := r.columnNameToDataType[v.Columns()[0]]
+			columnNameToDataType := r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]]
 			switch columnNameToDataType {
 			case "bool":
-				whereField += fmt.Sprintf("dao.%s.Is(%s),", r.UpperFieldName(v.Columns()[0]), r.LowerFieldName(v.Columns()[0]))
+				whereField += fmt.Sprintf("dao.%s.Is(%s),", r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]), r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]))
 			default:
-				whereField += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperFieldName(v.Columns()[0]), r.LowerFieldName(v.Columns()[0]))
+				whereField += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]), r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]))
 			}
 			findMultiByField, err := template.NewTemplate("findMultiByField").Parse(FindMultiByField).Execute(map[string]any{
 				"firstTableChar": r.firstTableChar,
 				"dbName":         r.dbName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperFieldName(v.Columns()[0]),
-				"lowerField":     r.LowerFieldName(v.Columns()[0]),
-				"dataType":       r.columnNameToDataType[v.Columns()[0]],
+				"upperField":     r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+				"lowerField":     r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+				"dataType":       r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				"whereField":     whereField,
 			})
 			if err != nil {
@@ -991,12 +1044,12 @@ func (r *Repo) generateReadFunc() (string, error) {
 				findMultiByFieldPlural, err := template.NewTemplate("findMultiByFieldPlural").Parse(FindMultiByFieldPlural).Execute(map[string]any{
 					"firstTableChar":   r.firstTableChar,
 					"dbName":           r.dbName,
-					"upperField":       r.UpperFieldName(v.Columns()[0]),
+					"upperField":       r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
-					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+					"upperFieldPlural": r.Plural(r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"dataType":         r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 					"whereField":       whereField,
 				})
 				if err != nil {
@@ -1006,11 +1059,11 @@ func (r *Repo) generateReadFunc() (string, error) {
 			}
 		}
 		// 不唯一 && 字段数大于1
-		if !unique && len(v.Columns()) > 1 {
+		if !unique && len(r.GetSortIndexColumns(v.Name(), v.Columns())) > 1 {
 			var upperFields string
 			var fieldAndDataTypes string
 			var whereFields string
-			for _, v := range v.Columns() {
+			for _, v := range r.GetSortIndexColumns(v.Name(), v.Columns()) {
 				upperFields += r.UpperFieldName(v)
 				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(v), r.columnNameToDataType[v])
 				switch r.columnNameToDataType[v] {
@@ -1116,7 +1169,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 	var varCacheDelKeys string
 	var haveUnique bool
 	for _, v := range r.index {
-		if r.CheckDaoFieldType(v.Columns()) {
+		if r.CheckDaoFieldType(r.GetSortIndexColumns(v.Name(), v.Columns())) {
 			continue
 		}
 		unique, _ := v.Unique()
@@ -1124,7 +1177,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 			haveUnique = true
 			var cacheField string
 			cacheFieldsJoinSli := make([]string, 0)
-			for _, column := range v.Columns() {
+			for _, column := range r.GetSortIndexColumns(v.Name(), v.Columns()) {
 				cacheField += r.UpperFieldName(column)
 				cacheFieldsJoinSli = append(cacheFieldsJoinSli, fmt.Sprintf("v.%s", r.UpperFieldName(column)))
 			}
@@ -1140,8 +1193,8 @@ func (r *Repo) generateDelFunc() (string, error) {
 			varCacheDelKeys += fmt.Sprintln(varCacheDelKeyTpl.String())
 		}
 		// 唯一 && 字段数于1
-		if unique && len(v.Columns()) == 1 {
-			columnNameToDataType := r.columnNameToDataType[v.Columns()[0]]
+		if unique && len(r.GetSortIndexColumns(v.Name(), v.Columns())) == 1 {
+			columnNameToDataType := r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]]
 			switch columnNameToDataType {
 			case "bool":
 			default:
@@ -1150,9 +1203,9 @@ func (r *Repo) generateDelFunc() (string, error) {
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns()[0]),
-					"lowerField":     r.LowerFieldName(v.Columns()[0]),
-					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+					"upperField":     r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":     r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"dataType":       r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -1163,9 +1216,9 @@ func (r *Repo) generateDelFunc() (string, error) {
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns()[0]),
-					"lowerField":     r.LowerFieldName(v.Columns()[0]),
-					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+					"upperField":     r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":     r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"dataType":       r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -1176,9 +1229,9 @@ func (r *Repo) generateDelFunc() (string, error) {
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns()[0]),
-					"lowerField":     r.LowerFieldName(v.Columns()[0]),
-					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+					"upperField":     r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":     r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"dataType":       r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -1189,9 +1242,9 @@ func (r *Repo) generateDelFunc() (string, error) {
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns()[0]),
-					"lowerField":     r.LowerFieldName(v.Columns()[0]),
-					"dataType":       r.columnNameToDataType[v.Columns()[0]],
+					"upperField":     r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":     r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"dataType":       r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -1202,11 +1255,11 @@ func (r *Repo) generateDelFunc() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns()[0]),
-					"lowerField":       r.LowerFieldName(v.Columns()[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
-					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+					"upperField":       r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":       r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"dataType":         r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -1217,11 +1270,11 @@ func (r *Repo) generateDelFunc() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns()[0]),
-					"lowerField":       r.LowerFieldName(v.Columns()[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
-					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+					"upperField":       r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":       r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"dataType":         r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -1232,11 +1285,11 @@ func (r *Repo) generateDelFunc() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns()[0]),
-					"lowerField":       r.LowerFieldName(v.Columns()[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
-					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+					"upperField":       r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":       r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"dataType":         r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -1247,11 +1300,11 @@ func (r *Repo) generateDelFunc() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns()[0]),
-					"lowerField":       r.LowerFieldName(v.Columns()[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns()[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns()[0])),
-					"dataType":         r.columnNameToDataType[v.Columns()[0]],
+					"upperField":       r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"lowerField":       r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+					"upperFieldPlural": r.Plural(r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"lowerFieldPlural": r.Plural(r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0])),
+					"dataType":         r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				})
 				if err != nil {
 					return "", err
@@ -1260,11 +1313,11 @@ func (r *Repo) generateDelFunc() (string, error) {
 			}
 		}
 		// 唯一 && 字段数大于1
-		if unique && len(v.Columns()) > 1 {
+		if unique && len(r.GetSortIndexColumns(v.Name(), v.Columns())) > 1 {
 			var upperFields string
 			var fieldAndDataTypes string
 			var whereFields string
-			for _, v := range v.Columns() {
+			for _, v := range r.GetSortIndexColumns(v.Name(), v.Columns()) {
 				upperFields += r.UpperFieldName(v)
 				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(v), r.columnNameToDataType[v])
 				switch r.columnNameToDataType[v] {
@@ -1279,10 +1332,10 @@ func (r *Repo) generateDelFunc() (string, error) {
 				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperFieldName(v.Columns()[0]),
-				"lowerField":        r.LowerFieldName(v.Columns()[0]),
+				"upperField":        r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+				"lowerField":        r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
 				"upperFields":       upperFields,
-				"dataType":          r.columnNameToDataType[v.Columns()[0]],
+				"dataType":          r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
 				"whereFields":       strings.Trim(whereFields, ","),
 			})
@@ -1295,10 +1348,10 @@ func (r *Repo) generateDelFunc() (string, error) {
 				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperFieldName(v.Columns()[0]),
-				"lowerField":        r.LowerFieldName(v.Columns()[0]),
+				"upperField":        r.UpperFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
+				"lowerField":        r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
 				"upperFields":       upperFields,
-				"dataType":          r.columnNameToDataType[v.Columns()[0]],
+				"dataType":          r.columnNameToDataType[r.GetSortIndexColumns(v.Name(), v.Columns())[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
 				"whereFields":       strings.Trim(whereFields, ","),
 			})
@@ -1312,7 +1365,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperFields":       upperFields,
-				"lowerField":        r.LowerFieldName(v.Columns()[0]),
+				"lowerField":        r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
 				"whereFields":       strings.Trim(whereFields, ","),
 			})
@@ -1326,7 +1379,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperFields":       upperFields,
-				"lowerField":        r.LowerFieldName(v.Columns()[0]),
+				"lowerField":        r.LowerFieldName(r.GetSortIndexColumns(v.Name(), v.Columns())[0]),
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
 				"whereFields":       strings.Trim(whereFields, ","),
 			})
@@ -1336,11 +1389,11 @@ func (r *Repo) generateDelFunc() (string, error) {
 			delMethods += fmt.Sprintln(deleteOneByFieldsTx.String())
 		}
 		// 不唯一 && 字段数等于1
-		if !unique && len(v.Columns()) == 1 {
+		if !unique && len(r.GetSortIndexColumns(v.Name(), v.Columns())) == 1 {
 
 		}
 		// 不唯一 && 字段数大于1
-		if !unique && len(v.Columns()) > 1 {
+		if !unique && len(r.GetSortIndexColumns(v.Name(), v.Columns())) > 1 {
 
 		}
 	}
