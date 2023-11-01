@@ -36,6 +36,11 @@ func newAdminRoleDemo(db *gorm.DB, opts ...gen.DOOption) adminRoleDemo {
 	_adminRoleDemo.CreatedAt = field.NewTime(tableName, "created_at")
 	_adminRoleDemo.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_adminRoleDemo.DeletedAt = field.NewField(tableName, "deleted_at")
+	_adminRoleDemo.Admins = adminRoleDemoManyToManyAdmins{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("Admins", "gorm_gen_model.AdminDemo"),
+	}
 
 	_adminRoleDemo.fillFieldMap()
 
@@ -55,6 +60,7 @@ type adminRoleDemo struct {
 	CreatedAt field.Time   // 创建时间
 	UpdatedAt field.Time   // 更新时间
 	DeletedAt field.Field  // 删除时间
+	Admins    adminRoleDemoManyToManyAdmins
 
 	fieldMap map[string]field.Expr
 }
@@ -108,7 +114,7 @@ func (a *adminRoleDemo) GetFieldByName(fieldName string) (field.OrderExpr, bool)
 }
 
 func (a *adminRoleDemo) fillFieldMap() {
-	a.fieldMap = make(map[string]field.Expr, 9)
+	a.fieldMap = make(map[string]field.Expr, 10)
 	a.fieldMap["id"] = a.ID
 	a.fieldMap["pid"] = a.Pid
 	a.fieldMap["name"] = a.Name
@@ -118,6 +124,7 @@ func (a *adminRoleDemo) fillFieldMap() {
 	a.fieldMap["created_at"] = a.CreatedAt
 	a.fieldMap["updated_at"] = a.UpdatedAt
 	a.fieldMap["deleted_at"] = a.DeletedAt
+
 }
 
 func (a adminRoleDemo) clone(db *gorm.DB) adminRoleDemo {
@@ -128,6 +135,77 @@ func (a adminRoleDemo) clone(db *gorm.DB) adminRoleDemo {
 func (a adminRoleDemo) replaceDB(db *gorm.DB) adminRoleDemo {
 	a.adminRoleDemoDo.ReplaceDB(db)
 	return a
+}
+
+type adminRoleDemoManyToManyAdmins struct {
+	db *gorm.DB
+
+	field.RelationField
+}
+
+func (a adminRoleDemoManyToManyAdmins) Where(conds ...field.Expr) *adminRoleDemoManyToManyAdmins {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a adminRoleDemoManyToManyAdmins) WithContext(ctx context.Context) *adminRoleDemoManyToManyAdmins {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a adminRoleDemoManyToManyAdmins) Session(session *gorm.Session) *adminRoleDemoManyToManyAdmins {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a adminRoleDemoManyToManyAdmins) Model(m *gorm_gen_model.AdminRoleDemo) *adminRoleDemoManyToManyAdminsTx {
+	return &adminRoleDemoManyToManyAdminsTx{a.db.Model(m).Association(a.Name())}
+}
+
+type adminRoleDemoManyToManyAdminsTx struct{ tx *gorm.Association }
+
+func (a adminRoleDemoManyToManyAdminsTx) Find() (result []*gorm_gen_model.AdminDemo, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a adminRoleDemoManyToManyAdminsTx) Append(values ...*gorm_gen_model.AdminDemo) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a adminRoleDemoManyToManyAdminsTx) Replace(values ...*gorm_gen_model.AdminDemo) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a adminRoleDemoManyToManyAdminsTx) Delete(values ...*gorm_gen_model.AdminDemo) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a adminRoleDemoManyToManyAdminsTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a adminRoleDemoManyToManyAdminsTx) Count() int64 {
+	return a.tx.Count()
 }
 
 type adminRoleDemoDo struct{ gen.DO }

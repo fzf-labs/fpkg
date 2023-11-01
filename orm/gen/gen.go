@@ -93,7 +93,7 @@ func WithDBNameOpts(fn func(*gorm.DB) string) OptionDB {
 	}
 }
 
-// WithGenerateModel 选项函数-自定义表对应的model
+// WithGenerateModel 选项函数-自定义表的关联关系
 func WithGenerateModel(fn func(g *gen.Generator) map[string]any) OptionDB {
 	return func(r *GenerationDB) {
 		r.generateModelOpt = fn

@@ -116,9 +116,23 @@ func SubstrReturnRight(str, target string) (string, bool) {
 	return str[pos+len(target):], true
 }
 
-// GetStringUtf8Len 获得字符串按照uft8编码的长度
-func GetStringUtf8Len(str string) int {
+// Utf8StringLen 获得字符串按照uft8编码的长度
+func Utf8StringLen(str string) int {
 	return utf8.RuneCountInString(str)
+}
+
+// Utf8StringCut 按照uft8编码截取字符串
+func Utf8StringCut(str string, n int) string {
+	var result string
+	runes := []rune(str)
+	for i := range runes {
+		result = string(runes[:i])
+		size := utf8.RuneCountInString(result)
+		if size >= n {
+			break
+		}
+	}
+	return result
 }
 
 // Utf8Index 按照uft8编码匹配子串，返回开头的索引

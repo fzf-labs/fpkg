@@ -49,8 +49,9 @@ func TestGenerationPostgres(t *testing.T) {
 			),
 		)
 		return map[string]any{
-			"admin_demo":     adminDemo,
-			"admin_log_demo": adminLogDemo,
+			"admin_demo":      adminDemo,
+			"admin_log_demo":  adminLogDemo,
+			"admin_role_demo": AdminRoleDemo,
 		}
 	}), WithDataMap(DataTypeMap()), WithDBOpts(ModelOptionRemoveDefault(), ModelOptionUnderline("ul_"))).Do()
 	assert.Equal(t, nil, err)
