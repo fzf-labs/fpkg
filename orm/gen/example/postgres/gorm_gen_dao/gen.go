@@ -17,32 +17,38 @@ import (
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:           db,
-		AdminDemo:    newAdminDemo(db, opts...),
-		AdminLogDemo: newAdminLogDemo(db, opts...),
-		DataTypeDemo: newDataTypeDemo(db, opts...),
-		UserDemo:     newUserDemo(db, opts...),
+		db:              db,
+		AdminDemo:       newAdminDemo(db, opts...),
+		AdminLogDemo:    newAdminLogDemo(db, opts...),
+		AdminRoleDemo:   newAdminRoleDemo(db, opts...),
+		AdminToRoleDemo: newAdminToRoleDemo(db, opts...),
+		DataTypeDemo:    newDataTypeDemo(db, opts...),
+		UserDemo:        newUserDemo(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
-	AdminDemo    adminDemo
-	AdminLogDemo adminLogDemo
-	DataTypeDemo dataTypeDemo
-	UserDemo     userDemo
+	AdminDemo       adminDemo
+	AdminLogDemo    adminLogDemo
+	AdminRoleDemo   adminRoleDemo
+	AdminToRoleDemo adminToRoleDemo
+	DataTypeDemo    dataTypeDemo
+	UserDemo        userDemo
 }
 
 func (q *Query) Available() bool { return q.db != nil }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:           db,
-		AdminDemo:    q.AdminDemo.clone(db),
-		AdminLogDemo: q.AdminLogDemo.clone(db),
-		DataTypeDemo: q.DataTypeDemo.clone(db),
-		UserDemo:     q.UserDemo.clone(db),
+		db:              db,
+		AdminDemo:       q.AdminDemo.clone(db),
+		AdminLogDemo:    q.AdminLogDemo.clone(db),
+		AdminRoleDemo:   q.AdminRoleDemo.clone(db),
+		AdminToRoleDemo: q.AdminToRoleDemo.clone(db),
+		DataTypeDemo:    q.DataTypeDemo.clone(db),
+		UserDemo:        q.UserDemo.clone(db),
 	}
 }
 
@@ -56,27 +62,33 @@ func (q *Query) WriteDB() *Query {
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:           db,
-		AdminDemo:    q.AdminDemo.replaceDB(db),
-		AdminLogDemo: q.AdminLogDemo.replaceDB(db),
-		DataTypeDemo: q.DataTypeDemo.replaceDB(db),
-		UserDemo:     q.UserDemo.replaceDB(db),
+		db:              db,
+		AdminDemo:       q.AdminDemo.replaceDB(db),
+		AdminLogDemo:    q.AdminLogDemo.replaceDB(db),
+		AdminRoleDemo:   q.AdminRoleDemo.replaceDB(db),
+		AdminToRoleDemo: q.AdminToRoleDemo.replaceDB(db),
+		DataTypeDemo:    q.DataTypeDemo.replaceDB(db),
+		UserDemo:        q.UserDemo.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
-	AdminDemo    *adminDemoDo
-	AdminLogDemo *adminLogDemoDo
-	DataTypeDemo *dataTypeDemoDo
-	UserDemo     *userDemoDo
+	AdminDemo       *adminDemoDo
+	AdminLogDemo    *adminLogDemoDo
+	AdminRoleDemo   *adminRoleDemoDo
+	AdminToRoleDemo *adminToRoleDemoDo
+	DataTypeDemo    *dataTypeDemoDo
+	UserDemo        *userDemoDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		AdminDemo:    q.AdminDemo.WithContext(ctx),
-		AdminLogDemo: q.AdminLogDemo.WithContext(ctx),
-		DataTypeDemo: q.DataTypeDemo.WithContext(ctx),
-		UserDemo:     q.UserDemo.WithContext(ctx),
+		AdminDemo:       q.AdminDemo.WithContext(ctx),
+		AdminLogDemo:    q.AdminLogDemo.WithContext(ctx),
+		AdminRoleDemo:   q.AdminRoleDemo.WithContext(ctx),
+		AdminToRoleDemo: q.AdminToRoleDemo.WithContext(ctx),
+		DataTypeDemo:    q.DataTypeDemo.WithContext(ctx),
+		UserDemo:        q.UserDemo.WithContext(ctx),
 	}
 }
 

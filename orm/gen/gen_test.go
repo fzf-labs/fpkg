@@ -23,11 +23,30 @@ func TestGenerationPostgres(t *testing.T) {
 	}
 	NewGenerationDB(client, "./example/postgres/", WithGenerateModel(func(g *gen.Generator) map[string]any {
 		adminLogDemo := g.GenerateModel("admin_log_demo")
-		adminDemo := g.GenerateModel("admin_demo", gen.FieldRelate(field.HasMany, "AdminLogDemos", adminLogDemo,
-			&field.RelateConfig{
-				RelateSlicePointer: true,
-				GORMTag:            field.GormTag{"foreignKey": []string{"admin_id"}},
-			}),
+		AdminRoleDemo := g.GenerateModel("admin_role_demo",
+			gen.FieldRelate(field.Many2Many, "Admins", g.GenerateModel("admin_demo"),
+				&field.RelateConfig{
+					RelateSlicePointer: true,
+					JSONTag:            JSONTagNameStrategy("Admins"),
+					GORMTag:            field.GormTag{"joinForeignKey": []string{"role_id"}, "joinReferences": []string{"admin_id"}, "many2many": []string{"admin_to_role_demo"}},
+				},
+			),
+		)
+		adminDemo := g.GenerateModel("admin_demo",
+			gen.FieldRelate(field.HasMany, "AdminLogDemos", adminLogDemo,
+				&field.RelateConfig{
+					RelateSlicePointer: true,
+					JSONTag:            JSONTagNameStrategy("AdminLogDemos"),
+					GORMTag:            field.GormTag{"foreignKey": []string{"admin_id"}},
+				},
+			),
+			gen.FieldRelate(field.Many2Many, "AdminRoles", AdminRoleDemo,
+				&field.RelateConfig{
+					RelateSlicePointer: true,
+					JSONTag:            JSONTagNameStrategy("AdminRoles"),
+					GORMTag:            field.GormTag{"joinForeignKey": []string{"admin_id"}, "joinReferences": []string{"role_id"}, "many2many": []string{"admin_to_role_demo"}},
+				},
+			),
 		)
 		return map[string]any{
 			"admin_demo":     adminDemo,
