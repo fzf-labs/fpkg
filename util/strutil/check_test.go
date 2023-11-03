@@ -1,6 +1,7 @@
 package strutil
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -38,4 +39,11 @@ func TestGetChineseString(t *testing.T) {
 func TestNoCaseEq(t *testing.T) {
 	assert.True(t, NoCaseEq("abc", "Abc"))
 	assert.False(t, NoCaseEq("abc", "Abv"))
+}
+
+func TestIsAlphaNumeric(t *testing.T) {
+	fmt.Println(IsAlphaNumeric("哈哈"))
+	fmt.Println(IsAlphaNumeric("abc"))
+	fmt.Println(IsAlphaNumeric("123"))
+	fmt.Println(IsAlphaNumeric("ABc123"))
 }

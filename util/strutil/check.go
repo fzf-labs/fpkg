@@ -152,3 +152,8 @@ func RuneIsLower(c rune) bool {
 func RuneIsUpper(c rune) bool {
 	return 'A' <= c && c <= 'Z'
 }
+
+// IsAlphaNumeric 判断字符串是否为字母数字
+func IsAlphaNumeric(str string) bool {
+	return regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(str)
+}
