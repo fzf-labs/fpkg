@@ -17,6 +17,8 @@ type GoRedisConfig struct {
 	DialTimeout  time.Duration `json:"dialTimeout"`
 	WriteTimeout time.Duration `json:"writeTimeout"`
 	ReadTimeout  time.Duration `json:"readTimeout"`
+	Tracing      bool          `json:"tracing"`
+	Metrics      bool          `json:"metrics"`
 }
 
 // NewGoRedis 初始化go-redis客户端
@@ -29,13 +31,17 @@ func NewGoRedis(cfg GoRedisConfig) (*redis.Client, error) {
 		WriteTimeout: cfg.WriteTimeout,
 		ReadTimeout:  cfg.ReadTimeout,
 	})
-	// 启用跟踪工具。
-	if err := redisotel.InstrumentTracing(client); err != nil {
-		panic(err)
+	if cfg.Tracing {
+		// 启用跟踪工具。
+		if err := redisotel.InstrumentTracing(client); err != nil {
+			panic(err)
+		}
 	}
-	// 启用度量工具。
-	if err := redisotel.InstrumentMetrics(client); err != nil {
-		panic(err)
+	if cfg.Metrics {
+		// 启用度量工具。
+		if err := redisotel.InstrumentMetrics(client); err != nil {
+			panic(err)
+		}
 	}
 	// ping 检测一下
 	_, err := client.Ping(context.Background()).Result()

@@ -22,7 +22,7 @@ vet:
 .PHONY: lint
 # make lint  golang使用最多的第三方静态程序分析工具
 lint:
-	@golangci-lint run ./...
+	@golangci-lint run ./... -v
 
 .PHONY: git-clean
 # make git-clean  git clean

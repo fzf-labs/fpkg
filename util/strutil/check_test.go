@@ -1,7 +1,6 @@
 package strutil
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -42,8 +41,8 @@ func TestNoCaseEq(t *testing.T) {
 }
 
 func TestIsAlphaNumeric(t *testing.T) {
-	fmt.Println(IsAlphaNumeric("哈哈"))
-	fmt.Println(IsAlphaNumeric("abc"))
-	fmt.Println(IsAlphaNumeric("123"))
-	fmt.Println(IsAlphaNumeric("ABc123"))
+	assert.Equal(t, IsAlphaNumeric("哈哈"), false)
+	assert.Equal(t, IsAlphaNumeric("abc"), true)
+	assert.Equal(t, IsAlphaNumeric("123"), true)
+	assert.Equal(t, IsAlphaNumeric("ABc123"), true)
 }
