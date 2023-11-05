@@ -1,10 +1,10 @@
 package rueidiscache
 
 import (
+	"github.com/fzf-labs/fpkg/cache/rueidiscache/rueidisotel"
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/rueidisaside"
 	"github.com/redis/rueidis/rueidiscompat"
-	"github.com/redis/rueidis/rueidisotel"
 )
 
 // NewRueidis  redis客户端rueidis
