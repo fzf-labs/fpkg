@@ -27,6 +27,7 @@ func WithTTL(ttl time.Duration) CacheOption {
 		r.ttl = ttl
 	}
 }
+
 func NewRocksDBCache(client *rockscache.Client, opts ...CacheOption) *Cache {
 	r := &Cache{
 		name:   "GormCache",
@@ -49,13 +50,17 @@ func (r *Cache) Key(keys ...any) string {
 	}
 	return strings.Join(keyStr, ":")
 }
-
 func (r *Cache) Fetch(ctx context.Context, key string, fn func() (string, error)) (string, error) {
-	return r.client.Fetch2(ctx, key, r.ttl, fn)
+	return r.Fetch2(ctx, key, fn, r.ttl)
 }
-
+func (r *Cache) Fetch2(ctx context.Context, key string, fn func() (string, error), expire time.Duration) (string, error) {
+	return r.client.Fetch2(ctx, key, expire, fn)
+}
 func (r *Cache) FetchBatch(ctx context.Context, keys []string, fn func(miss []string) (map[string]string, error)) (map[string]string, error) {
-	resp, err := r.client.FetchBatch2(ctx, keys, r.ttl, func(idx []int) (map[int]string, error) {
+	return r.FetchBatch2(ctx, keys, fn, r.ttl)
+}
+func (r *Cache) FetchBatch2(ctx context.Context, keys []string, fn func(miss []string) (map[string]string, error), expire time.Duration) (map[string]string, error) {
+	resp, err := r.client.FetchBatch2(ctx, keys, expire, func(idx []int) (map[int]string, error) {
 		result := make(map[int]string)
 		miss := make([]string, 0)
 		for _, v := range idx {
@@ -83,11 +88,9 @@ func (r *Cache) FetchBatch(ctx context.Context, keys []string, fn func(miss []st
 	}
 	return result, nil
 }
-
 func (r *Cache) Del(ctx context.Context, key string) error {
 	return r.client.TagAsDeleted2(ctx, key)
 }
-
 func (r *Cache) DelBatch(ctx context.Context, keys []string) error {
 	return r.client.TagAsDeletedBatch2(ctx, keys)
 }

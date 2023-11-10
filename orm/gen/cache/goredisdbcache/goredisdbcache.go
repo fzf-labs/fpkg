@@ -57,7 +57,12 @@ func (r *Cache) Key(keys ...any) string {
 func (r *Cache) TTL(ttl time.Duration) time.Duration {
 	return ttl - time.Duration(rand.Float64()*0.1*float64(ttl))
 }
+
 func (r *Cache) Fetch(ctx context.Context, key string, fn func() (string, error)) (string, error) {
+	return r.Fetch2(ctx, key, fn, r.ttl)
+}
+
+func (r *Cache) Fetch2(ctx context.Context, key string, fn func() (string, error), expire time.Duration) (string, error) {
 	do, err, _ := r.sf.Do(key, func() (any, error) {
 		result, err := r.client.Get(ctx, key).Result()
 		if err != nil && err != redis.Nil {
@@ -68,7 +73,7 @@ func (r *Cache) Fetch(ctx context.Context, key string, fn func() (string, error)
 			if err != nil {
 				return "", err
 			}
-			err = r.client.Set(ctx, key, result, r.TTL(r.ttl)).Err()
+			err = r.client.Set(ctx, key, result, r.TTL(expire)).Err()
 			if err != nil {
 				return "", err
 			}
@@ -82,6 +87,10 @@ func (r *Cache) Fetch(ctx context.Context, key string, fn func() (string, error)
 }
 
 func (r *Cache) FetchBatch(ctx context.Context, keys []string, fn func(miss []string) (map[string]string, error)) (map[string]string, error) {
+	return r.FetchBatch2(ctx, keys, fn, r.ttl)
+}
+
+func (r *Cache) FetchBatch2(ctx context.Context, keys []string, fn func(miss []string) (map[string]string, error), expire time.Duration) (map[string]string, error) {
 	resp := make(map[string]string)
 	miss := make([]string, 0)
 	pipelined, err := r.client.Pipelined(ctx, func(p redis.Pipeliner) error {
@@ -110,7 +119,7 @@ func (r *Cache) FetchBatch(ctx context.Context, keys []string, fn func(miss []st
 		_, err = r.client.Pipelined(ctx, func(p redis.Pipeliner) error {
 			for _, v := range miss {
 				resp[v] = dbValue[v]
-				err = p.Set(ctx, v, dbValue[v], r.TTL(r.ttl)).Err()
+				err = p.Set(ctx, v, dbValue[v], r.TTL(expire)).Err()
 				if err != nil {
 					return err
 				}

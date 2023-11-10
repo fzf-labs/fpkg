@@ -55,14 +55,15 @@ func (r *Cache) Key(keys ...any) string {
 	}
 	return strings.Join(keyStr, ":")
 }
-
 func (r *Cache) TTL(ttl time.Duration) time.Duration {
 	return ttl - time.Duration(rand.Float64()*0.1*float64(ttl))
 }
-
 func (r *Cache) Fetch(ctx context.Context, key string, fn func() (string, error)) (string, error) {
+	return r.Fetch2(ctx, key, fn, r.ttl)
+}
+func (r *Cache) Fetch2(ctx context.Context, key string, fn func() (string, error), expire time.Duration) (string, error) {
 	do, err, _ := r.sf.Do(key, func() (any, error) {
-		cacheValue := r.client.DoCache(ctx, r.client.B().Get().Key(key).Cache(), r.TTL(r.ttl))
+		cacheValue := r.client.DoCache(ctx, r.client.B().Get().Key(key).Cache(), r.TTL(expire))
 		if cacheValue.Error() != nil && !rueidis.IsRedisNil(cacheValue.Error()) {
 			return "", cacheValue.Error()
 		}
@@ -77,7 +78,7 @@ func (r *Cache) Fetch(ctx context.Context, key string, fn func() (string, error)
 		if err != nil {
 			return "", err
 		}
-		err = r.client.Do(ctx, r.client.B().Set().Key(key).Value(resp).Ex(r.TTL(r.ttl)).Build()).Error()
+		err = r.client.Do(ctx, r.client.B().Set().Key(key).Value(resp).Ex(r.TTL(expire)).Build()).Error()
 		if err != nil {
 			return "", err
 		}
@@ -88,12 +89,14 @@ func (r *Cache) Fetch(ctx context.Context, key string, fn func() (string, error)
 	}
 	return do.(string), nil
 }
-
 func (r *Cache) FetchBatch(ctx context.Context, keys []string, fn func(miss []string) (map[string]string, error)) (map[string]string, error) {
+	return r.FetchBatch2(ctx, keys, fn, r.ttl)
+}
+func (r *Cache) FetchBatch2(ctx context.Context, keys []string, fn func(miss []string) (map[string]string, error), expire time.Duration) (map[string]string, error) {
 	resp := make(map[string]string)
 	commands := make([]rueidis.CacheableTTL, 0)
 	for _, v := range keys {
-		commands = append(commands, rueidis.CT(r.client.B().Get().Key(v).Cache(), r.TTL(r.ttl)))
+		commands = append(commands, rueidis.CT(r.client.B().Get().Key(v).Cache(), r.TTL(expire)))
 	}
 	cacheValue := r.client.DoMultiCache(ctx, commands...)
 	miss := make([]string, 0)
@@ -111,7 +114,7 @@ func (r *Cache) FetchBatch(ctx context.Context, keys []string, fn func(miss []st
 		}
 		completes := make([]rueidis.Completed, 0)
 		for k, v := range dbValue {
-			completes = append(completes, r.client.B().Set().Key(k).Value(v).Ex(r.TTL(r.ttl)).Build())
+			completes = append(completes, r.client.B().Set().Key(k).Value(v).Ex(r.TTL(expire)).Build())
 			resp[k] = v
 		}
 		multi := r.client.DoMulti(ctx, completes...)
@@ -124,11 +127,9 @@ func (r *Cache) FetchBatch(ctx context.Context, keys []string, fn func(miss []st
 	}
 	return resp, nil
 }
-
 func (r *Cache) Del(ctx context.Context, key string) error {
 	return r.client.Do(ctx, r.client.B().Del().Key(key).Build()).Error()
 }
-
 func (r *Cache) DelBatch(ctx context.Context, keys []string) error {
 	completes := make([]rueidis.Completed, 0)
 	for _, v := range keys {
