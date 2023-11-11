@@ -31,7 +31,7 @@ func Test_hash_HashidsEncode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := &hash{
+			h := &Hash{
 				secret: tt.fields.secret,
 				length: tt.fields.length,
 			}
