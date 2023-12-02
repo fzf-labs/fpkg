@@ -73,6 +73,13 @@ func StrSliFind(collection []string, element string) bool {
 	return false
 }
 
-func DBName(db string) string {
-	return strings.ReplaceAll(db, "-", "_")
+func SliRemove(collection, element []string) []string {
+	for _, s := range element {
+		for i, v := range collection {
+			if s == v {
+				collection = append(collection[:i], collection[i+1:]...)
+			}
+		}
+	}
+	return collection
 }

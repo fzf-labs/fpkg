@@ -14,6 +14,7 @@ import (
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_dao"
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_model"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 var _ IUserDemoRepo = (*UserDemoRepo)(nil)
@@ -34,6 +35,10 @@ type (
 		UpsertOne(ctx context.Context, data *gorm_gen_model.UserDemo) error
 		// UpsertOneByTx Upsert一条数据(事务)
 		UpsertOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.UserDemo) error
+		// UpsertOneByFields Upsert一条数据，根据fields字段
+		UpsertOneByFields(ctx context.Context, data *gorm_gen_model.UserDemo, fields []string) error
+		// UpsertOneByFieldsTx Upsert一条数据，根据fields字段(事务)
+		UpsertOneByFieldsTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.UserDemo, fields []string) error
 		// CreateBatch 批量创建数据
 		CreateBatch(ctx context.Context, data []*gorm_gen_model.UserDemo, batchSize int) error
 		// UpdateOne 更新一条数据
@@ -166,6 +171,46 @@ func (u *UserDemoRepo) UpsertOne(ctx context.Context, data *gorm_gen_model.UserD
 func (u *UserDemoRepo) UpsertOneByTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.UserDemo) error {
 	dao := tx.UserDemo
 	err := dao.WithContext(ctx).Save(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpsertOneByFields Upsert一条数据，根据fields字段
+func (u *UserDemoRepo) UpsertOneByFields(ctx context.Context, data *gorm_gen_model.UserDemo, fields []string) error {
+	if len(fields) == 0 {
+		return errors.New("UpsertOneByFields fields is empty")
+	}
+	columns := make([]clause.Column, 0)
+	for _, v := range fields {
+		columns = append(columns, clause.Column{Name: v})
+	}
+	dao := gorm_gen_dao.Use(u.db).UserDemo
+	err := dao.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   columns,
+		UpdateAll: true,
+	}).Create(data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpsertOneByFieldsTx Upsert一条数据，根据fields字段(事务)
+func (u *UserDemoRepo) UpsertOneByFieldsTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.UserDemo, fields []string) error {
+	if len(fields) == 0 {
+		return errors.New("UpsertOneByFieldsTx fields is empty")
+	}
+	columns := make([]clause.Column, 0)
+	for _, v := range fields {
+		columns = append(columns, clause.Column{Name: v})
+	}
+	dao := tx.UserDemo
+	err := dao.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   columns,
+		UpdateAll: true,
+	}).Create(data)
 	if err != nil {
 		return err
 	}

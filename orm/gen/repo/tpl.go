@@ -40,6 +40,12 @@ var InterfaceUpsertOne string
 //go:embed tpl/upsert-one.tpl
 var UpsertOne string
 
+//go:embed tpl/interface-upsert-one-by-fields.tpl
+var InterfaceUpsertOneByFields string
+
+//go:embed tpl/upsert-one-by-fields.tpl
+var UpsertOneByFields string
+
 //go:embed tpl/interface-create-batch.tpl
 var InterfaceCreateBatch string
 
@@ -165,6 +171,12 @@ var InterfaceUpsertOneByTx string
 
 //go:embed tpl/upsert-one-by-tx.tpl
 var UpsertOneByTx string
+
+//go:embed tpl/interface-upsert-one-by-fields-tx.tpl
+var InterfaceUpsertOneByFieldsTx string
+
+//go:embed tpl/upsert-one-by-fields-tx.tpl
+var UpsertOneByFieldsTx string
 
 //go:embed tpl/interface-update-one-by-tx.tpl
 var InterfaceUpdateOneByTx string

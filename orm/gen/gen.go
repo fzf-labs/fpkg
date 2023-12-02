@@ -9,6 +9,7 @@ import (
 
 	"github.com/fzf-labs/fpkg/orm/gen/proto"
 	"github.com/fzf-labs/fpkg/orm/gen/repo"
+	"github.com/fzf-labs/fpkg/orm/gen/utils/dbfunc"
 	"github.com/fzf-labs/fpkg/orm/gen/utils/file"
 	"github.com/fzf-labs/fpkg/orm/gen/utils/util"
 	"github.com/iancoleman/strcase"
@@ -139,6 +140,13 @@ func (g *GenerationDB) Do() {
 	if len(g.tables) > 0 {
 		tables = g.tables
 	}
+	// 查询分区所有子表
+	partitionChildTables, err := dbfunc.GetPartitionChildTable(g.db)
+	if err != nil {
+		return
+	}
+	// 去掉tables中的partitionChildTables
+	tables = util.SliRemove(tables, partitionChildTables)
 	models := make(map[string]any, len(tables))
 	for _, tableName := range tables {
 		models[tableName] = generator.GenerateModel(tableName)

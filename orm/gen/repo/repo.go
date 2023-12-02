@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/fzf-labs/fpkg/orm/gen/utils/dbfunc"
 	"github.com/fzf-labs/fpkg/orm/gen/utils/template"
 	"github.com/fzf-labs/fpkg/orm/gen/utils/util"
 	"github.com/jinzhu/inflection"
@@ -141,13 +142,22 @@ func (r *Repo) ProcessIndex() ([]DBIndex, error) {
 	result := make([]DBIndex, 0)
 	tmp := make([]DBIndex, 0)
 	repeat := make(map[string]struct{})
+	// 查询是否有分区表
+	childTableForTable, err := dbfunc.GetPartitionChildTableForTable(r.gorm, r.table)
+	if err != nil {
+		return nil, err
+	}
+	table := r.table
+	if len(childTableForTable) > 0 {
+		table = childTableForTable[0]
+	}
 	// 获取索引
-	indexes, err := r.gorm.Migrator().GetIndexes(r.table)
+	indexes, err := r.gorm.Migrator().GetIndexes(table)
 	if err != nil {
 		return nil, err
 	}
 	// 获取排序的索引字段
-	sortIndexColumns, err := r.SortIndexColumns()
+	sortIndexColumns, err := dbfunc.SortIndexColumns(r.gorm, table)
 	if err != nil {
 		return nil, err
 	}
@@ -217,45 +227,6 @@ func (r *Repo) ProcessIndex() ([]DBIndex, error) {
 		}
 	}
 	return result, nil
-}
-
-// SortIndexColumns 排序索引字段
-func (r *Repo) SortIndexColumns() (map[string][]string, error) {
-	resp := make(map[string][]string)
-	var err error
-	switch r.gorm.Dialector.Name() {
-	case "postgres":
-		resp, err = r.postgresSortIndexColumns()
-		if err != nil {
-			return nil, err
-		}
-	default:
-
-	}
-	return resp, nil
-}
-
-// postgresSortIndexColumns  postgres索引字段排序
-func (r *Repo) postgresSortIndexColumns() (map[string][]string, error) {
-	resp := make(map[string][]string)
-	type Tmp struct {
-		TableName  string `gorm:"column:table_name" json:"table_name"`
-		IndexName  string `gorm:"column:index_name" json:"index_name"`
-		ColumnName string `gorm:"column:column_name" json:"column_name"`
-	}
-	result := make([]Tmp, 0)
-	sql := fmt.Sprintf(`SELECT t.relname AS table_name,i.relname AS index_name,a.attname AS column_name,ix.indisunique AS non_unique,ix.indisprimary AS PRIMARY FROM pg_class t JOIN pg_index ix ON t.oid=ix.indrelid JOIN pg_class i ON i.oid=ix.indexrelid JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=ANY(ix.indkey)WHERE t.relkind='r' AND t.relname='%s' ORDER BY ix.indrelid,(array_position(ix.indkey,a.attnum))`, r.table)
-	err := r.gorm.Raw(sql).Scan(&result).Error
-	if err != nil {
-		return nil, err
-	}
-	for _, v := range result {
-		if _, ok := resp[v.IndexName]; !ok {
-			resp[v.IndexName] = make([]string, 0)
-		}
-		resp[v.IndexName] = append(resp[v.IndexName], v.ColumnName)
-	}
-	return resp, nil
 }
 
 // output 导出文件
@@ -383,6 +354,22 @@ func (r *Repo) generateCreateMethods() (string, error) {
 		return "", err
 	}
 	createMethods += fmt.Sprintln(interfaceUpsertOneByTx.String())
+	interfaceUpsertOneByFields, err := template.NewTemplate("InterfaceUpsertOneByFields").Parse(InterfaceUpsertOneByFields).Execute(map[string]any{
+		"dbName":         r.dbName,
+		"upperTableName": r.upperTableName,
+	})
+	if err != nil {
+		return "", err
+	}
+	createMethods += fmt.Sprintln(interfaceUpsertOneByFields.String())
+	interfaceUpsertOneByFieldsTx, err := template.NewTemplate("InterfaceUpsertOneByFieldsTx").Parse(InterfaceUpsertOneByFieldsTx).Execute(map[string]any{
+		"dbName":         r.dbName,
+		"upperTableName": r.upperTableName,
+	})
+	if err != nil {
+		return "", err
+	}
+	createMethods += fmt.Sprintln(interfaceUpsertOneByFieldsTx.String())
 	interfaceCreateBatch, err := template.NewTemplate("InterfaceCreateBatch").Parse(InterfaceCreateBatch).Execute(map[string]any{
 		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
@@ -902,6 +889,26 @@ func (r *Repo) generateCreateFunc() (string, error) {
 		return "", err
 	}
 	createFunc += fmt.Sprintln(upsertOneByTx.String())
+	upsertOneByFields, err := template.NewTemplate("UpsertOneByFields").Parse(UpsertOneByFields).Execute(map[string]any{
+		"firstTableChar": r.firstTableChar,
+		"dbName":         r.dbName,
+		"upperTableName": r.upperTableName,
+		"lowerTableName": r.lowerTableName,
+	})
+	if err != nil {
+		return "", err
+	}
+	createFunc += fmt.Sprintln(upsertOneByFields.String())
+	upsertOneByFieldsTx, err := template.NewTemplate("UpsertOneByFieldsTx").Parse(UpsertOneByFieldsTx).Execute(map[string]any{
+		"firstTableChar": r.firstTableChar,
+		"dbName":         r.dbName,
+		"upperTableName": r.upperTableName,
+		"lowerTableName": r.lowerTableName,
+	})
+	if err != nil {
+		return "", err
+	}
+	createFunc += fmt.Sprintln(upsertOneByFieldsTx.String())
 	createBatch, err := template.NewTemplate("CreateBatch").Parse(CreateBatch).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
 		"dbName":         r.dbName,
