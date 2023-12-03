@@ -32,7 +32,7 @@ require (
 	github.com/iancoleman/strcase v0.3.0
 	github.com/imroc/req/v3 v3.41.4
 	github.com/jinzhu/inflection v1.0.0
-	github.com/klauspost/compress v1.16.7
+	github.com/klauspost/compress v1.17.4
 	github.com/lionsoul2014/ip2region/binding/golang v0.0.0-20230731060429-6ed8bf011875
 	github.com/mssola/useragent v1.0.0
 	github.com/nsqio/go-nsq v1.1.0
@@ -42,7 +42,7 @@ require (
 	github.com/pyihe/apple_validator v0.0.0-20201105140642-5f932dd2c8e9
 	github.com/redis/go-redis/extra/redisotel/v9 v9.0.5
 	github.com/redis/go-redis/v9 v9.0.5
-	github.com/redis/rueidis v1.0.21
+	github.com/redis/rueidis v1.0.22
 	github.com/segmentio/ksuid v1.0.4
 	github.com/shirou/gopsutil/v3 v3.23.7
 	github.com/silenceper/wechat/v2 v2.1.5
@@ -50,7 +50,6 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/teris-io/shortid v0.0.0-20220617161101-71ec9f2aa569
 	github.com/tidwall/gjson v1.17.0
-	github.com/vmihailenco/go-tinylfu v0.2.2
 	go.opentelemetry.io/otel v1.19.0
 	go.opentelemetry.io/otel/exporters/jaeger v1.16.0
 	go.opentelemetry.io/otel/exporters/zipkin v1.16.0
