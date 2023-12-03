@@ -2,6 +2,7 @@ package redislocaldbcache
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/rand"
 	"runtime/debug"
@@ -26,8 +27,8 @@ type Cache struct {
 	sf         singleflight.Group // 防止缓存击穿
 }
 
-// newGoRedisLocalDBCache redis+localdb缓存
-func newGoRedisLocalDBCache(client *redis.Client, opts ...CacheOption) *Cache {
+// NewRedisLocalDBCache redis+localdb缓存
+func NewRedisLocalDBCache(client *redis.Client, opts ...CacheOption) *Cache {
 	r := &Cache{
 		name:       "GormCache",
 		rocksCache: nil,
@@ -35,12 +36,15 @@ func newGoRedisLocalDBCache(client *redis.Client, opts ...CacheOption) *Cache {
 		redisTTL:   time.Hour * 24,
 		localCache: nil,
 		localTTL:   time.Second * 10,
-		channel:    "GormCacheGoRedisLocalCacheDelChannel",
+		channel:    "",
 	}
 	if len(opts) > 0 {
 		for _, v := range opts {
 			v(r)
 		}
+	}
+	if r.channel == "" {
+		r.channel = "RedisLocalCacheDelChannel" + r.name
 	}
 	if r.localCache == nil {
 		localCache, err := newRistretto()
@@ -50,8 +54,9 @@ func newGoRedisLocalDBCache(client *redis.Client, opts ...CacheOption) *Cache {
 		r.localCache = localCache
 	}
 	if r.rocksCache == nil {
-		r.rocksCache = NewRocksCacheClient(client)
+		r.rocksCache = newRocksCacheClient(client)
 	}
+	r.init()
 	return r
 }
 
@@ -64,8 +69,8 @@ func newRistretto() (*ristretto.Cache, error) {
 	})
 }
 
-// NewRocksCacheClient 弱一致性RocksCache缓存客户端
-func NewRocksCacheClient(rdb *redis.Client) *rockscache.Client {
+// newRocksCacheClient 弱一致性RocksCache缓存客户端
+func newRocksCacheClient(rdb *redis.Client) *rockscache.Client {
 	rc := rockscache.NewClient(rdb, rockscache.NewDefaultOptions())
 	// 常用参数设置
 	// 1、强一致性(默认关闭强一致性，如果开启的话会影响性能)
@@ -147,16 +152,20 @@ func (r *Cache) Fetch(ctx context.Context, key string, fn func() (string, error)
 func (r *Cache) Fetch2(ctx context.Context, key string, fn func() (string, error), expire time.Duration) (string, error) {
 	do, err, _ := r.sf.Do(key, func() (any, error) {
 		// 查询本地缓存
-		result, ok := r.localCache.Get(key)
+		localCacheValue, ok := r.localCache.Get(key)
 		if ok {
-			return result, nil
+			return localCacheValue.(string), nil
 		}
-		result, err := r.rocksCache.Fetch2(ctx, key, expire, fn)
+		fmt.Println("local cache miss")
+		// 查询redis缓存
+		rocksCacheValue, err := r.rocksCache.Fetch2(ctx, key, expire, fn)
 		if err != nil {
 			return nil, err
 		}
-		r.localCache.SetWithTTL(key, result, 1, r.localTTL)
-		return result, nil
+		fmt.Println("rocksCache Fetch2")
+		// 设置本地缓存
+		r.localCache.SetWithTTL(key, rocksCacheValue, 1, r.localTTL)
+		return rocksCacheValue, nil
 	})
 	if err != nil {
 		return "", err
@@ -183,6 +192,8 @@ func (r *Cache) FetchBatch2(ctx context.Context, keys []string, fn func(miss []s
 	if len(localMissKeys) == 0 {
 		return resp, nil
 	}
+	fmt.Println("local cache miss")
+	// 查询redis缓存
 	rocksCacheResult, err := r.rocksCache.FetchBatch2(ctx, localMissKeys, expire, func(idx []int) (map[int]string, error) {
 		result := make(map[int]string)
 		rocksCacheMiss := make([]string, 0)
@@ -242,7 +253,7 @@ func (r *Cache) DelBatch(ctx context.Context, keys []string) error {
 	return nil
 }
 
-func (r *Cache) Init() {
+func (r *Cache) init() {
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
@@ -254,6 +265,7 @@ func (r *Cache) Init() {
 			for r == nil || !r.ok() {
 				time.Sleep(10 * time.Millisecond)
 			}
+			fmt.Println("sub channel:", r.channel)
 			r.sub(r.channel)
 		}
 	}()
@@ -287,8 +299,13 @@ func (r *Cache) sub(channel string) {
 		if msg.String() != "" {
 			log.Println("sub ReceiveMessage:", msg.String())
 			keys := strings.Split(msg.String(), ":")
-			for _, key := range keys {
-				r.localCache.Del(key)
+			if len(keys) > 1 {
+				for i, key := range keys {
+					if i == 0 {
+						continue
+					}
+					r.localCache.Del(key)
+				}
 			}
 		}
 	}
@@ -296,5 +313,6 @@ func (r *Cache) sub(channel string) {
 
 // pub 发布消息
 func (r *Cache) pub(ctx context.Context, channel, key string) error {
+	log.Println("pub:", key)
 	return r.redisCache.Publish(ctx, channel, key).Err()
 }
