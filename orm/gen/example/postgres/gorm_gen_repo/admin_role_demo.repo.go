@@ -485,7 +485,7 @@ func (a *AdminRoleDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorR
 	if err != nil {
 		return result, nil, err
 	}
-	query := a.db.WithContext(ctx).Model(&gorm_gen_model.UserDemo{}).Clauses(whereExpressions...).Clauses(orderExpressions...)
+	query := a.db.WithContext(ctx).Model(&gorm_gen_model.AdminRoleDemo{}).Clauses(whereExpressions...).Clauses(orderExpressions...)
 	if paginatorReply.Offset != 0 {
 		query = query.Offset(paginatorReply.Offset)
 	}

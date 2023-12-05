@@ -100,12 +100,6 @@ func (p *Req) ConvertToGormExpression(model any) (whereExpressions, orderExpress
 	whereExpressions = make([]clause.Expression, 0)
 	orderExpressions = make([]clause.Expression, 0)
 	jsonToColumn := p.jsonToColumn(model)
-	if p.Page <= 0 {
-		p.Page = 1
-	}
-	if p.PageSize <= 0 {
-		p.PageSize = 10
-	}
 	if len(p.Search) > 0 {
 		for _, v := range p.Search {
 			if v.Field == "" {

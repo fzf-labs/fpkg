@@ -17,7 +17,7 @@ func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiByPaginator(ctx con
 	if err != nil {
 		return result, nil, err
 	}
-	query := {{.firstTableChar}}.db.WithContext(ctx).Model(&gorm_gen_model.UserDemo{}).Clauses(whereExpressions...).Clauses(orderExpressions...)
+	query := {{.firstTableChar}}.db.WithContext(ctx).Model(&{{.dbName}}_model.{{.upperTableName}}{}).Clauses(whereExpressions...).Clauses(orderExpressions...)
 	if paginatorReply.Offset != 0 {
 		query = query.Offset(paginatorReply.Offset)
 	}
