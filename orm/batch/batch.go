@@ -1,5 +1,5 @@
 //nolint:all
-package orm
+package batch
 
 import (
 	"bytes"

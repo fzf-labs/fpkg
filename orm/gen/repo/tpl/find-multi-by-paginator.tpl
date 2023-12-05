@@ -1,5 +1,5 @@
 // FindMultiByPaginator 查询分页数据(通用)
-func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiByPaginator(ctx context.Context, paginatorReq *orm.PaginatorReq) ([]*{{.dbName}}_model.{{.upperTableName}}, *orm.PaginatorReply, error) {
+func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiByPaginator(ctx context.Context, paginatorReq *paginator.Req) ([]*{{.dbName}}_model.{{.upperTableName}}, *paginator.Reply, error) {
 	result := make([]*{{.dbName}}_model.{{.upperTableName}}, 0)
 	var total int64
 	whereExpressions, orderExpressions, err := paginatorReq.ConvertToGormExpression({{.dbName}}_model.{{.upperTableName}}{})
@@ -13,8 +13,18 @@ func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiByPaginator(ctx con
 	if total == 0 {
 		return result, nil, nil
 	}
-	paginatorReply := paginatorReq.ConvertToPage(int(total))
-	err = {{.firstTableChar}}.db.WithContext(ctx).Model(&{{.dbName}}_model.{{.upperTableName}}{}).Limit(paginatorReply.Limit).Offset(paginatorReply.Offset).Clauses(whereExpressions...).Clauses(orderExpressions...).Find(&result).Error
+	paginatorReply,err := paginatorReq.ConvertToPage(int(total))
+	if err != nil {
+		return result, nil, err
+	}
+	query := {{.firstTableChar}}.db.WithContext(ctx).Model(&gorm_gen_model.UserDemo{}).Clauses(whereExpressions...).Clauses(orderExpressions...)
+	if paginatorReply.Offset != 0 {
+		query = query.Offset(paginatorReply.Offset)
+	}
+	if paginatorReply.Limit != 0 {
+		query = query.Limit(paginatorReply.Limit)
+	}
+	err = query.Find(&result).Error
 	if err != nil {
 		return result, nil, err
 	}

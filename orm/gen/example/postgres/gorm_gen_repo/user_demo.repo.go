@@ -9,10 +9,10 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/fzf-labs/fpkg/orm"
 	"github.com/fzf-labs/fpkg/orm/gen/cache"
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_dao"
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_model"
+	"github.com/fzf-labs/fpkg/orm/paginator"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -80,7 +80,7 @@ type (
 		// FindMultiByTenantIDS 根据tenantIDS查询多条数据
 		FindMultiByTenantIDS(ctx context.Context, tenantIDS []int64) ([]*gorm_gen_model.UserDemo, error)
 		// FindMultiByPaginator 查询分页数据(通用)
-		FindMultiByPaginator(ctx context.Context, paginatorReq *orm.PaginatorReq) ([]*gorm_gen_model.UserDemo, *orm.PaginatorReply, error)
+		FindMultiByPaginator(ctx context.Context, paginatorReq *paginator.Req) ([]*gorm_gen_model.UserDemo, *paginator.Reply, error)
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
 		DeleteOneCacheByID(ctx context.Context, ID int64) error
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
@@ -882,7 +882,7 @@ func (u *UserDemoRepo) FindMultiByTenantIDS(ctx context.Context, tenantIDS []int
 }
 
 // FindMultiByPaginator 查询分页数据(通用)
-func (u *UserDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorReq *orm.PaginatorReq) ([]*gorm_gen_model.UserDemo, *orm.PaginatorReply, error) {
+func (u *UserDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorReq *paginator.Req) ([]*gorm_gen_model.UserDemo, *paginator.Reply, error) {
 	result := make([]*gorm_gen_model.UserDemo, 0)
 	var total int64
 	whereExpressions, orderExpressions, err := paginatorReq.ConvertToGormExpression(gorm_gen_model.UserDemo{})
@@ -896,8 +896,18 @@ func (u *UserDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorReq *o
 	if total == 0 {
 		return result, nil, nil
 	}
-	paginatorReply := paginatorReq.ConvertToPage(int(total))
-	err = u.db.WithContext(ctx).Model(&gorm_gen_model.UserDemo{}).Limit(paginatorReply.Limit).Offset(paginatorReply.Offset).Clauses(whereExpressions...).Clauses(orderExpressions...).Find(&result).Error
+	paginatorReply, err := paginatorReq.ConvertToPage(int(total))
+	if err != nil {
+		return result, nil, err
+	}
+	query := u.db.WithContext(ctx).Model(&gorm_gen_model.UserDemo{}).Clauses(whereExpressions...).Clauses(orderExpressions...)
+	if paginatorReply.Offset != 0 {
+		query = query.Offset(paginatorReply.Offset)
+	}
+	if paginatorReply.Limit != 0 {
+		query = query.Limit(paginatorReply.Limit)
+	}
+	err = query.Find(&result).Error
 	if err != nil {
 		return result, nil, err
 	}

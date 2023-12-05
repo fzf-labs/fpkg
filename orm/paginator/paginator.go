@@ -1,4 +1,4 @@
-package orm
+package paginator
 
 import (
 	"fmt"
@@ -12,14 +12,16 @@ import (
 type EXP string
 
 const (
-	Eq   EXP = "="
-	Neq  EXP = "!="
-	Gt   EXP = ">"
-	Gte  EXP = ">="
-	Lt   EXP = "<"
-	Lte  EXP = "<="
-	In   EXP = "IN"
-	Like EXP = "Like"
+	Eq      EXP = "="
+	Neq     EXP = "!="
+	Gt      EXP = ">"
+	Gte     EXP = ">="
+	Lt      EXP = "<"
+	Lte     EXP = "<="
+	In      EXP = "IN"
+	NotIn   EXP = "NotIn"
+	Like    EXP = "Like"
+	NotLike EXP = "NotLike"
 )
 
 func (s EXP) Validate() bool {
@@ -63,14 +65,14 @@ func (s ORDER) Validate() bool {
 	}
 }
 
-type PaginatorReq struct {
+type Req struct {
 	Page     int             `json:"page"`
 	PageSize int             `json:"pageSize"`
 	Order    []*OrderColumn  `json:"order"`
-	Search   []*SearchColumn `json:"search,omitempty"`
+	Search   []*SearchColumn `json:"search"`
 }
 
-type PaginatorReply struct {
+type Reply struct {
 	Page      int `json:"Page"`
 	PageSize  int `json:"PageSize"`
 	Total     int `json:"Total"`
@@ -83,7 +85,7 @@ type PaginatorReply struct {
 
 type OrderColumn struct {
 	Field string `json:"field"` // 字段
-	Order ORDER  `json:"exp"`   // 表达式 ASC,DESC
+	Exp   ORDER  `json:"exp"`   // 表达式 ASC,DESC
 }
 
 type SearchColumn struct {
@@ -94,7 +96,7 @@ type SearchColumn struct {
 }
 
 // ConvertToGormExpression 根据SearchColumn参数转换为符合gorm where clause.Expression
-func (p *PaginatorReq) ConvertToGormExpression(model any) (whereExpressions, orderExpressions []clause.Expression, err error) {
+func (p *Req) ConvertToGormExpression(model any) (whereExpressions, orderExpressions []clause.Expression, err error) {
 	whereExpressions = make([]clause.Expression, 0)
 	orderExpressions = make([]clause.Expression, 0)
 	jsonToColumn := p.jsonToColumn(model)
@@ -105,7 +107,6 @@ func (p *PaginatorReq) ConvertToGormExpression(model any) (whereExpressions, ord
 		p.PageSize = 10
 	}
 	if len(p.Search) > 0 {
-		cols := make([]clause.Expression, 0)
 		for _, v := range p.Search {
 			if v.Field == "" {
 				return whereExpressions, orderExpressions, fmt.Errorf("field cannot be empty")
@@ -116,50 +117,58 @@ func (p *PaginatorReq) ConvertToGormExpression(model any) (whereExpressions, ord
 			if v.Exp == "" {
 				v.Exp = Eq
 			}
+			if !v.Exp.Validate() {
+				return whereExpressions, orderExpressions, fmt.Errorf("unknown s exp type '%s'", v.Exp)
+			}
 			if v.Logic == "" {
 				v.Logic = And
 			}
-			if !v.Exp.Validate() {
-				return whereExpressions, orderExpressions, fmt.Errorf("exp is err")
-			}
 			if !v.Logic.Validate() {
-				return whereExpressions, orderExpressions, fmt.Errorf("logic is err")
+				return whereExpressions, orderExpressions, fmt.Errorf("unknown s logic type '%s'", v.Logic)
 			}
-			if v.Exp == Eq {
-				cols = append(cols, clause.Eq{Column: jsonToColumn[v.Field], Value: v.Value})
-			}
-			if v.Exp == Neq {
-				cols = append(cols, clause.Neq{Column: jsonToColumn[v.Field], Value: v.Value})
-			}
-			if v.Exp == Gt {
-				cols = append(cols, clause.Gt{Column: jsonToColumn[v.Field], Value: v.Value})
-			}
-			if v.Exp == Gte {
-				cols = append(cols, clause.Gte{Column: jsonToColumn[v.Field], Value: v.Value})
-			}
-			if v.Exp == Lt {
-				cols = append(cols, clause.Lt{Column: jsonToColumn[v.Field], Value: v.Value})
-			}
-			if v.Exp == Lte {
-				cols = append(cols, clause.Lte{Column: jsonToColumn[v.Field], Value: v.Value})
-			}
-			if v.Exp == In {
+			var expression clause.Expression
+			switch v.Exp {
+			case Eq:
+				expression = clause.Eq{Column: jsonToColumn[v.Field], Value: v.Value}
+			case Neq:
+				expression = clause.Neq{Column: jsonToColumn[v.Field], Value: v.Value}
+			case Gt:
+				expression = clause.Gt{Column: jsonToColumn[v.Field], Value: v.Value}
+			case Gte:
+				expression = clause.Gte{Column: jsonToColumn[v.Field], Value: v.Value}
+			case Lt:
+				expression = clause.Lt{Column: jsonToColumn[v.Field], Value: v.Value}
+			case Lte:
+				expression = clause.Lte{Column: jsonToColumn[v.Field], Value: v.Value}
+			case In:
 				split := strings.Split(v.Value, ",")
 				if len(split) > 0 {
 					values := make([]any, 0)
 					for _, vv := range split {
 						values = append(values, vv)
 					}
-					cols = append(cols, clause.IN{Column: jsonToColumn[v.Field], Values: values})
+					expression = clause.IN{Column: jsonToColumn[v.Field], Values: values}
 				}
-			}
-			if v.Exp == Like {
-				cols = append(cols, clause.Like{Column: jsonToColumn[v.Field], Value: v.Value})
+			case NotIn:
+				split := strings.Split(v.Value, ",")
+				if len(split) > 0 {
+					values := make([]any, 0)
+					for _, vv := range split {
+						values = append(values, vv)
+					}
+					expression = clause.Not(clause.IN{Column: jsonToColumn[v.Field], Values: values})
+				}
+			case Like:
+				expression = clause.Like{Column: jsonToColumn[v.Field], Value: v.Value}
+			case NotLike:
+				expression = clause.Not(clause.Like{Column: jsonToColumn[v.Field], Value: v.Value})
+			default:
+				return whereExpressions, orderExpressions, fmt.Errorf("unknown s exp type '%s'", v.Exp)
 			}
 			if v.Logic == And {
-				whereExpressions = append(whereExpressions, clause.And(cols...))
+				whereExpressions = append(whereExpressions, expression)
 			} else {
-				whereExpressions = append(whereExpressions, clause.Or(cols...))
+				whereExpressions = append(whereExpressions, expression)
 			}
 		}
 	}
@@ -171,17 +180,17 @@ func (p *PaginatorReq) ConvertToGormExpression(model any) (whereExpressions, ord
 			if _, ok := jsonToColumn[v.Field]; !ok {
 				return whereExpressions, orderExpressions, fmt.Errorf("field is not exist")
 			}
-			if v.Order == "" {
-				v.Order = Asc
+			if v.Exp == "" {
+				v.Exp = Asc
 			}
-			if !v.Order.Validate() {
+			if !v.Exp.Validate() {
 				return whereExpressions, orderExpressions, fmt.Errorf("order is err")
 			}
 			orderExpressions = append(orderExpressions, clause.OrderBy{
 				Columns: []clause.OrderByColumn{
 					{
 						Column:  clause.Column{Name: jsonToColumn[v.Field]},
-						Desc:    v.Order == Desc,
+						Desc:    v.Exp == Desc,
 						Reorder: false,
 					},
 				},
@@ -192,36 +201,40 @@ func (p *PaginatorReq) ConvertToGormExpression(model any) (whereExpressions, ord
 }
 
 // ConvertToPage 转换为page
-func (p *PaginatorReq) ConvertToPage(total int) *PaginatorReply {
-	// 根据nums总数，和prePage每页数量 生成分页总数
-	page := p.Page
-	pageSize := p.PageSize
-	totalPage := int(math.Ceil(float64(total) / float64(p.PageSize))) // page总数
-	if page <= 0 {
-		page = 1
+func (p *Req) ConvertToPage(total int) (*Reply, error) {
+	resp := &Reply{
+		Total: total,
 	}
-	prevPage := page - 1
-	if prevPage <= 0 {
-		prevPage = 1
+	if p.Page < 0 {
+		return resp, fmt.Errorf("page cannot be less than 0")
 	}
-	nextPage := page + 1
-	if nextPage > totalPage {
-		nextPage = totalPage
+	if p.PageSize < 0 {
+		return resp, fmt.Errorf("pageSize cannot be less than 0")
 	}
-	return &PaginatorReply{
-		Page:      page,
-		PageSize:  pageSize,
-		Total:     total,
-		PrevPage:  prevPage,
-		NextPage:  nextPage,
-		TotalPage: totalPage,
-		Limit:     pageSize,
-		Offset:    (page - 1) * pageSize,
+	if (p.Page != 0 && p.PageSize == 0) || (p.Page == 0 && p.PageSize != 0) {
+		return resp, fmt.Errorf("page and pageSize must be a pair")
 	}
+	if p.Page == 0 && p.PageSize == 0 {
+		return resp, nil
+	}
+	resp.Page = p.Page
+	resp.PageSize = p.PageSize
+	resp.TotalPage = int(math.Ceil(float64(total) / float64(p.PageSize)))
+	resp.NextPage = p.Page + 1
+	if resp.NextPage > resp.TotalPage {
+		resp.NextPage = resp.TotalPage
+	}
+	resp.PrevPage = p.Page - 1
+	if resp.PrevPage <= 0 {
+		resp.PrevPage = 1
+	}
+	resp.Limit = p.PageSize
+	resp.Offset = (p.Page - 1) * p.PageSize
+	return resp, nil
 }
 
 // jsonToColumn 将model的tag中json和gorm的tag的Column转换为map[string]string
-func (p *PaginatorReq) jsonToColumn(model any) map[string]string {
+func (p *Req) jsonToColumn(model any) map[string]string {
 	m := make(map[string]string)
 	t := reflect.TypeOf(model)
 	for i := 0; i < t.NumField(); i++ {
