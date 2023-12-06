@@ -46,14 +46,27 @@ func TestCache_FetchBatch(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	redisLocalDBCache := NewRedisLocalDBCache(goRedis)
+	redisLocalDBCache := NewRedisLocalDBCache(goRedis, WithLocalCacheDisable())
 	ctx := context.Background()
-
 	for i := 0; i < 10; i++ {
-		result, err2 := redisLocalDBCache.FetchBatch(ctx, []string{"test1", "test2"}, func(miss []string) (map[string]string, error) {
+		result, err2 := redisLocalDBCache.FetchBatch(ctx, []string{"test1", "test1", "test2", "test3", "test4", "test5", "test6", "test7", "test8", "test9", "test10", "test11", "test12", "test13", "test14", "test15"}, func(miss []string) (map[string]string, error) {
+			// 15个假数据
 			return map[string]string{
-				"test1": "test1",
-				"test2": "test2",
+				"test1":  "test1",
+				"test2":  "test2",
+				"test3":  "test",
+				"test4":  "test",
+				"test5":  "test",
+				"test6":  "test",
+				"test7":  "test",
+				"test8":  "test",
+				"test9":  "test",
+				"test10": "test",
+				"test11": "test",
+				"test12": "test",
+				"test13": "test",
+				"test14": "test",
+				"test15": "test",
 			}, nil
 		})
 		if err2 != nil {
