@@ -160,9 +160,9 @@ func (p *Req) ConvertToGormExpression(model any) (whereExpressions, orderExpress
 				return whereExpressions, orderExpressions, fmt.Errorf("unknown s exp type '%s'", v.Exp)
 			}
 			if v.Logic == And {
-				whereExpressions = append(whereExpressions, expression)
+				whereExpressions = append(whereExpressions, clause.And(expression))
 			} else {
-				whereExpressions = append(whereExpressions, expression)
+				whereExpressions = append(whereExpressions, clause.Or(expression))
 			}
 		}
 	}

@@ -46,7 +46,7 @@ func TestCache_FetchBatch(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	redisLocalDBCache := NewRedisLocalDBCache(goRedis, WithLocalCacheDisable())
+	redisLocalDBCache := NewRedisLocalDBCache(goRedis)
 	ctx := context.Background()
 	for i := 0; i < 10; i++ {
 		result, err2 := redisLocalDBCache.FetchBatch(ctx, []string{"test1", "test1", "test2", "test3", "test4", "test5", "test6", "test7", "test8", "test9", "test10", "test11", "test12", "test13", "test14", "test15"}, func(miss []string) (map[string]string, error) {
