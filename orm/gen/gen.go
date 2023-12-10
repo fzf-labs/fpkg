@@ -112,8 +112,9 @@ func (g *GenerationDB) Do() {
 	repoPath := fmt.Sprintf("%s/%s_repo", outPutPath, dbName)
 	// 初始化
 	generator := gen.NewGenerator(gen.Config{
-		OutPath:      daoPath,
-		ModelPkgPath: modelPath,
+		OutPath:          daoPath,
+		ModelPkgPath:     modelPath,
+		FieldWithTypeTag: true,
 	})
 	// 使用数据库
 	generator.UseDB(g.db)
@@ -248,6 +249,14 @@ func ModelOptionPgDefaultString() gen.ModelOpt {
 	})
 }
 
+// ModelOptionRemoveGormTypeTag 移除gorm tag :type
+func ModelOptionRemoveGormTypeTag() gen.ModelOpt {
+	return gen.FieldGORMTagReg(".*?", func(tag field.GormTag) field.GormTag {
+		tag.Remove("type")
+		return tag
+	})
+}
+
 // ModelOptionRemoveDefault 默认字符串移除(主键除外)
 func ModelOptionRemoveDefault() gen.ModelOpt {
 	return gen.FieldGORMTagReg(".*?", func(tag field.GormTag) field.GormTag {
@@ -260,8 +269,8 @@ func ModelOptionRemoveDefault() gen.ModelOpt {
 	})
 }
 
-// DataTypeMap 自定义字段类型映射
-func DataTypeMap() map[string]func(columnType gorm.ColumnType) (dataType string) {
+// PGDataTypeMap 自定义字段类型映射
+func PGDataTypeMap() map[string]func(columnType gorm.ColumnType) (dataType string) {
 	return map[string]func(columnType gorm.ColumnType) (dataType string){
 		"json":  func(columnType gorm.ColumnType) string { return "datatypes.JSON" },
 		"jsonb": func(columnType gorm.ColumnType) string { return "datatypes.JSON" },
@@ -274,6 +283,18 @@ func DataTypeMap() map[string]func(columnType gorm.ColumnType) (dataType string)
 				return SQLNullTime
 			}
 			return TimeTime
+		},
+		"character varying[]": func(columnType gorm.ColumnType) (dataType string) {
+			return "pq.StringArray"
+		},
+		"smallint[]": func(columnType gorm.ColumnType) (dataType string) {
+			return "pq.Int32Array"
+		},
+		"integer[]": func(columnType gorm.ColumnType) (dataType string) {
+			return "pq.Int32Array"
+		},
+		"bigint[]": func(columnType gorm.ColumnType) (dataType string) {
+			return "pq.Int64Array"
 		},
 	}
 }

@@ -73,12 +73,12 @@ type Req struct {
 }
 
 type Reply struct {
-	Page      int `json:"Page"`
-	PageSize  int `json:"PageSize"`
-	Total     int `json:"Total"`
-	PrevPage  int `json:"PrevPage"`
-	NextPage  int `json:"NextPage"`
-	TotalPage int `json:"TotalPage"`
+	Page      int `json:"page"`
+	PageSize  int `json:"pageSize"`
+	Total     int `json:"total"`
+	PrevPage  int `json:"prevPage"`
+	NextPage  int `json:"nextPage"`
+	TotalPage int `json:"totalPage"`
 	Limit     int `json:"-"`
 	Offset    int `json:"-"`
 }

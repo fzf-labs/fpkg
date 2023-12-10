@@ -8,8 +8,8 @@ const TableNameAdminToRoleDemo = "admin_to_role_demo"
 
 // AdminToRoleDemo mapped from table <admin_to_role_demo>
 type AdminToRoleDemo struct {
-	AdminID string `gorm:"column:admin_id;not null" json:"adminId"`
-	RoleID  string `gorm:"column:role_id;not null" json:"roleId"`
+	AdminID string `gorm:"column:admin_id;type:uuid;not null" json:"adminId"`
+	RoleID  string `gorm:"column:role_id;type:uuid;not null" json:"roleId"`
 }
 
 // TableName AdminToRoleDemo's table name

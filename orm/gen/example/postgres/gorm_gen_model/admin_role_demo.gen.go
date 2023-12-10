@@ -14,15 +14,15 @@ const TableNameAdminRoleDemo = "admin_role_demo"
 
 // AdminRoleDemo mapped from table <admin_role_demo>
 type AdminRoleDemo struct {
-	ID        string         `gorm:"column:id;primaryKey;default:gen_random_uuid();comment:编号" json:"id"` // 编号
-	Pid       string         `gorm:"column:pid;not null;comment:父级id" json:"pid"`                         // 父级id
-	Name      string         `gorm:"column:name;not null;comment:名称" json:"name"`                         // 名称
-	Remark    string         `gorm:"column:remark;comment:备注" json:"remark"`                              // 备注
-	Status    int16          `gorm:"column:status;not null;comment:0=禁用 1=开启" json:"status"`              // 0=禁用 1=开启
-	Sort      int64          `gorm:"column:sort;not null;comment:排序值" json:"sort"`                        // 排序值
-	CreatedAt time.Time      `gorm:"column:created_at;not null;comment:创建时间" json:"createdAt"`            // 创建时间
-	UpdatedAt time.Time      `gorm:"column:updated_at;not null;comment:更新时间" json:"updatedAt"`            // 更新时间
-	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;comment:删除时间" json:"deletedAt"`                     // 删除时间
+	ID        string         `gorm:"column:id;type:uuid;primaryKey;default:gen_random_uuid();comment:编号" json:"id"`          // 编号
+	Pid       string         `gorm:"column:pid;type:uuid;not null;comment:父级id" json:"pid"`                                  // 父级id
+	Name      string         `gorm:"column:name;type:character varying(50);not null;comment:名称" json:"name"`                 // 名称
+	Remark    string         `gorm:"column:remark;type:character varying(200);comment:备注" json:"remark"`                     // 备注
+	Status    int16          `gorm:"column:status;type:smallint;not null;comment:0=禁用 1=开启" json:"status"`                   // 0=禁用 1=开启
+	Sort      int64          `gorm:"column:sort;type:bigint;not null;comment:排序值" json:"sort"`                               // 排序值
+	CreatedAt time.Time      `gorm:"column:created_at;type:timestamp with time zone;not null;comment:创建时间" json:"createdAt"` // 创建时间
+	UpdatedAt time.Time      `gorm:"column:updated_at;type:timestamp with time zone;not null;comment:更新时间" json:"updatedAt"` // 更新时间
+	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;type:timestamp with time zone;comment:删除时间" json:"deletedAt"`          // 删除时间
 	Admins    []*AdminDemo   `gorm:"joinForeignKey:role_id;joinReferences:admin_id;many2many:admin_to_role_demo" json:"admins"`
 }
 

@@ -12,9 +12,7 @@ const (
 )
 
 // SortIndexColumns 排序索引字段
-func SortIndexColumns(db *gorm.DB, table string) (map[string][]string, error) {
-	resp := make(map[string][]string)
-	var err error
+func SortIndexColumns(db *gorm.DB, table string) (resp map[string][]string, err error) {
 	switch db.Dialector.Name() {
 	case Postgres:
 		resp, err = pgSortIndexColumns(db, table)
@@ -50,9 +48,7 @@ func pgSortIndexColumns(db *gorm.DB, table string) (map[string][]string, error) 
 }
 
 // GetPartitionTableName 获取分区表
-func GetPartitionTableName(db *gorm.DB) ([]string, error) {
-	var resp []string
-	var err error
+func GetPartitionTableName(db *gorm.DB) (resp []string, err error) {
 	switch db.Dialector.Name() {
 	case Postgres:
 		resp, err = getPGPartitionTableName(db)
@@ -77,9 +73,7 @@ func getPGPartitionTableName(db *gorm.DB) ([]string, error) {
 }
 
 // GetPartitionChildTableForTable 获取PG分区表的子表
-func GetPartitionChildTableForTable(db *gorm.DB, tableName string) ([]string, error) {
-	var resp []string
-	var err error
+func GetPartitionChildTableForTable(db *gorm.DB, tableName string) (resp []string, err error) {
 	switch db.Dialector.Name() {
 	case Postgres:
 		resp, err = getPGPartitionChildTableForTable(db, tableName)
@@ -104,9 +98,7 @@ func getPGPartitionChildTableForTable(db *gorm.DB, tableName string) ([]string, 
 }
 
 // GetPartitionChildTable 获取所有分区表的子表
-func GetPartitionChildTable(db *gorm.DB) ([]string, error) {
-	var resp []string
-	var err error
+func GetPartitionChildTable(db *gorm.DB) (resp []string, err error) {
 	switch db.Dialector.Name() {
 	case Postgres:
 		resp, err = getPartitionChildTable(db)

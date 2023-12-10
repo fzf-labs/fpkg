@@ -13,7 +13,6 @@ import (
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_dao"
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_model"
 	"github.com/fzf-labs/fpkg/orm/paginator"
-	"github.com/fzf-labs/fpkg/util/jsonutil"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -725,12 +724,10 @@ func (a *AdminDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorReq *
 	if total == 0 {
 		return result, nil, nil
 	}
-	jsonutil.Dump(paginatorReq)
 	paginatorReply, err := paginatorReq.ConvertToPage(int(total))
 	if err != nil {
 		return result, nil, err
 	}
-	jsonutil.Dump(paginatorReply)
 	query := a.db.WithContext(ctx).Model(&gorm_gen_model.AdminDemo{}).Clauses(whereExpressions...).Clauses(orderExpressions...)
 	if paginatorReply.Offset != 0 {
 		query = query.Offset(paginatorReply.Offset)
