@@ -304,19 +304,31 @@ func ReadFileLineToSli(dir string) ([]string, error) {
 		return nil, err
 	}
 	defer file.Close()
-	buf := bufio.NewReader(file)
-	res := make([]string, 0)
-	for {
-		line, _, err := buf.ReadLine()
-		c := string(line)
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-		}
-		res = append(res, c)
+	lines := make([]string, 0)
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
 	}
-	return res, nil
+	return lines, scanner.Err()
+}
+
+// ReadURLFileLineToSli 按行读取url文件
+func ReadURLFileLineToSli(url string) ([]string, error) {
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, http.NoBody)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	lines := make([]string, 0)
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	return lines, scanner.Err()
 }
 
 // ReadFileToString 读取文件到string
