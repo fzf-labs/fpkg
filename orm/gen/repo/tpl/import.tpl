@@ -1,12 +1,12 @@
 import (
-	"context"
-	"errors"
+    "context"
 	"encoding/json"
-	"time"
-    "gorm.io/gorm"
-    "github.com/fzf-labs/fpkg/cache/cachekey"
-    "github.com/fzf-labs/fpkg/conv"
+	"errors"
+
     "github.com/fzf-labs/fpkg/orm/gen/cache"
     "{{.daoPkgPath}}"
     "{{.modelPkgPath}}"
+    "github.com/fzf-labs/fpkg/orm/paginator"
+    "gorm.io/gorm"
+    "gorm.io/gorm/clause"
 )

@@ -267,7 +267,7 @@ func (r *Repo) generatePkg() (string, error) {
 func (r *Repo) generateImport() (string, error) {
 	tplParams := map[string]any{
 		"daoPkgPath":   r.daoPkgPath,
-		"modelPkgPath": r.daoPkgPath,
+		"modelPkgPath": r.modelPkgPath,
 	}
 	tpl, err := template.NewTemplate("Import").Parse(Import).Execute(tplParams)
 	if err != nil {

@@ -12,16 +12,16 @@ import (
 type EXP string
 
 const (
-	Eq      EXP = "="
-	Neq     EXP = "!="
-	Gt      EXP = ">"
-	Gte     EXP = ">="
-	Lt      EXP = "<"
-	Lte     EXP = "<="
-	In      EXP = "IN"
-	NotIn   EXP = "NotIn"
-	Like    EXP = "Like"
-	NotLike EXP = "NotLike"
+	Eq      EXP = "Eq"      // 等于
+	Neq     EXP = "Neq"     // 不等于
+	Gt      EXP = "Gt"      // 大于
+	Gte     EXP = "Gte"     // 大于等于
+	Lt      EXP = "Lt"      // 小于
+	Lte     EXP = "Lte"     // 小于等于
+	In      EXP = "In"      // in
+	NotIn   EXP = "NotIn"   // not in
+	Like    EXP = "Like"    // like
+	NotLike EXP = "NotLike" // not like
 )
 
 func (s EXP) Validate() bool {
@@ -36,8 +36,8 @@ func (s EXP) Validate() bool {
 type LOGIC string
 
 const (
-	And LOGIC = "AND"
-	Or  LOGIC = "OR"
+	And LOGIC = "And"
+	Or  LOGIC = "Or"
 )
 
 func (s LOGIC) Validate() bool {
@@ -52,8 +52,8 @@ func (s LOGIC) Validate() bool {
 type ORDER string
 
 const (
-	Asc  ORDER = "ASC"
-	Desc ORDER = "DESC"
+	Asc  ORDER = "Asc"
+	Desc ORDER = "Desc"
 )
 
 func (s ORDER) Validate() bool {
