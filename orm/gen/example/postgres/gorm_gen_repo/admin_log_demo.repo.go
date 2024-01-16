@@ -392,9 +392,11 @@ func (a *AdminLogDemoRepo) FindOneCacheByID(ctx context.Context, ID string) (*go
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal([]byte(cacheValue), resp)
-	if err != nil {
-		return nil, err
+	if cacheValue != "" {
+		err = json.Unmarshal([]byte(cacheValue), resp)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return resp, nil
 }
@@ -447,9 +449,11 @@ func (a *AdminLogDemoRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string
 	}
 	for _, v := range cacheValue {
 		tmp := new(gorm_gen_model.AdminLogDemo)
-		err := json.Unmarshal([]byte(v), tmp)
-		if err != nil {
-			return nil, err
+		if v != "" {
+			err := json.Unmarshal([]byte(v), tmp)
+			if err != nil {
+				return nil, err
+			}
 		}
 		resp = append(resp, tmp)
 	}

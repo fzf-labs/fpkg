@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+package api.gorm_gen.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "paginator/paginator.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "validate/validate.proto";
+
+option go_package = "api/gorm_gen/v1;v1";
+
+service AdminLogDemo {
+  //系统-日志-创建一条数据
+  rpc CreateAdminLogDemo(CreateAdminLogDemoReq) returns (CreateAdminLogDemoReply) {
+    option (google.api.http) = {
+      post: "/admin_log_demo/v1/admin_log_demo/create"
+      body: "*"
+    };
+  }
+  //系统-日志-更新一条数据
+  rpc UpdateAdminLogDemo(UpdateAdminLogDemoReq) returns (UpdateAdminLogDemoReply) {
+    option (google.api.http) = {
+      post: "/admin_log_demo/v1/admin_log_demo/update"
+      body: "*"
+    };
+  }
+  //系统-日志-删除多条数据
+  rpc DeleteAdminLogDemo(DeleteAdminLogDemoReq) returns (DeleteAdminLogDemoReply) {
+    option (google.api.http) = {
+      post: "/admin_log_demo/v1/admin_log_demo/delete"
+      body: "*"
+    };
+  }
+  //系统-日志-单条数据查询
+  rpc GetAdminLogDemo(GetAdminLogDemoReq) returns (GetAdminLogDemoReply) {
+    option (google.api.http) = {get: "/admin_log_demo/v1/admin_log_demo/get"};
+  }
+  //系统-日志-列表数据查询
+  rpc ListAdminLogDemo(ListAdminLogDemoReq) returns (ListAdminLogDemoReply) {
+    option (google.api.http) = {
+      post: "/admin_log_demo/v1/admin_log_demo/list",
+      body: "*"
+    };
+  }
+}
+//系统-日志信息
+message AdminLogDemoInfo {
+  string ID = 1; // 编号
+	string adminID = 2; // 管理员ID
+	string IP = 3; // ip
+	string URI = 4; // 请求路径
+	string useragent = 5; // 浏览器标识
+	string header = 6; // header
+	string req = 7; // 请求数据
+	string resp = 8; // 响应数据
+	google.protobuf.Timestamp createdAt = 9; // 创建时间
+}
+
+//请求-系统-日志-创建一条数据
+message CreateAdminLogDemoReq {
+  string adminID = 1; // 管理员ID
+	string IP = 2; // ip
+	string URI = 3; // 请求路径
+	string useragent = 4; // 浏览器标识
+	string header = 5; // header
+	string req = 6; // 请求数据
+	string resp = 7; // 响应数据
+}
+
+//响应-系统-日志-创建一条数据
+message CreateAdminLogDemoReply {
+  	string ID = 1; // 编号
+}
+
+//请求-系统-日志-更新一条数据
+message UpdateAdminLogDemoReq {
+  string ID = 1; // 编号
+	string adminID = 2; // 管理员ID
+	string IP = 3; // ip
+	string URI = 4; // 请求路径
+	string useragent = 5; // 浏览器标识
+	string header = 6; // header
+	string req = 7; // 请求数据
+	string resp = 8; // 响应数据
+}
+
+//响应-系统-日志-更新一条数据
+message UpdateAdminLogDemoReply {}
+
+//请求-系统-日志-删除多条数据
+message DeleteAdminLogDemoReq {
+  repeated string IDS = 1; // 编号集合
+}
+
+//响应-系统-日志-删除多条数据
+message DeleteAdminLogDemoReply {}
+
+//请求-系统-日志-单条数据查询
+message GetAdminLogDemoReq {
+  string ID = 1; // 编号
+}
+
+//响应-系统-日志-单条数据查询
+message GetAdminLogDemoReply {
+  AdminLogDemoInfo info = 1;
+}
+
+//请求-系统-日志-列表数据查询
+message ListAdminLogDemoReq {
+  paginator.PaginatorReq paginator = 1; //分页
+}
+
+//响应-系统-日志-列表数据查询
+message ListAdminLogDemoReply {
+  paginator.PaginatorReply paginator = 1; // 分页
+  repeated AdminLogDemoInfo list = 2; // 列表数据
+}
+

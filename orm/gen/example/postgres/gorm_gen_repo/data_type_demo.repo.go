@@ -555,9 +555,11 @@ func (d *DataTypeDemoRepo) FindOneCacheByID(ctx context.Context, ID string) (*go
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal([]byte(cacheValue), resp)
-	if err != nil {
-		return nil, err
+	if cacheValue != "" {
+		err = json.Unmarshal([]byte(cacheValue), resp)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return resp, nil
 }
@@ -610,9 +612,11 @@ func (d *DataTypeDemoRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string
 	}
 	for _, v := range cacheValue {
 		tmp := new(gorm_gen_model.DataTypeDemo)
-		err := json.Unmarshal([]byte(v), tmp)
-		if err != nil {
-			return nil, err
+		if v != "" {
+			err := json.Unmarshal([]byte(v), tmp)
+			if err != nil {
+				return nil, err
+			}
 		}
 		resp = append(resp, tmp)
 	}
@@ -648,9 +652,11 @@ func (d *DataTypeDemoRepo) FindOneCacheByUlID(ctx context.Context, ulID string) 
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal([]byte(cacheValue), resp)
-	if err != nil {
-		return nil, err
+	if cacheValue != "" {
+		err = json.Unmarshal([]byte(cacheValue), resp)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return resp, nil
 }
@@ -703,9 +709,11 @@ func (d *DataTypeDemoRepo) FindMultiCacheByUlIDS(ctx context.Context, ulIDS []st
 	}
 	for _, v := range cacheValue {
 		tmp := new(gorm_gen_model.DataTypeDemo)
-		err := json.Unmarshal([]byte(v), tmp)
-		if err != nil {
-			return nil, err
+		if v != "" {
+			err := json.Unmarshal([]byte(v), tmp)
+			if err != nil {
+				return nil, err
+			}
 		}
 		resp = append(resp, tmp)
 	}

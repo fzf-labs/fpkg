@@ -628,9 +628,11 @@ func (u *UserDemoRepo) FindOneCacheByID(ctx context.Context, ID int64) (*gorm_ge
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal([]byte(cacheValue), resp)
-	if err != nil {
-		return nil, err
+	if cacheValue != "" {
+		err = json.Unmarshal([]byte(cacheValue), resp)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return resp, nil
 }
@@ -683,9 +685,11 @@ func (u *UserDemoRepo) FindMultiCacheByIDS(ctx context.Context, IDS []int64) ([]
 	}
 	for _, v := range cacheValue {
 		tmp := new(gorm_gen_model.UserDemo)
-		err := json.Unmarshal([]byte(v), tmp)
-		if err != nil {
-			return nil, err
+		if v != "" {
+			err := json.Unmarshal([]byte(v), tmp)
+			if err != nil {
+				return nil, err
+			}
 		}
 		resp = append(resp, tmp)
 	}
@@ -721,9 +725,11 @@ func (u *UserDemoRepo) FindOneCacheByUID(ctx context.Context, UID string) (*gorm
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal([]byte(cacheValue), resp)
-	if err != nil {
-		return nil, err
+	if cacheValue != "" {
+		err = json.Unmarshal([]byte(cacheValue), resp)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return resp, nil
 }
@@ -776,9 +782,11 @@ func (u *UserDemoRepo) FindMultiCacheByUIDS(ctx context.Context, UIDS []string) 
 	}
 	for _, v := range cacheValue {
 		tmp := new(gorm_gen_model.UserDemo)
-		err := json.Unmarshal([]byte(v), tmp)
-		if err != nil {
-			return nil, err
+		if v != "" {
+			err := json.Unmarshal([]byte(v), tmp)
+			if err != nil {
+				return nil, err
+			}
 		}
 		resp = append(resp, tmp)
 	}
@@ -814,9 +822,11 @@ func (u *UserDemoRepo) FindOneCacheByUIDStatus(ctx context.Context, UID string, 
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal([]byte(cacheValue), resp)
-	if err != nil {
-		return nil, err
+	if cacheValue != "" {
+		err = json.Unmarshal([]byte(cacheValue), resp)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return resp, nil
 }

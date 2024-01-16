@@ -12,34 +12,41 @@ option go_package = "api/gorm_gen/v1;v1";
 
 service DataTypeDemo {
   //数据类型示例-创建一条数据
-  rpc DataTypeDemoStore(DataTypeDemoStoreReq) returns (DataTypeDemoStoreReply) {
+  rpc CreateDataTypeDemo(CreateDataTypeDemoReq) returns (CreateDataTypeDemoReply) {
     option (google.api.http) = {
-      post: "/data_type_demo/v1/data_type_demo_store"
+      post: "/data_type_demo/v1/data_type_demo/create"
+      body: "*"
+    };
+  }
+  //数据类型示例-更新一条数据
+  rpc UpdateDataTypeDemo(UpdateDataTypeDemoReq) returns (UpdateDataTypeDemoReply) {
+    option (google.api.http) = {
+      post: "/data_type_demo/v1/data_type_demo/update"
       body: "*"
     };
   }
   //数据类型示例-删除多条数据
-  rpc DataTypeDemoDel(DataTypeDemoDelReq) returns (DataTypeDemoDelReply) {
+  rpc DeleteDataTypeDemo(DeleteDataTypeDemoReq) returns (DeleteDataTypeDemoReply) {
     option (google.api.http) = {
-      post: "/data_type_demo/v1/data_type_demo_del"
+      post: "/data_type_demo/v1/data_type_demo/delete"
       body: "*"
     };
   }
   //数据类型示例-单条数据查询
-  rpc DataTypeDemoOne(DataTypeDemoOneReq) returns (DataTypeDemoOneReply) {
-    option (google.api.http) = {get: "/data_type_demo/v1/data_type_demo_info"};
+  rpc GetDataTypeDemo(GetDataTypeDemoReq) returns (GetDataTypeDemoReply) {
+    option (google.api.http) = {get: "/data_type_demo/v1/data_type_demo/get"};
   }
   //数据类型示例-列表数据查询
-  rpc DataTypeDemoList(DataTypeDemoListReq) returns (DataTypeDemoListReply) {
+  rpc ListDataTypeDemo(ListDataTypeDemoReq) returns (ListDataTypeDemoReply) {
     option (google.api.http) = {
-      post: "/data_type_demo/v1/data_type_demo_list",
+      post: "/data_type_demo/v1/data_type_demo/list",
       body: "*"
     };
   }
 }
 //数据类型示例信息
 message DataTypeDemoInfo {
-	string ID = 1; // ID
+  string ID = 1; // ID
 	bool dataTypeBool = 2; // 数据类型 bool
 	int32 dataTypeInt2 = 3; // 数据类型 int2
 	int32 dataTypeInt8 = 4; // 数据类型 int8
@@ -60,13 +67,40 @@ message DataTypeDemoInfo {
 	string dataTypeBytea = 20; // 
 	string dataTypeNumeric = 21; // 
 	string dataTypeInterval = 22; // 
-	string batchAPI = 23; // 
-
+	string batchAPI = 23; //
 }
 
 //请求-数据类型示例-创建一条数据
-message DataTypeDemoStoreReq {
-	string ID = 1; // ID
+message CreateDataTypeDemoReq {
+  bool dataTypeBool = 1; // 数据类型 bool
+	int32 dataTypeInt2 = 2; // 数据类型 int2
+	int32 dataTypeInt8 = 3; // 数据类型 int8
+	string dataTypeVarchar = 4; // 数据类型 varchar
+	string dataTypeText = 5; // 数据类型 text
+	string dataTypeJSON = 6; // 数据类型 json
+	google.protobuf.Timestamp dataTypeTimeNull = 7; // 数据类型 time null
+	google.protobuf.Timestamp dataTypeTime = 8; // 数据类型 time not null
+	string dataTypeJsonb = 9; // 数据类型 jsonb
+	google.protobuf.Timestamp dataTypeDate = 10; // 
+	float dataTypeFloat4 = 11; // 
+	double dataTypeFloat8 = 12; // 
+	string ulID = 13; // 验证下划线
+	string cacheKey = 14; // 特殊保留字段名称
+	google.protobuf.Timestamp dataTypeTimestamp = 15; // 
+	string dataTypeBytea = 16; // 
+	string dataTypeNumeric = 17; // 
+	string dataTypeInterval = 18; // 
+	string batchAPI = 19; //
+}
+
+//响应-数据类型示例-创建一条数据
+message CreateDataTypeDemoReply {
+  	string ID = 1; // ID
+}
+
+//请求-数据类型示例-更新一条数据
+message UpdateDataTypeDemoReq {
+  string ID = 1; // ID
 	bool dataTypeBool = 2; // 数据类型 bool
 	int32 dataTypeInt2 = 3; // 数据类型 int2
 	int32 dataTypeInt8 = 4; // 数据类型 int8
@@ -85,43 +119,37 @@ message DataTypeDemoStoreReq {
 	string dataTypeBytea = 20; // 
 	string dataTypeNumeric = 21; // 
 	string dataTypeInterval = 22; // 
-	string batchAPI = 23; // 
-
+	string batchAPI = 23; //
 }
 
-//响应-数据类型示例-创建一条数据
-message DataTypeDemoStoreReply {
-	string ID = 1; // ID
-
-}
+//响应-数据类型示例-更新一条数据
+message UpdateDataTypeDemoReply {}
 
 //请求-数据类型示例-删除多条数据
-message DataTypeDemoDelReq {
-repeated string IDS = 1; // ID集合
-
+message DeleteDataTypeDemoReq {
+  repeated string IDS = 1; // ID集合
 }
 
 //响应-数据类型示例-删除多条数据
-message DataTypeDemoDelReply {}
+message DeleteDataTypeDemoReply {}
 
 //请求-数据类型示例-单条数据查询
-message DataTypeDemoOneReq {
-	string ID = 1; // ID
-
+message GetDataTypeDemoReq {
+  string ID = 1; // ID
 }
 
 //响应-数据类型示例-单条数据查询
-message DataTypeDemoOneReply {
+message GetDataTypeDemoReply {
   DataTypeDemoInfo info = 1;
 }
 
 //请求-数据类型示例-列表数据查询
-message DataTypeDemoListReq {
+message ListDataTypeDemoReq {
   paginator.PaginatorReq paginator = 1; //分页
 }
 
 //响应-数据类型示例-列表数据查询
-message DataTypeDemoListReply {
+message ListDataTypeDemoReply {
   paginator.PaginatorReply paginator = 1; // 分页
   repeated DataTypeDemoInfo list = 2; // 列表数据
 }

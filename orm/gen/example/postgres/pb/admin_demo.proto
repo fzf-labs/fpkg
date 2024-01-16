@@ -11,35 +11,42 @@ import "validate/validate.proto";
 option go_package = "api/gorm_gen/v1;v1";
 
 service AdminDemo {
-  //系统-用户-创建一条数据
-  rpc AdminDemoStore(AdminDemoStoreReq) returns (AdminDemoStoreReply) {
+  //-创建一条数据
+  rpc CreateAdminDemo(CreateAdminDemoReq) returns (CreateAdminDemoReply) {
     option (google.api.http) = {
-      post: "/admin_demo/v1/admin_demo_store"
+      post: "/admin_demo/v1/admin_demo/create"
       body: "*"
     };
   }
-  //系统-用户-删除多条数据
-  rpc AdminDemoDel(AdminDemoDelReq) returns (AdminDemoDelReply) {
+  //-更新一条数据
+  rpc UpdateAdminDemo(UpdateAdminDemoReq) returns (UpdateAdminDemoReply) {
     option (google.api.http) = {
-      post: "/admin_demo/v1/admin_demo_del"
+      post: "/admin_demo/v1/admin_demo/update"
       body: "*"
     };
   }
-  //系统-用户-单条数据查询
-  rpc AdminDemoOne(AdminDemoOneReq) returns (AdminDemoOneReply) {
-    option (google.api.http) = {get: "/admin_demo/v1/admin_demo_info"};
-  }
-  //系统-用户-列表数据查询
-  rpc AdminDemoList(AdminDemoListReq) returns (AdminDemoListReply) {
+  //-删除多条数据
+  rpc DeleteAdminDemo(DeleteAdminDemoReq) returns (DeleteAdminDemoReply) {
     option (google.api.http) = {
-      post: "/admin_demo/v1/admin_demo_list",
+      post: "/admin_demo/v1/admin_demo/delete"
+      body: "*"
+    };
+  }
+  //-单条数据查询
+  rpc GetAdminDemo(GetAdminDemoReq) returns (GetAdminDemoReply) {
+    option (google.api.http) = {get: "/admin_demo/v1/admin_demo/get"};
+  }
+  //-列表数据查询
+  rpc ListAdminDemo(ListAdminDemoReq) returns (ListAdminDemoReply) {
+    option (google.api.http) = {
+      post: "/admin_demo/v1/admin_demo/list",
       body: "*"
     };
   }
 }
-//系统-用户信息
+//信息
 message AdminDemoInfo {
-	string ID = 1; // 编号
+  string ID = 1; // 编号
 	string username = 2; // 用户名
 	string password = 3; // 密码
 	string nickname = 4; // 昵称
@@ -55,12 +62,33 @@ message AdminDemoInfo {
 	string motto = 14; // 个性签名
 	google.protobuf.Timestamp createdAt = 15; // 创建时间
 	google.protobuf.Timestamp updatedAt = 16; // 更新时间
-
 }
 
-//请求-系统-用户-创建一条数据
-message AdminDemoStoreReq {
-	string ID = 1; // 编号
+//请求--创建一条数据
+message CreateAdminDemoReq {
+  string username = 1; // 用户名
+	string password = 2; // 密码
+	string nickname = 3; // 昵称
+	string avatar = 4; // 头像
+	int32 gender = 5; // 0=保密 1=女 2=男
+	string email = 6; // 邮件
+	string mobile = 7; // 手机号
+	string jobID = 8; // 岗位
+	string deptID = 9; // 部门
+	string roleIds = 10; // 角色集
+	string salt = 11; // 盐值
+	int32 status = 12; // 0=禁用 1=开启
+	string motto = 13; // 个性签名
+}
+
+//响应--创建一条数据
+message CreateAdminDemoReply {
+  	string ID = 1; // 编号
+}
+
+//请求--更新一条数据
+message UpdateAdminDemoReq {
+  string ID = 1; // 编号
 	string username = 2; // 用户名
 	string password = 3; // 密码
 	string nickname = 4; // 昵称
@@ -74,42 +102,36 @@ message AdminDemoStoreReq {
 	string salt = 12; // 盐值
 	int32 status = 13; // 0=禁用 1=开启
 	string motto = 14; // 个性签名
-
 }
 
-//响应-系统-用户-创建一条数据
-message AdminDemoStoreReply {
-	string ID = 1; // 编号
+//响应--更新一条数据
+message UpdateAdminDemoReply {}
 
+//请求--删除多条数据
+message DeleteAdminDemoReq {
+  repeated string IDS = 1; // 编号集合
 }
 
-//请求-系统-用户-删除多条数据
-message AdminDemoDelReq {
-repeated string IDS = 1; // 编号集合
+//响应--删除多条数据
+message DeleteAdminDemoReply {}
 
+//请求--单条数据查询
+message GetAdminDemoReq {
+  string ID = 1; // 编号
 }
 
-//响应-系统-用户-删除多条数据
-message AdminDemoDelReply {}
-
-//请求-系统-用户-单条数据查询
-message AdminDemoOneReq {
-	string ID = 1; // 编号
-
-}
-
-//响应-系统-用户-单条数据查询
-message AdminDemoOneReply {
+//响应--单条数据查询
+message GetAdminDemoReply {
   AdminDemoInfo info = 1;
 }
 
-//请求-系统-用户-列表数据查询
-message AdminDemoListReq {
+//请求--列表数据查询
+message ListAdminDemoReq {
   paginator.PaginatorReq paginator = 1; //分页
 }
 
-//响应-系统-用户-列表数据查询
-message AdminDemoListReply {
+//响应--列表数据查询
+message ListAdminDemoReply {
   paginator.PaginatorReply paginator = 1; // 分页
   repeated AdminDemoInfo list = 2; // 列表数据
 }

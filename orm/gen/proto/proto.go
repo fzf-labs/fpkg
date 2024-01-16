@@ -123,29 +123,15 @@ func (p *Proto) GenService() string {
 }
 
 func (p *Proto) GenMessage() string {
+	var info string
+	var createReq string
+	var createReply string
+	var updateReq string
+	var deleteReq string
+	var getReq string
 	columnTypes, err := p.gorm.Migrator().ColumnTypes(p.tableName)
 	if err != nil {
 		return ""
-	}
-	var info string
-	var storeReq string
-	var storeReply string
-	var delReq string
-	var oneReq string
-	columnTypeInfo := make(map[string]gorm.ColumnType)
-	for k, v := range columnTypes {
-		columnTypeInfo[v.Name()] = v
-		pbType := columnTypeToPbType(v.DatabaseTypeName())
-		pbName := LowerFieldName(p.columnNameToName[v.Name()])
-		comment, _ := v.Comment()
-		if util.StrSliFind([]string{"deletedAt", "deleted_at", "deletedTime", "deleted_time"}, v.Name()) {
-			continue
-		}
-		info += fmt.Sprintf("	%s %s = %d; // %s\n", pbType, pbName, k+1, comment)
-		if util.StrSliFind([]string{"createdAt", "created_at", "createdTime", "created_time", "updatedAt", "updated_at", "updatedTime", "updated_time"}, v.Name()) {
-			continue
-		}
-		storeReq += fmt.Sprintf("	%s %s = %d; // %s\n", pbType, pbName, k+1, comment)
 	}
 	indexes, err := p.gorm.Migrator().GetIndexes(p.tableName)
 	if err != nil {
@@ -159,23 +145,51 @@ func (p *Proto) GenMessage() string {
 			break
 		}
 	}
+	columnTypeInfo := make(map[string]gorm.ColumnType)
+	num := 0
+	createNum := 0
+	for _, v := range columnTypes {
+		num++
+		columnTypeInfo[v.Name()] = v
+		pbType := columnTypeToPbType(v.DatabaseTypeName())
+		pbName := LowerFieldName(p.columnNameToName[v.Name()])
+		comment, _ := v.Comment()
+		if util.StrSliFind([]string{"deletedAt", "deleted_at", "deletedTime", "deleted_time"}, v.Name()) {
+			continue
+		}
+		info += fmt.Sprintf("	%s %s = %d; // %s\n", pbType, pbName, num, comment)
+		if util.StrSliFind([]string{"createdAt", "created_at", "createdTime", "created_time", "updatedAt", "updated_at", "updatedTime", "updated_time"}, v.Name()) {
+			continue
+		}
+		if v.Name() != primaryKeyColumn {
+			createNum++
+			createReq += fmt.Sprintf("	%s %s = %d; // %s\n", pbType, pbName, createNum, comment)
+		}
+		updateReq += fmt.Sprintf("	%s %s = %d; // %s\n", pbType, pbName, num, comment)
+	}
 	if primaryKeyColumn != "" {
 		primaryKeyColumnType, _ := columnTypeInfo[primaryKeyColumn].ColumnType()
 		primaryKeyComment, _ := columnTypeInfo[primaryKeyColumn].Comment()
 		pbType := columnTypeToPbType(primaryKeyColumnType)
 		pbName := LowerFieldName(p.columnNameToName[primaryKeyColumn])
-		storeReply = fmt.Sprintf("	%s %s = %d; // %s\n", pbType, pbName, 1, primaryKeyComment)
-		oneReq = fmt.Sprintf("	%s %s = %d; // %s\n", pbType, pbName, 1, primaryKeyComment)
-		delReq = fmt.Sprintf("repeated %s %s = %d; // %s\n", pbType, Plural(pbName), 1, primaryKeyComment+"集合")
+		createReply = fmt.Sprintf("	%s %s = %d; // %s", pbType, pbName, 1, primaryKeyComment)
+		getReq = fmt.Sprintf("	%s %s = %d; // %s\n", pbType, pbName, 1, primaryKeyComment)
+		deleteReq = fmt.Sprintf("repeated %s %s = %d; // %s\n", pbType, Plural(pbName), 1, primaryKeyComment+"集合")
 	}
+	info = strings.TrimSpace(strings.TrimRight(info, "\n"))
+	createReq = strings.TrimSpace(strings.TrimRight(createReq, "\n"))
+	updateReq = strings.TrimSpace(strings.TrimRight(updateReq, "\n"))
+	deleteReq = strings.TrimSpace(strings.TrimRight(deleteReq, "\n"))
+	getReq = strings.TrimSpace(strings.TrimRight(getReq, "\n"))
 	str, _ := template.NewTemplate("Message").Parse(Message).Execute(map[string]any{
 		"tableNameComment": p.tableNameComment,
 		"upperTableName":   p.upperTableName,
-		"Info":             info,
-		"StoreReq":         storeReq,
-		"StoreReply":       storeReply,
-		"DelReq":           delReq,
-		"OneReq":           oneReq,
+		"info":             info,
+		"createReq":        createReq,
+		"createReply":      createReply,
+		"updateReq":        updateReq,
+		"deleteReq":        deleteReq,
+		"getReq":           getReq,
 	})
 	return fmt.Sprintln(str.String())
 }

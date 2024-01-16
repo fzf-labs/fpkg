@@ -36,9 +36,11 @@ func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiCacheBy{{.upperFiel
 	}
 	for _, v := range cacheValue {
 		tmp := new({{.dbName}}_model.{{.upperTableName}})
-		err := json.Unmarshal([]byte(v), tmp)
-		if err != nil {
-			return nil, err
+		if v != ""{
+			err := json.Unmarshal([]byte(v), tmp)
+			if err != nil {
+				return nil, err
+			}
 		}
 		resp = append(resp, tmp)
 	}

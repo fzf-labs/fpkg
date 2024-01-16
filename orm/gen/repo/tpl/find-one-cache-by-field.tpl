@@ -17,9 +17,11 @@ func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindOneCacheBy{{.upperField}
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal([]byte(cacheValue), resp)
-	if err != nil {
-		return nil, err
+	if cacheValue != "" {
+		err = json.Unmarshal([]byte(cacheValue), resp)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return resp, nil
 }

@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package api.gorm_gen.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "paginator/paginator.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "validate/validate.proto";
+
+option go_package = "api/gorm_gen/v1;v1";
+
+service AdminRoleDemo {
+  //系统-角色-创建一条数据
+  rpc CreateAdminRoleDemo(CreateAdminRoleDemoReq) returns (CreateAdminRoleDemoReply) {
+    option (google.api.http) = {
+      post: "/admin_role_demo/v1/admin_role_demo/create"
+      body: "*"
+    };
+  }
+  //系统-角色-更新一条数据
+  rpc UpdateAdminRoleDemo(UpdateAdminRoleDemoReq) returns (UpdateAdminRoleDemoReply) {
+    option (google.api.http) = {
+      post: "/admin_role_demo/v1/admin_role_demo/update"
+      body: "*"
+    };
+  }
+  //系统-角色-删除多条数据
+  rpc DeleteAdminRoleDemo(DeleteAdminRoleDemoReq) returns (DeleteAdminRoleDemoReply) {
+    option (google.api.http) = {
+      post: "/admin_role_demo/v1/admin_role_demo/delete"
+      body: "*"
+    };
+  }
+  //系统-角色-单条数据查询
+  rpc GetAdminRoleDemo(GetAdminRoleDemoReq) returns (GetAdminRoleDemoReply) {
+    option (google.api.http) = {get: "/admin_role_demo/v1/admin_role_demo/get"};
+  }
+  //系统-角色-列表数据查询
+  rpc ListAdminRoleDemo(ListAdminRoleDemoReq) returns (ListAdminRoleDemoReply) {
+    option (google.api.http) = {
+      post: "/admin_role_demo/v1/admin_role_demo/list",
+      body: "*"
+    };
+  }
+}
+//系统-角色信息
+message AdminRoleDemoInfo {
+  string ID = 1; // 编号
+	string pid = 2; // 父级id
+	string name = 3; // 名称
+	string remark = 4; // 备注
+	int32 status = 5; // 0=禁用 1=开启
+	int32 sort = 6; // 排序值
+	google.protobuf.Timestamp createdAt = 7; // 创建时间
+	google.protobuf.Timestamp updatedAt = 8; // 更新时间
+}
+
+//请求-系统-角色-创建一条数据
+message CreateAdminRoleDemoReq {
+  string pid = 1; // 父级id
+	string name = 2; // 名称
+	string remark = 3; // 备注
+	int32 status = 4; // 0=禁用 1=开启
+	int32 sort = 5; // 排序值
+}
+
+//响应-系统-角色-创建一条数据
+message CreateAdminRoleDemoReply {
+  	string ID = 1; // 编号
+}
+
+//请求-系统-角色-更新一条数据
+message UpdateAdminRoleDemoReq {
+  string ID = 1; // 编号
+	string pid = 2; // 父级id
+	string name = 3; // 名称
+	string remark = 4; // 备注
+	int32 status = 5; // 0=禁用 1=开启
+	int32 sort = 6; // 排序值
+}
+
+//响应-系统-角色-更新一条数据
+message UpdateAdminRoleDemoReply {}
+
+//请求-系统-角色-删除多条数据
+message DeleteAdminRoleDemoReq {
+  repeated string IDS = 1; // 编号集合
+}
+
+//响应-系统-角色-删除多条数据
+message DeleteAdminRoleDemoReply {}
+
+//请求-系统-角色-单条数据查询
+message GetAdminRoleDemoReq {
+  string ID = 1; // 编号
+}
+
+//响应-系统-角色-单条数据查询
+message GetAdminRoleDemoReply {
+  AdminRoleDemoInfo info = 1;
+}
+
+//请求-系统-角色-列表数据查询
+message ListAdminRoleDemoReq {
+  paginator.PaginatorReq paginator = 1; //分页
+}
+
+//响应-系统-角色-列表数据查询
+message ListAdminRoleDemoReply {
+  paginator.PaginatorReply paginator = 1; // 分页
+  repeated AdminRoleDemoInfo list = 2; // 列表数据
+}
+

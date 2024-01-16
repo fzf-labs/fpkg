@@ -12,21 +12,21 @@ import (
 type EXP string
 
 const (
-	Eq      EXP = "Eq"      // 等于
-	Neq     EXP = "Neq"     // 不等于
-	Gt      EXP = "Gt"      // 大于
-	Gte     EXP = "Gte"     // 大于等于
-	Lt      EXP = "Lt"      // 小于
-	Lte     EXP = "Lte"     // 小于等于
-	In      EXP = "In"      // in
-	NotIn   EXP = "NotIn"   // not in
-	Like    EXP = "Like"    // like
-	NotLike EXP = "NotLike" // not like
+	EQ      EXP = "="
+	NEQ     EXP = "!="
+	GT      EXP = ">"
+	GTE     EXP = ">="
+	LT      EXP = "<"
+	LTE     EXP = "<="
+	IN      EXP = "IN"
+	NOTIN   EXP = "NOT IN"
+	LIKE    EXP = "LIKE"
+	NOTLIKE EXP = "NOT LIKE"
 )
 
 func (s EXP) Validate() bool {
 	switch s {
-	case Eq, Neq, Gt, Gte, Lt, Lte, In, Like:
+	case EQ, NEQ, GT, GTE, LT, LTE, IN, LIKE:
 		return true
 	default:
 		return false
@@ -36,13 +36,13 @@ func (s EXP) Validate() bool {
 type LOGIC string
 
 const (
-	And LOGIC = "And"
-	Or  LOGIC = "Or"
+	AND LOGIC = "AND"
+	OR  LOGIC = "OR"
 )
 
 func (s LOGIC) Validate() bool {
 	switch s {
-	case And, Or:
+	case AND, OR:
 		return true
 	default:
 		return false
@@ -52,13 +52,13 @@ func (s LOGIC) Validate() bool {
 type ORDER string
 
 const (
-	Asc  ORDER = "Asc"
-	Desc ORDER = "Desc"
+	ASC  ORDER = "ASC"
+	DESC ORDER = "DESC"
 )
 
 func (s ORDER) Validate() bool {
 	switch s {
-	case Asc, Desc:
+	case ASC, DESC:
 		return true
 	default:
 		return false
@@ -109,32 +109,32 @@ func (p *Req) ConvertToGormExpression(model any) (whereExpressions, orderExpress
 				return whereExpressions, orderExpressions, fmt.Errorf("field is not exist")
 			}
 			if v.Exp == "" {
-				v.Exp = Eq
+				v.Exp = EQ
 			}
 			if !v.Exp.Validate() {
 				return whereExpressions, orderExpressions, fmt.Errorf("unknown s exp type '%s'", v.Exp)
 			}
 			if v.Logic == "" {
-				v.Logic = And
+				v.Logic = AND
 			}
 			if !v.Logic.Validate() {
 				return whereExpressions, orderExpressions, fmt.Errorf("unknown s logic type '%s'", v.Logic)
 			}
 			var expression clause.Expression
 			switch v.Exp {
-			case Eq:
+			case EQ:
 				expression = clause.Eq{Column: jsonToColumn[v.Field], Value: v.Value}
-			case Neq:
+			case NEQ:
 				expression = clause.Neq{Column: jsonToColumn[v.Field], Value: v.Value}
-			case Gt:
+			case GT:
 				expression = clause.Gt{Column: jsonToColumn[v.Field], Value: v.Value}
-			case Gte:
+			case GTE:
 				expression = clause.Gte{Column: jsonToColumn[v.Field], Value: v.Value}
-			case Lt:
+			case LT:
 				expression = clause.Lt{Column: jsonToColumn[v.Field], Value: v.Value}
-			case Lte:
+			case LTE:
 				expression = clause.Lte{Column: jsonToColumn[v.Field], Value: v.Value}
-			case In:
+			case IN:
 				split := strings.Split(v.Value, ",")
 				if len(split) > 0 {
 					values := make([]any, 0)
@@ -143,7 +143,7 @@ func (p *Req) ConvertToGormExpression(model any) (whereExpressions, orderExpress
 					}
 					expression = clause.IN{Column: jsonToColumn[v.Field], Values: values}
 				}
-			case NotIn:
+			case NOTIN:
 				split := strings.Split(v.Value, ",")
 				if len(split) > 0 {
 					values := make([]any, 0)
@@ -152,14 +152,14 @@ func (p *Req) ConvertToGormExpression(model any) (whereExpressions, orderExpress
 					}
 					expression = clause.Not(clause.IN{Column: jsonToColumn[v.Field], Values: values})
 				}
-			case Like:
+			case LIKE:
 				expression = clause.Like{Column: jsonToColumn[v.Field], Value: v.Value}
-			case NotLike:
+			case NOTLIKE:
 				expression = clause.Not(clause.Like{Column: jsonToColumn[v.Field], Value: v.Value})
 			default:
 				return whereExpressions, orderExpressions, fmt.Errorf("unknown s exp type '%s'", v.Exp)
 			}
-			if v.Logic == And {
+			if v.Logic == AND {
 				whereExpressions = append(whereExpressions, clause.And(expression))
 			} else {
 				whereExpressions = append(whereExpressions, clause.Or(expression))
@@ -175,7 +175,7 @@ func (p *Req) ConvertToGormExpression(model any) (whereExpressions, orderExpress
 				return whereExpressions, orderExpressions, fmt.Errorf("field is not exist")
 			}
 			if v.Exp == "" {
-				v.Exp = Asc
+				v.Exp = ASC
 			}
 			if !v.Exp.Validate() {
 				return whereExpressions, orderExpressions, fmt.Errorf("order is err")
@@ -184,7 +184,7 @@ func (p *Req) ConvertToGormExpression(model any) (whereExpressions, orderExpress
 				Columns: []clause.OrderByColumn{
 					{
 						Column:  clause.Column{Name: jsonToColumn[v.Field]},
-						Desc:    v.Exp == Desc,
+						Desc:    v.Exp == DESC,
 						Reorder: false,
 					},
 				},

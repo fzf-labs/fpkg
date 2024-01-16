@@ -12,34 +12,41 @@ option go_package = "api/gorm_gen/v1;v1";
 
 service UserDemo {
   //用户-创建一条数据
-  rpc UserDemoStore(UserDemoStoreReq) returns (UserDemoStoreReply) {
+  rpc CreateUserDemo(CreateUserDemoReq) returns (CreateUserDemoReply) {
     option (google.api.http) = {
-      post: "/user_demo/v1/user_demo_store"
+      post: "/user_demo/v1/user_demo/create"
+      body: "*"
+    };
+  }
+  //用户-更新一条数据
+  rpc UpdateUserDemo(UpdateUserDemoReq) returns (UpdateUserDemoReply) {
+    option (google.api.http) = {
+      post: "/user_demo/v1/user_demo/update"
       body: "*"
     };
   }
   //用户-删除多条数据
-  rpc UserDemoDel(UserDemoDelReq) returns (UserDemoDelReply) {
+  rpc DeleteUserDemo(DeleteUserDemoReq) returns (DeleteUserDemoReply) {
     option (google.api.http) = {
-      post: "/user_demo/v1/user_demo_del"
+      post: "/user_demo/v1/user_demo/delete"
       body: "*"
     };
   }
   //用户-单条数据查询
-  rpc UserDemoOne(UserDemoOneReq) returns (UserDemoOneReply) {
-    option (google.api.http) = {get: "/user_demo/v1/user_demo_info"};
+  rpc GetUserDemo(GetUserDemoReq) returns (GetUserDemoReply) {
+    option (google.api.http) = {get: "/user_demo/v1/user_demo/get"};
   }
   //用户-列表数据查询
-  rpc UserDemoList(UserDemoListReq) returns (UserDemoListReply) {
+  rpc ListUserDemo(ListUserDemoReq) returns (ListUserDemoReply) {
     option (google.api.http) = {
-      post: "/user_demo/v1/user_demo_list",
+      post: "/user_demo/v1/user_demo/list",
       body: "*"
     };
   }
 }
 //用户信息
 message UserDemoInfo {
-	int32 ID = 1; // ID
+  int32 ID = 1; // ID
 	string UID = 2; // uid
 	string username = 3; // 用户账号
 	string password = 4; // 密码
@@ -57,12 +64,35 @@ message UserDemoInfo {
 	int32 tenantID = 16; // 租户编号
 	google.protobuf.Timestamp createdAt = 17; // 创建时间
 	google.protobuf.Timestamp updatedAt = 18; // 更新时间
-
 }
 
 //请求-用户-创建一条数据
-message UserDemoStoreReq {
-	int32 ID = 1; // ID
+message CreateUserDemoReq {
+  string UID = 1; // uid
+	string username = 2; // 用户账号
+	string password = 3; // 密码
+	string nickname = 4; // 用户昵称
+	string remark = 5; // 备注
+	int32 deptID = 6; // 部门ID
+	string postIds = 7; // 岗位编号数组
+	string email = 8; // 用户邮箱
+	string mobile = 9; // 手机号码
+	int32 sex = 10; // 用户性别
+	string avatar = 11; // 头像地址
+	int32 status = 12; // 帐号状态（0正常 -1停用）
+	string loginIP = 13; // 最后登录IP
+	google.protobuf.Timestamp loginDate = 14; // 最后登录时间
+	int32 tenantID = 15; // 租户编号
+}
+
+//响应-用户-创建一条数据
+message CreateUserDemoReply {
+  	string ID = 1; // ID
+}
+
+//请求-用户-更新一条数据
+message UpdateUserDemoReq {
+  int32 ID = 1; // ID
 	string UID = 2; // uid
 	string username = 3; // 用户账号
 	string password = 4; // 密码
@@ -78,42 +108,36 @@ message UserDemoStoreReq {
 	string loginIP = 14; // 最后登录IP
 	google.protobuf.Timestamp loginDate = 15; // 最后登录时间
 	int32 tenantID = 16; // 租户编号
-
 }
 
-//响应-用户-创建一条数据
-message UserDemoStoreReply {
-	string ID = 1; // ID
-
-}
+//响应-用户-更新一条数据
+message UpdateUserDemoReply {}
 
 //请求-用户-删除多条数据
-message UserDemoDelReq {
-repeated string IDS = 1; // ID集合
-
+message DeleteUserDemoReq {
+  repeated string IDS = 1; // ID集合
 }
 
 //响应-用户-删除多条数据
-message UserDemoDelReply {}
+message DeleteUserDemoReply {}
 
 //请求-用户-单条数据查询
-message UserDemoOneReq {
-	string ID = 1; // ID
-
+message GetUserDemoReq {
+  string ID = 1; // ID
 }
 
 //响应-用户-单条数据查询
-message UserDemoOneReply {
+message GetUserDemoReply {
   UserDemoInfo info = 1;
 }
 
 //请求-用户-列表数据查询
-message UserDemoListReq {
+message ListUserDemoReq {
   paginator.PaginatorReq paginator = 1; //分页
 }
 
 //响应-用户-列表数据查询
-message UserDemoListReply {
+message ListUserDemoReply {
   paginator.PaginatorReply paginator = 1; // 分页
   repeated UserDemoInfo list = 2; // 列表数据
 }

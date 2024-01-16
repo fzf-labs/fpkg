@@ -542,9 +542,11 @@ func (a *AdminDemoRepo) FindOneCacheByID(ctx context.Context, ID string) (*gorm_
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal([]byte(cacheValue), resp)
-	if err != nil {
-		return nil, err
+	if cacheValue != "" {
+		err = json.Unmarshal([]byte(cacheValue), resp)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return resp, nil
 }
@@ -597,9 +599,11 @@ func (a *AdminDemoRepo) FindMultiCacheByIDS(ctx context.Context, IDS []string) (
 	}
 	for _, v := range cacheValue {
 		tmp := new(gorm_gen_model.AdminDemo)
-		err := json.Unmarshal([]byte(v), tmp)
-		if err != nil {
-			return nil, err
+		if v != "" {
+			err := json.Unmarshal([]byte(v), tmp)
+			if err != nil {
+				return nil, err
+			}
 		}
 		resp = append(resp, tmp)
 	}
@@ -635,9 +639,11 @@ func (a *AdminDemoRepo) FindOneCacheByUsername(ctx context.Context, username str
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal([]byte(cacheValue), resp)
-	if err != nil {
-		return nil, err
+	if cacheValue != "" {
+		err = json.Unmarshal([]byte(cacheValue), resp)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return resp, nil
 }
@@ -690,9 +696,11 @@ func (a *AdminDemoRepo) FindMultiCacheByUsernames(ctx context.Context, usernames
 	}
 	for _, v := range cacheValue {
 		tmp := new(gorm_gen_model.AdminDemo)
-		err := json.Unmarshal([]byte(v), tmp)
-		if err != nil {
-			return nil, err
+		if v != "" {
+			err := json.Unmarshal([]byte(v), tmp)
+			if err != nil {
+				return nil, err
+			}
 		}
 		resp = append(resp, tmp)
 	}
