@@ -72,16 +72,16 @@ func Test_FindMultiByPaginator(t *testing.T) {
 	ctx := context.Background()
 	rueidisCache := rueidisdbcache.NewRueidisDBCache(client)
 	repo := gorm_gen_repo.NewAdminDemoRepo(gormPostgresClient, rueidisCache)
-	result, total, err := repo.FindMultiByPaginator(ctx, &paginator.Req{
+	result, total, err := repo.FindMultiByPaginator(ctx, &paginator.PaginatorReq{
 		Page:     0,
 		PageSize: 0,
-		Order: []*paginator.OrderColumn{
+		Order: []*paginator.OrderParam{
 			{
 				Field: "createdAt",
 				Exp:   "DESC",
 			},
 		},
-		Search: []*paginator.SearchColumn{
+		Search: []*paginator.SearchParam{
 			{
 				Field: "nickname",
 				Value: "",

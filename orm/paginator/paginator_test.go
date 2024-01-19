@@ -7,19 +7,19 @@ import (
 
 func TestReq_ConvertToPage(t *testing.T) {
 	type fields struct {
-		Page     int
-		PageSize int
-		Order    []*OrderColumn
-		Search   []*SearchColumn
+		Page     int32
+		PageSize int32
+		Order    []*OrderParam
+		Search   []*SearchParam
 	}
 	type args struct {
-		total int
+		total int32
 	}
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
-		want    *Reply
+		want    *PaginatorReply
 		wantErr bool
 	}{
 		{
@@ -33,15 +33,13 @@ func TestReq_ConvertToPage(t *testing.T) {
 			args: args{
 				total: 100,
 			},
-			want: &Reply{
+			want: &PaginatorReply{
 				Page:      0,
 				PageSize:  0,
 				Total:     100,
 				PrevPage:  0,
 				NextPage:  0,
 				TotalPage: 0,
-				Limit:     0,
-				Offset:    0,
 			},
 			wantErr: true,
 		},
@@ -56,22 +54,20 @@ func TestReq_ConvertToPage(t *testing.T) {
 			args: args{
 				total: 100,
 			},
-			want: &Reply{
+			want: &PaginatorReply{
 				Page:      0,
 				PageSize:  0,
 				Total:     100,
 				PrevPage:  0,
 				NextPage:  0,
 				TotalPage: 0,
-				Limit:     0,
-				Offset:    0,
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := &Req{
+			p := &PaginatorReq{
 				Page:     tt.fields.Page,
 				PageSize: tt.fields.PageSize,
 				Order:    tt.fields.Order,

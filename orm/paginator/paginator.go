@@ -9,22 +9,30 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-type EXP string
-
 const (
-	EQ      EXP = "="
-	NEQ     EXP = "!="
-	GT      EXP = ">"
-	GTE     EXP = ">="
-	LT      EXP = "<"
-	LTE     EXP = "<="
-	IN      EXP = "IN"
-	NOTIN   EXP = "NOT IN"
-	LIKE    EXP = "LIKE"
-	NOTLIKE EXP = "NOT LIKE"
+	EQ      string = "="
+	NEQ     string = "!="
+	GT      string = ">"
+	GTE     string = ">="
+	LT      string = "<"
+	LTE     string = "<="
+	IN      string = "IN"
+	NOTIN   string = "NOT IN"
+	LIKE    string = "LIKE"
+	NOTLIKE string = "NOT LIKE"
 )
 
-func (s EXP) Validate() bool {
+const (
+	AND string = "AND"
+	OR  string = "OR"
+)
+
+const (
+	ASC  string = "ASC"
+	DESC string = "DESC"
+)
+
+func ExpValidate(s string) bool {
 	switch s {
 	case EQ, NEQ, GT, GTE, LT, LTE, IN, LIKE:
 		return true
@@ -33,14 +41,7 @@ func (s EXP) Validate() bool {
 	}
 }
 
-type LOGIC string
-
-const (
-	AND LOGIC = "AND"
-	OR  LOGIC = "OR"
-)
-
-func (s LOGIC) Validate() bool {
+func LogicValidate(s string) bool {
 	switch s {
 	case AND, OR:
 		return true
@@ -49,14 +50,7 @@ func (s LOGIC) Validate() bool {
 	}
 }
 
-type ORDER string
-
-const (
-	ASC  ORDER = "ASC"
-	DESC ORDER = "DESC"
-)
-
-func (s ORDER) Validate() bool {
+func OrderValidate(s string) bool {
 	switch s {
 	case ASC, DESC:
 		return true
@@ -65,75 +59,45 @@ func (s ORDER) Validate() bool {
 	}
 }
 
-type Req struct {
-	Page     int             `json:"page"`
-	PageSize int             `json:"pageSize"`
-	Order    []*OrderColumn  `json:"order"`
-	Search   []*SearchColumn `json:"search"`
-}
-
-type Reply struct {
-	Page      int `json:"page"`
-	PageSize  int `json:"pageSize"`
-	Total     int `json:"total"`
-	PrevPage  int `json:"prevPage"`
-	NextPage  int `json:"nextPage"`
-	TotalPage int `json:"totalPage"`
-	Limit     int `json:"-"`
-	Offset    int `json:"-"`
-}
-
-type OrderColumn struct {
-	Field string `json:"field"` // 字段
-	Exp   ORDER  `json:"exp"`   // 表达式 ASC,DESC
-}
-
-type SearchColumn struct {
-	Field string `json:"field"` // 字段
-	Value string `json:"value"` // 值
-	Exp   EXP    `json:"exp"`   // 表达式 exp
-	Logic LOGIC  `json:"logic"` // 逻辑关系 logic
-}
-
 // ConvertToGormExpression 根据SearchColumn参数转换为符合gorm where clause.Expression
-func (p *Req) ConvertToGormExpression(model any) (whereExpressions, orderExpressions []clause.Expression, err error) {
+func (p *PaginatorReq) ConvertToGormExpression(model any) (whereExpressions, orderExpressions []clause.Expression, err error) {
 	whereExpressions = make([]clause.Expression, 0)
 	orderExpressions = make([]clause.Expression, 0)
-	jsonToColumn := p.jsonToColumn(model)
+	column := jsonToColumn(model)
 	if len(p.Search) > 0 {
 		for _, v := range p.Search {
 			if v.Field == "" {
 				return whereExpressions, orderExpressions, fmt.Errorf("field cannot be empty")
 			}
-			if _, ok := jsonToColumn[v.Field]; !ok {
+			if _, ok := column[v.Field]; !ok {
 				return whereExpressions, orderExpressions, fmt.Errorf("field is not exist")
 			}
 			if v.Exp == "" {
 				v.Exp = EQ
 			}
-			if !v.Exp.Validate() {
+			if !ExpValidate(v.Exp) {
 				return whereExpressions, orderExpressions, fmt.Errorf("unknown s exp type '%s'", v.Exp)
 			}
 			if v.Logic == "" {
 				v.Logic = AND
 			}
-			if !v.Logic.Validate() {
+			if !LogicValidate(v.Logic) {
 				return whereExpressions, orderExpressions, fmt.Errorf("unknown s logic type '%s'", v.Logic)
 			}
 			var expression clause.Expression
 			switch v.Exp {
 			case EQ:
-				expression = clause.Eq{Column: jsonToColumn[v.Field], Value: v.Value}
+				expression = clause.Eq{Column: column[v.Field], Value: v.Value}
 			case NEQ:
-				expression = clause.Neq{Column: jsonToColumn[v.Field], Value: v.Value}
+				expression = clause.Neq{Column: column[v.Field], Value: v.Value}
 			case GT:
-				expression = clause.Gt{Column: jsonToColumn[v.Field], Value: v.Value}
+				expression = clause.Gt{Column: column[v.Field], Value: v.Value}
 			case GTE:
-				expression = clause.Gte{Column: jsonToColumn[v.Field], Value: v.Value}
+				expression = clause.Gte{Column: column[v.Field], Value: v.Value}
 			case LT:
-				expression = clause.Lt{Column: jsonToColumn[v.Field], Value: v.Value}
+				expression = clause.Lt{Column: column[v.Field], Value: v.Value}
 			case LTE:
-				expression = clause.Lte{Column: jsonToColumn[v.Field], Value: v.Value}
+				expression = clause.Lte{Column: column[v.Field], Value: v.Value}
 			case IN:
 				split := strings.Split(v.Value, ",")
 				if len(split) > 0 {
@@ -141,7 +105,7 @@ func (p *Req) ConvertToGormExpression(model any) (whereExpressions, orderExpress
 					for _, vv := range split {
 						values = append(values, vv)
 					}
-					expression = clause.IN{Column: jsonToColumn[v.Field], Values: values}
+					expression = clause.IN{Column: column[v.Field], Values: values}
 				}
 			case NOTIN:
 				split := strings.Split(v.Value, ",")
@@ -150,12 +114,12 @@ func (p *Req) ConvertToGormExpression(model any) (whereExpressions, orderExpress
 					for _, vv := range split {
 						values = append(values, vv)
 					}
-					expression = clause.Not(clause.IN{Column: jsonToColumn[v.Field], Values: values})
+					expression = clause.Not(clause.IN{Column: column[v.Field], Values: values})
 				}
 			case LIKE:
-				expression = clause.Like{Column: jsonToColumn[v.Field], Value: v.Value}
+				expression = clause.Like{Column: column[v.Field], Value: v.Value}
 			case NOTLIKE:
-				expression = clause.Not(clause.Like{Column: jsonToColumn[v.Field], Value: v.Value})
+				expression = clause.Not(clause.Like{Column: column[v.Field], Value: v.Value})
 			default:
 				return whereExpressions, orderExpressions, fmt.Errorf("unknown s exp type '%s'", v.Exp)
 			}
@@ -171,19 +135,19 @@ func (p *Req) ConvertToGormExpression(model any) (whereExpressions, orderExpress
 			if v.Field == "" {
 				return whereExpressions, orderExpressions, fmt.Errorf("field cannot be empty")
 			}
-			if _, ok := jsonToColumn[v.Field]; !ok {
+			if _, ok := column[v.Field]; !ok {
 				return whereExpressions, orderExpressions, fmt.Errorf("field is not exist")
 			}
 			if v.Exp == "" {
 				v.Exp = ASC
 			}
-			if !v.Exp.Validate() {
+			if !OrderValidate(v.Exp) {
 				return whereExpressions, orderExpressions, fmt.Errorf("order is err")
 			}
 			orderExpressions = append(orderExpressions, clause.OrderBy{
 				Columns: []clause.OrderByColumn{
 					{
-						Column:  clause.Column{Name: jsonToColumn[v.Field]},
+						Column:  clause.Column{Name: column[v.Field]},
 						Desc:    v.Exp == DESC,
 						Reorder: false,
 					},
@@ -195,9 +159,14 @@ func (p *Req) ConvertToGormExpression(model any) (whereExpressions, orderExpress
 }
 
 // ConvertToPage 转换为page
-func (p *Req) ConvertToPage(total int) (*Reply, error) {
-	resp := &Reply{
-		Total: total,
+func (p *PaginatorReq) ConvertToPage(total int32) (*PaginatorReply, error) {
+	resp := &PaginatorReply{
+		Page:      0,
+		PageSize:  0,
+		Total:     total,
+		PrevPage:  0,
+		NextPage:  0,
+		TotalPage: 0,
 	}
 	if p.Page < 0 {
 		return resp, fmt.Errorf("page cannot be less than 0")
@@ -213,7 +182,7 @@ func (p *Req) ConvertToPage(total int) (*Reply, error) {
 	}
 	resp.Page = p.Page
 	resp.PageSize = p.PageSize
-	resp.TotalPage = int(math.Ceil(float64(total) / float64(p.PageSize)))
+	resp.TotalPage = int32(math.Ceil(float64(total) / float64(p.PageSize)))
 	resp.NextPage = p.Page + 1
 	if resp.NextPage > resp.TotalPage {
 		resp.NextPage = resp.TotalPage
@@ -222,13 +191,11 @@ func (p *Req) ConvertToPage(total int) (*Reply, error) {
 	if resp.PrevPage <= 0 {
 		resp.PrevPage = 1
 	}
-	resp.Limit = p.PageSize
-	resp.Offset = (p.Page - 1) * p.PageSize
 	return resp, nil
 }
 
 // jsonToColumn 将model的tag中json和gorm的tag的Column转换为map[string]string
-func (p *Req) jsonToColumn(model any) map[string]string {
+func jsonToColumn(model any) map[string]string {
 	m := make(map[string]string)
 	t := reflect.TypeOf(model)
 	for i := 0; i < t.NumField(); i++ {
@@ -236,8 +203,8 @@ func (p *Req) jsonToColumn(model any) map[string]string {
 		json := field.Tag.Get("json")
 		gorm := field.Tag.Get("gorm")
 		if json != "" && gorm != "" {
-			gorms := strings.Split(gorm, ";")
-			for _, v := range gorms {
+			gormTags := strings.Split(gorm, ";")
+			for _, v := range gormTags {
 				if strings.Contains(v, "column") {
 					column := strings.Split(v, ":")
 					if len(column) == 2 {

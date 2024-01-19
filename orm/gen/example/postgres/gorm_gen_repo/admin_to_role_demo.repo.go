@@ -35,7 +35,7 @@ type (
 		// CreateBatch 批量创建数据
 		CreateBatch(ctx context.Context, data []*gorm_gen_model.AdminToRoleDemo, batchSize int) error
 		// FindMultiByPaginator 查询分页数据(通用)
-		FindMultiByPaginator(ctx context.Context, paginatorReq *paginator.Req) ([]*gorm_gen_model.AdminToRoleDemo, *paginator.Reply, error)
+		FindMultiByPaginator(ctx context.Context, paginatorReq *paginator.PaginatorReq) ([]*gorm_gen_model.AdminToRoleDemo, *paginator.PaginatorReply, error)
 	}
 	AdminToRoleDemoRepo struct {
 		db    *gorm.DB
@@ -141,7 +141,7 @@ func (a *AdminToRoleDemoRepo) CreateBatch(ctx context.Context, data []*gorm_gen_
 }
 
 // FindMultiByPaginator 查询分页数据(通用)
-func (a *AdminToRoleDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorReq *paginator.Req) ([]*gorm_gen_model.AdminToRoleDemo, *paginator.Reply, error) {
+func (a *AdminToRoleDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorReq *paginator.PaginatorReq) ([]*gorm_gen_model.AdminToRoleDemo, *paginator.PaginatorReply, error) {
 	result := make([]*gorm_gen_model.AdminToRoleDemo, 0)
 	var total int64
 	whereExpressions, orderExpressions, err := paginatorReq.ConvertToGormExpression(gorm_gen_model.AdminToRoleDemo{})
@@ -155,16 +155,14 @@ func (a *AdminToRoleDemoRepo) FindMultiByPaginator(ctx context.Context, paginato
 	if total == 0 {
 		return result, nil, nil
 	}
-	paginatorReply, err := paginatorReq.ConvertToPage(int(total))
+	paginatorReply, err := paginatorReq.ConvertToPage(int32(total))
 	if err != nil {
 		return result, nil, err
 	}
 	query := a.db.WithContext(ctx).Model(&gorm_gen_model.AdminToRoleDemo{}).Clauses(whereExpressions...).Clauses(orderExpressions...)
-	if paginatorReply.Offset != 0 {
-		query = query.Offset(paginatorReply.Offset)
-	}
-	if paginatorReply.Limit != 0 {
-		query = query.Limit(paginatorReply.Limit)
+	if paginatorReply.Page != 0 && paginatorReply.PageSize != 0 {
+		query = query.Offset(int((paginatorReply.Page - 1) * paginatorReply.PageSize))
+		query = query.Limit(int(paginatorReply.PageSize))
 	}
 	err = query.Find(&result).Error
 	if err != nil {

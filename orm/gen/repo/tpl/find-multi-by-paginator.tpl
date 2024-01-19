@@ -1,5 +1,5 @@
 // FindMultiByPaginator 查询分页数据(通用)
-func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiByPaginator(ctx context.Context, paginatorReq *paginator.Req) ([]*{{.dbName}}_model.{{.upperTableName}}, *paginator.Reply, error) {
+func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiByPaginator(ctx context.Context, paginatorReq *paginator.PaginatorReq) ([]*{{.dbName}}_model.{{.upperTableName}}, *paginator.PaginatorReply, error) {
 	result := make([]*{{.dbName}}_model.{{.upperTableName}}, 0)
 	var total int64
 	whereExpressions, orderExpressions, err := paginatorReq.ConvertToGormExpression({{.dbName}}_model.{{.upperTableName}}{})
@@ -13,16 +13,14 @@ func ({{.firstTableChar}} *{{.upperTableName}}Repo) FindMultiByPaginator(ctx con
 	if total == 0 {
 		return result, nil, nil
 	}
-	paginatorReply,err := paginatorReq.ConvertToPage(int(total))
+	paginatorReply,err := paginatorReq.ConvertToPage(int32(total))
 	if err != nil {
 		return result, nil, err
 	}
 	query := {{.firstTableChar}}.db.WithContext(ctx).Model(&{{.dbName}}_model.{{.upperTableName}}{}).Clauses(whereExpressions...).Clauses(orderExpressions...)
-	if paginatorReply.Offset != 0 {
-		query = query.Offset(paginatorReply.Offset)
-	}
-	if paginatorReply.Limit != 0 {
-		query = query.Limit(paginatorReply.Limit)
+	if paginatorReply.Page != 0 && paginatorReply.PageSize != 0 {
+		query = query.Offset(int((paginatorReply.Page - 1) * paginatorReply.PageSize))
+		query = query.Limit(int(paginatorReply.PageSize))
 	}
 	err = query.Find(&result).Error
 	if err != nil {

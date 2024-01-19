@@ -56,7 +56,7 @@ type (
 		// FindMultiByIDS 根据IDS查询多条数据
 		FindMultiByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.AdminRoleDemo, error)
 		// FindMultiByPaginator 查询分页数据(通用)
-		FindMultiByPaginator(ctx context.Context, paginatorReq *paginator.Req) ([]*gorm_gen_model.AdminRoleDemo, *paginator.Reply, error)
+		FindMultiByPaginator(ctx context.Context, paginatorReq *paginator.PaginatorReq) ([]*gorm_gen_model.AdminRoleDemo, *paginator.PaginatorReply, error)
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
 		DeleteOneCacheByID(ctx context.Context, ID string) error
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
@@ -471,7 +471,7 @@ func (a *AdminRoleDemoRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([
 }
 
 // FindMultiByPaginator 查询分页数据(通用)
-func (a *AdminRoleDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorReq *paginator.Req) ([]*gorm_gen_model.AdminRoleDemo, *paginator.Reply, error) {
+func (a *AdminRoleDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorReq *paginator.PaginatorReq) ([]*gorm_gen_model.AdminRoleDemo, *paginator.PaginatorReply, error) {
 	result := make([]*gorm_gen_model.AdminRoleDemo, 0)
 	var total int64
 	whereExpressions, orderExpressions, err := paginatorReq.ConvertToGormExpression(gorm_gen_model.AdminRoleDemo{})
@@ -485,16 +485,14 @@ func (a *AdminRoleDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorR
 	if total == 0 {
 		return result, nil, nil
 	}
-	paginatorReply, err := paginatorReq.ConvertToPage(int(total))
+	paginatorReply, err := paginatorReq.ConvertToPage(int32(total))
 	if err != nil {
 		return result, nil, err
 	}
 	query := a.db.WithContext(ctx).Model(&gorm_gen_model.AdminRoleDemo{}).Clauses(whereExpressions...).Clauses(orderExpressions...)
-	if paginatorReply.Offset != 0 {
-		query = query.Offset(paginatorReply.Offset)
-	}
-	if paginatorReply.Limit != 0 {
-		query = query.Limit(paginatorReply.Limit)
+	if paginatorReply.Page != 0 && paginatorReply.PageSize != 0 {
+		query = query.Offset(int((paginatorReply.Page - 1) * paginatorReply.PageSize))
+		query = query.Limit(int(paginatorReply.PageSize))
 	}
 	err = query.Find(&result).Error
 	if err != nil {
