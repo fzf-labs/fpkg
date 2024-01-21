@@ -36,10 +36,10 @@ git-clean:
 	@git push -f origin ${GitBranch}
 	#清除结束
 
-paginator:
+custom:
 	protoc --proto_path=. \
  	       --go_out=paths=source_relative:. \
- 	       ./orm/paginator/paginator.proto
+ 	       ./orm/custom/custom.proto
 
 # show help
 help:

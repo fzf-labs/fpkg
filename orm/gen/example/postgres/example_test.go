@@ -7,10 +7,10 @@ import (
 
 	"github.com/fzf-labs/fpkg/cache/rueidiscache"
 	"github.com/fzf-labs/fpkg/orm"
+	"github.com/fzf-labs/fpkg/orm/custom"
 	"github.com/fzf-labs/fpkg/orm/gen/cache/rueidisdbcache"
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_dao"
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_repo"
-	"github.com/fzf-labs/fpkg/orm/paginator"
 	"github.com/fzf-labs/fpkg/util/jsonutil"
 	"github.com/redis/rueidis"
 	"github.com/stretchr/testify/assert"
@@ -72,16 +72,16 @@ func Test_FindMultiByPaginator(t *testing.T) {
 	ctx := context.Background()
 	rueidisCache := rueidisdbcache.NewRueidisDBCache(client)
 	repo := gorm_gen_repo.NewAdminDemoRepo(gormPostgresClient, rueidisCache)
-	result, total, err := repo.FindMultiByPaginator(ctx, &paginator.PaginatorReq{
+	result, total, err := repo.FindMultiByCustom(ctx, &custom.PaginatorReq{
 		Page:     0,
 		PageSize: 0,
-		Order: []*paginator.OrderParam{
+		Order: []*custom.OrderParam{
 			{
 				Field: "createdAt",
 				Exp:   "DESC",
 			},
 		},
-		Search: []*paginator.SearchParam{
+		Search: []*custom.SearchParam{
 			{
 				Field: "nickname",
 				Value: "",

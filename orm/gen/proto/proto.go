@@ -32,15 +32,15 @@ func GenerationPB(db *gorm.DB, outPutPath, packageStr, goPackageStr, table strin
 		upperTableName:      "",
 		columnNameToName:    columnNameToName,
 	}
-	p.tableNameComment = p.GetTableComment(table)
-	p.lowerTableName = p.LowerName(table)
-	p.upperTableName = p.UpperName(table)
-	f += p.GenSyntax()
-	f += p.GenPackage()
-	f += p.GenImport()
-	f += p.GenOption()
-	f += p.GenService()
-	f += p.GenMessage()
+	p.tableNameComment = p.getTableComment(table)
+	p.lowerTableName = p.lowerName(table)
+	p.upperTableName = p.upperName(table)
+	f += p.genSyntax()
+	f += p.genPackage()
+	f += p.genImport()
+	f += p.genOption()
+	f += p.genService()
+	f += p.genMessage()
 	outputFile := p.outPutPath + "/" + table + ".proto"
 	return p.output(outputFile, f)
 }
@@ -60,7 +60,7 @@ type Proto struct {
 }
 
 func (p *Proto) output(filePath, content string) error {
-	if file.FileExists(filePath) {
+	if file.Exists(filePath) {
 		return errors.New(fmt.Sprintf("%s exist", filePath))
 	}
 	fileDir := filepath.Dir(filePath)
@@ -79,7 +79,7 @@ func (p *Proto) output(filePath, content string) error {
 	return err
 }
 
-func (p *Proto) GetTableComment(table string) string {
+func (p *Proto) getTableComment(table string) string {
 	type result struct {
 		Comment string `json:"comment"`
 	}
@@ -89,31 +89,31 @@ func (p *Proto) GetTableComment(table string) string {
 	return res.Comment
 }
 
-func (p *Proto) GenSyntax() string {
+func (p *Proto) genSyntax() string {
 	str, _ := template.NewTemplate("Syntax").Parse(Syntax).Execute(map[string]any{})
 	return fmt.Sprintln(str.String())
 }
 
-func (p *Proto) GenPackage() string {
+func (p *Proto) genPackage() string {
 	str, _ := template.NewTemplate("Package").Parse(Package).Execute(map[string]any{
 		"packageStr": p.packageStr,
 	})
 	return fmt.Sprintln(str.String())
 }
 
-func (p *Proto) GenImport() string {
+func (p *Proto) genImport() string {
 	str, _ := template.NewTemplate("Import").Parse(Import).Execute(map[string]any{})
 	return fmt.Sprintln(str.String())
 }
 
-func (p *Proto) GenOption() string {
+func (p *Proto) genOption() string {
 	str, _ := template.NewTemplate("Option").Parse(Option).Execute(map[string]any{
 		"goPackageStr": p.goPackageStr,
 	})
 	return fmt.Sprintln(str.String())
 }
 
-func (p *Proto) GenService() string {
+func (p *Proto) genService() string {
 	str, _ := template.NewTemplate("Service").Parse(Service).Execute(map[string]any{
 		"upperTableName":      p.upperTableName,
 		"tableNameComment":    p.tableNameComment,
@@ -122,7 +122,7 @@ func (p *Proto) GenService() string {
 	return fmt.Sprintln(str.String())
 }
 
-func (p *Proto) GenMessage() string {
+func (p *Proto) genMessage() string {
 	var info string
 	var createReq string
 	var createReply string
@@ -152,7 +152,7 @@ func (p *Proto) GenMessage() string {
 		num++
 		columnTypeInfo[v.Name()] = v
 		pbType := columnTypeToPbType(v.DatabaseTypeName())
-		pbName := LowerFieldName(p.columnNameToName[v.Name()])
+		pbName := lowerFieldName(p.columnNameToName[v.Name()])
 		comment, _ := v.Comment()
 		if util.StrSliFind([]string{"deletedAt", "deleted_at", "deletedTime", "deleted_time"}, v.Name()) {
 			continue
@@ -171,10 +171,10 @@ func (p *Proto) GenMessage() string {
 		primaryKeyColumnType, _ := columnTypeInfo[primaryKeyColumn].ColumnType()
 		primaryKeyComment, _ := columnTypeInfo[primaryKeyColumn].Comment()
 		pbType := columnTypeToPbType(primaryKeyColumnType)
-		pbName := LowerFieldName(p.columnNameToName[primaryKeyColumn])
+		pbName := lowerFieldName(p.columnNameToName[primaryKeyColumn])
 		createReply = fmt.Sprintf("	%s %s = %d; // %s", pbType, pbName, 1, primaryKeyComment)
 		getReq = fmt.Sprintf("	%s %s = %d; // %s\n", pbType, pbName, 1, primaryKeyComment)
-		deleteReq = fmt.Sprintf("repeated %s %s = %d; // %s\n", pbType, Plural(pbName), 1, primaryKeyComment+"集合")
+		deleteReq = fmt.Sprintf("repeated %s %s = %d; // %s\n", pbType, plural(pbName), 1, primaryKeyComment+"集合")
 	}
 	info = strings.TrimSpace(strings.TrimRight(info, "\n"))
 	createReq = strings.TrimSpace(strings.TrimRight(createReq, "\n"))
@@ -194,14 +194,14 @@ func (p *Proto) GenMessage() string {
 	return fmt.Sprintln(str.String())
 }
 
-// UpperName 大写
-func (p *Proto) UpperName(s string) string {
+// upperName 大写
+func (p *Proto) upperName(s string) string {
 	return p.gorm.NamingStrategy.SchemaName(s)
 }
 
-// LowerName 小写
-func (p *Proto) LowerName(s string) string {
-	str := p.UpperName(s)
+// lowerName 小写
+func (p *Proto) lowerName(s string) string {
+	str := p.upperName(s)
 	if str == "" {
 		return str
 	}
@@ -220,8 +220,8 @@ func (p *Proto) LowerName(s string) string {
 	return str
 }
 
-// LowerFieldName 字段名称小写
-func LowerFieldName(str string) string {
+// lowerFieldName 字段名称小写
+func lowerFieldName(str string) string {
 	words := []string{"API", "ASCII", "CPU", "CSS", "DNS", "EOF", "GUID", "HTML", "HTTP", "HTTPS", "ID", "IP", "JSON", "LHS", "QPS", "RAM", "RHS", "RPC", "SLA", "SMTP", "SSH", "TLS", "ttl", "UID", "UI", "UUID", "URI", "URL", "UTF8", "VM", "XML", "XSRF", "XSS"}
 	// 如果第一个单词命中  则不处理
 	for _, v := range words {
@@ -261,11 +261,11 @@ func columnTypeToPbType(columnType string) string {
 	return fieldType
 }
 
-// Plural 复数形式
-func Plural(s string) string {
+// plural 复数形式
+func plural(s string) string {
 	str := inflection.Plural(s)
 	if str == s {
-		str += "Plural"
+		str += "plural"
 	}
 	return str
 }

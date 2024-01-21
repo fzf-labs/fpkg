@@ -15,14 +15,14 @@ type DefaultTemplate struct {
 	goFmt bool
 }
 
-// NewTemplate returns an instance of DefaultTemplate
+// NewTemplate returns an instance of defaultTemplate
 func NewTemplate(name string) *DefaultTemplate {
 	return &DefaultTemplate{
 		name: name,
 	}
 }
 
-// Parse accepts a source template and returns DefaultTemplate
+// Parse accepts a source template and returns defaultTemplate
 func (t *DefaultTemplate) Parse(text string) *DefaultTemplate {
 	t.text = text
 	return t

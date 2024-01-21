@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package paginator;
+package custom;
 
-option go_package = "github.com/fzf-labs/fpkg/orm/paginator;paginator";
+option go_package = "github.com/fzf-labs/fpkg/orm/custom;custom";
 
 // SearchParam
 message SearchParam {

@@ -8,10 +8,10 @@ import (
 	"context"
 	"errors"
 
+	"github.com/fzf-labs/fpkg/orm/custom"
 	"github.com/fzf-labs/fpkg/orm/gen/cache"
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_dao"
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_model"
-	"github.com/fzf-labs/fpkg/orm/paginator"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -34,8 +34,8 @@ type (
 		UpsertOneByFieldsTx(ctx context.Context, tx *gorm_gen_dao.Query, data *gorm_gen_model.AdminToRoleDemo, fields []string) error
 		// CreateBatch 批量创建数据
 		CreateBatch(ctx context.Context, data []*gorm_gen_model.AdminToRoleDemo, batchSize int) error
-		// FindMultiByPaginator 查询分页数据(通用)
-		FindMultiByPaginator(ctx context.Context, paginatorReq *paginator.PaginatorReq) ([]*gorm_gen_model.AdminToRoleDemo, *paginator.PaginatorReply, error)
+		// FindMultiByCustom 自定义查询数据(通用)
+		FindMultiByCustom(ctx context.Context, customReq *custom.PaginatorReq) ([]*gorm_gen_model.AdminToRoleDemo, *custom.PaginatorReply, error)
 	}
 	AdminToRoleDemoRepo struct {
 		db    *gorm.DB
@@ -140,11 +140,11 @@ func (a *AdminToRoleDemoRepo) CreateBatch(ctx context.Context, data []*gorm_gen_
 	return nil
 }
 
-// FindMultiByPaginator 查询分页数据(通用)
-func (a *AdminToRoleDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorReq *paginator.PaginatorReq) ([]*gorm_gen_model.AdminToRoleDemo, *paginator.PaginatorReply, error) {
+// FindMultiByCustom 自定义查询数据(通用)
+func (a *AdminToRoleDemoRepo) FindMultiByCustom(ctx context.Context, customReq *custom.PaginatorReq) ([]*gorm_gen_model.AdminToRoleDemo, *custom.PaginatorReply, error) {
 	result := make([]*gorm_gen_model.AdminToRoleDemo, 0)
 	var total int64
-	whereExpressions, orderExpressions, err := paginatorReq.ConvertToGormExpression(gorm_gen_model.AdminToRoleDemo{})
+	whereExpressions, orderExpressions, err := customReq.ConvertToGormExpression(gorm_gen_model.AdminToRoleDemo{})
 	if err != nil {
 		return result, nil, err
 	}
@@ -155,18 +155,18 @@ func (a *AdminToRoleDemoRepo) FindMultiByPaginator(ctx context.Context, paginato
 	if total == 0 {
 		return result, nil, nil
 	}
-	paginatorReply, err := paginatorReq.ConvertToPage(int32(total))
+	customReply, err := customReq.ConvertToPage(int32(total))
 	if err != nil {
 		return result, nil, err
 	}
 	query := a.db.WithContext(ctx).Model(&gorm_gen_model.AdminToRoleDemo{}).Clauses(whereExpressions...).Clauses(orderExpressions...)
-	if paginatorReply.Page != 0 && paginatorReply.PageSize != 0 {
-		query = query.Offset(int((paginatorReply.Page - 1) * paginatorReply.PageSize))
-		query = query.Limit(int(paginatorReply.PageSize))
+	if customReply.Page != 0 && customReply.PageSize != 0 {
+		query = query.Offset(int((customReply.Page - 1) * customReply.PageSize))
+		query = query.Limit(int(customReply.PageSize))
 	}
 	err = query.Find(&result).Error
 	if err != nil {
 		return result, nil, err
 	}
-	return result, paginatorReply, err
+	return result, customReply, err
 }

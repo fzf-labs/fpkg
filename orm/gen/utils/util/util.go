@@ -1,69 +1,25 @@
 package util
 
 import (
-	"os"
-	"strings"
-
 	"golang.org/x/tools/go/packages"
 )
 
-// SafeString converts the input string into a safe naming style in golang
-func SafeString(in string) string {
-	if in == "" {
-		return in
-	}
-
-	data := strings.Map(func(r rune) rune {
-		if isSafeRune(r) {
-			return r
-		}
-		return '_'
-	}, in)
-
-	headRune := rune(data[0])
-	if isNumber(headRune) {
-		return "_" + data
-	}
-	return data
-}
-func isSafeRune(r rune) bool {
-	return isLetter(r) || isNumber(r) || r == '_'
-}
-func isLetter(r rune) bool {
-	return 'A' <= r && r <= 'z'
-}
-
-func isNumber(r rune) bool {
-	return '0' <= r && r <= '9'
-}
-
-// MkdirIfNotExist makes directories if the input path is not exists
-func MkdirIfNotExist(dir string) error {
-	if dir == "" {
-		return nil
-	}
-
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		return os.MkdirAll(dir, os.ModePerm)
-	}
-
-	return nil
-}
-
-func FillModelPkgPath(filePath string) string {
+// FillModelPkgPath 返回模型文件的包路径
+func FillModelPkgPath(dir string) string {
 	pkg, err := packages.Load(&packages.Config{
 		Mode: packages.NeedName,
-		Dir:  filePath,
+		Dir:  dir,
 	})
 	if err != nil {
 		return ""
 	}
-	if len(pkg) == 0 {
-		return ""
+	if len(pkg) > 0 {
+		return pkg[0].PkgPath
 	}
-	return pkg[0].PkgPath
+	return ""
 }
 
+// StrSliFind 判断字符串切片中是否存在某个元素
 func StrSliFind(collection []string, element string) bool {
 	for _, s := range collection {
 		if s == element {
@@ -73,6 +29,7 @@ func StrSliFind(collection []string, element string) bool {
 	return false
 }
 
+// SliRemove 删除字符串切片中的某个元素
 func SliRemove(collection, element []string) []string {
 	for _, s := range element {
 		for i, v := range collection {

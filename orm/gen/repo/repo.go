@@ -50,13 +50,13 @@ func GenerationTable(db *gorm.DB, dbname, daoPath, modelPath, repoPath, table st
 		index:                 make([]DBIndex, 0),
 	}
 	// 查询当前db的索引
-	index, err := g.ProcessIndex()
+	index, err := g.processIndex()
 	if err != nil {
 		return err
 	}
 	g.index = index
-	g.lowerTableName = g.LowerName(table)
-	g.upperTableName = g.UpperName(table)
+	g.lowerTableName = g.lowerName(table)
+	g.upperTableName = g.upperName(table)
 	g.firstTableChar = g.lowerTableName[0:1]
 	generatePkg, err := g.generatePkg()
 	if err != nil {
@@ -137,8 +137,8 @@ type DBIndex struct {
 	Columns    []string // 索引字段
 }
 
-// ProcessIndex 索引处理  索引去重和排序
-func (r *Repo) ProcessIndex() ([]DBIndex, error) {
+// processIndex 索引处理  索引去重和排序
+func (r *Repo) processIndex() ([]DBIndex, error) {
 	result := make([]DBIndex, 0)
 	tmp := make([]DBIndex, 0)
 	repeat := make(map[string]struct{})
@@ -281,13 +281,13 @@ func (r *Repo) generateVar() (string, error) {
 	var varStr string
 	var cacheKeys string
 	for _, v := range r.index {
-		if r.CheckDaoFieldType(v.Columns) {
+		if r.checkDaoFieldType(v.Columns) {
 			continue
 		}
 		if v.Unique {
 			var cacheField string
 			for _, column := range v.Columns {
-				cacheField += r.UpperFieldName(column)
+				cacheField += r.upperFieldName(column)
 			}
 			varCacheTpl, err := template.NewTemplate("VarCache").Parse(VarCache).Execute(map[string]any{
 				"dbName":         r.dbName,
@@ -433,7 +433,7 @@ func (r *Repo) generateUpdateMethods() (string, error) {
 func (r *Repo) generateReadMethods() (string, error) {
 	var readMethods string
 	for _, v := range r.index {
-		if r.CheckDaoFieldType(v.Columns) {
+		if r.checkDaoFieldType(v.Columns) {
 			continue
 		}
 		// 唯一 && 字段数于1
@@ -443,8 +443,8 @@ func (r *Repo) generateReadMethods() (string, error) {
 				"dbName":         r.dbName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperFieldName(v.Columns[0]),
-				"lowerField":     r.LowerFieldName(v.Columns[0]),
+				"upperField":     r.upperFieldName(v.Columns[0]),
+				"lowerField":     r.lowerFieldName(v.Columns[0]),
 				"dataType":       r.columnNameToDataType[v.Columns[0]],
 			})
 			if err != nil {
@@ -455,8 +455,8 @@ func (r *Repo) generateReadMethods() (string, error) {
 				"dbName":         r.dbName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperFieldName(v.Columns[0]),
-				"lowerField":     r.LowerFieldName(v.Columns[0]),
+				"upperField":     r.upperFieldName(v.Columns[0]),
+				"lowerField":     r.lowerFieldName(v.Columns[0]),
 				"dataType":       r.columnNameToDataType[v.Columns[0]],
 			})
 			if err != nil {
@@ -470,10 +470,10 @@ func (r *Repo) generateReadMethods() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns[0]),
-					"lowerField":       r.LowerFieldName(v.Columns[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns[0])),
+					"upperField":       r.upperFieldName(v.Columns[0]),
+					"lowerField":       r.lowerFieldName(v.Columns[0]),
+					"upperFieldPlural": r.plural(r.upperFieldName(v.Columns[0])),
+					"lowerFieldPlural": r.plural(r.lowerFieldName(v.Columns[0])),
 					"dataType":         r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -484,8 +484,8 @@ func (r *Repo) generateReadMethods() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns[0])),
+					"upperFieldPlural": r.plural(r.upperFieldName(v.Columns[0])),
+					"lowerFieldPlural": r.plural(r.lowerFieldName(v.Columns[0])),
 					"dataType":         r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -500,8 +500,8 @@ func (r *Repo) generateReadMethods() (string, error) {
 			var upperFields string
 			var fieldAndDataTypes string
 			for _, vv := range v.Columns {
-				upperFields += r.UpperFieldName(vv)
-				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(vv), r.columnNameToDataType[vv])
+				upperFields += r.upperFieldName(vv)
+				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.lowerFieldName(vv), r.columnNameToDataType[vv])
 			}
 			interfaceFindOneCacheByFields, err := template.NewTemplate("InterfaceFindOneCacheByFields").Parse(InterfaceFindOneCacheByFields).Execute(map[string]any{
 				"dbName":            r.dbName,
@@ -536,8 +536,8 @@ func (r *Repo) generateReadMethods() (string, error) {
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns[0]),
-					"lowerField":     r.LowerFieldName(v.Columns[0]),
+					"upperField":     r.upperFieldName(v.Columns[0]),
+					"lowerField":     r.lowerFieldName(v.Columns[0]),
 					"dataType":       r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -548,8 +548,8 @@ func (r *Repo) generateReadMethods() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns[0])),
+					"upperFieldPlural": r.plural(r.upperFieldName(v.Columns[0])),
+					"lowerFieldPlural": r.plural(r.lowerFieldName(v.Columns[0])),
 					"dataType":         r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -563,8 +563,8 @@ func (r *Repo) generateReadMethods() (string, error) {
 			var upperFields string
 			var fieldAndDataTypes string
 			for _, v := range v.Columns {
-				upperFields += r.UpperFieldName(v)
-				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(v), r.columnNameToDataType[v])
+				upperFields += r.upperFieldName(v)
+				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.lowerFieldName(v), r.columnNameToDataType[v])
 			}
 			interfaceFindMultiByFields, err := template.NewTemplate("InterfaceFindMultiByFields").Parse(InterfaceFindMultiByFields).Execute(map[string]any{
 				"dbName":            r.dbName,
@@ -579,7 +579,7 @@ func (r *Repo) generateReadMethods() (string, error) {
 			readMethods += fmt.Sprintln(interfaceFindMultiByFields.String())
 		}
 	}
-	interfaceFindMultiByPaginator, err := template.NewTemplate("InterfaceFindMultiByPaginator").Parse(InterfaceFindMultiByPaginator).Execute(map[string]any{
+	interfaceFindMultiByCustom, err := template.NewTemplate("InterfaceFindMultiByCustom").Parse(InterfaceFindMultiByCustom).Execute(map[string]any{
 		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
@@ -587,7 +587,7 @@ func (r *Repo) generateReadMethods() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	readMethods += fmt.Sprintln(interfaceFindMultiByPaginator.String())
+	readMethods += fmt.Sprintln(interfaceFindMultiByCustom.String())
 	return readMethods, nil
 }
 
@@ -596,7 +596,7 @@ func (r *Repo) generateDelMethods() (string, error) {
 	var delMethods string
 	var haveUnique bool
 	for _, v := range r.index {
-		if r.CheckDaoFieldType(v.Columns) {
+		if r.checkDaoFieldType(v.Columns) {
 			continue
 		}
 		if v.Unique {
@@ -611,8 +611,8 @@ func (r *Repo) generateDelMethods() (string, error) {
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns[0]),
-					"lowerField":     r.LowerFieldName(v.Columns[0]),
+					"upperField":     r.upperFieldName(v.Columns[0]),
+					"lowerField":     r.lowerFieldName(v.Columns[0]),
 					"dataType":       r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -623,8 +623,8 @@ func (r *Repo) generateDelMethods() (string, error) {
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns[0]),
-					"lowerField":     r.LowerFieldName(v.Columns[0]),
+					"upperField":     r.upperFieldName(v.Columns[0]),
+					"lowerField":     r.lowerFieldName(v.Columns[0]),
 					"dataType":       r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -635,8 +635,8 @@ func (r *Repo) generateDelMethods() (string, error) {
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns[0]),
-					"lowerField":     r.LowerFieldName(v.Columns[0]),
+					"upperField":     r.upperFieldName(v.Columns[0]),
+					"lowerField":     r.lowerFieldName(v.Columns[0]),
 					"dataType":       r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -647,8 +647,8 @@ func (r *Repo) generateDelMethods() (string, error) {
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns[0]),
-					"lowerField":     r.LowerFieldName(v.Columns[0]),
+					"upperField":     r.upperFieldName(v.Columns[0]),
+					"lowerField":     r.lowerFieldName(v.Columns[0]),
 					"dataType":       r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -659,10 +659,10 @@ func (r *Repo) generateDelMethods() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns[0]),
-					"lowerField":       r.LowerFieldName(v.Columns[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns[0])),
+					"upperField":       r.upperFieldName(v.Columns[0]),
+					"lowerField":       r.lowerFieldName(v.Columns[0]),
+					"upperFieldPlural": r.plural(r.upperFieldName(v.Columns[0])),
+					"lowerFieldPlural": r.plural(r.lowerFieldName(v.Columns[0])),
 					"dataType":         r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -673,10 +673,10 @@ func (r *Repo) generateDelMethods() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns[0]),
-					"lowerField":       r.LowerFieldName(v.Columns[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns[0])),
+					"upperField":       r.upperFieldName(v.Columns[0]),
+					"lowerField":       r.lowerFieldName(v.Columns[0]),
+					"upperFieldPlural": r.plural(r.upperFieldName(v.Columns[0])),
+					"lowerFieldPlural": r.plural(r.lowerFieldName(v.Columns[0])),
 					"dataType":         r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -687,10 +687,10 @@ func (r *Repo) generateDelMethods() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns[0]),
-					"lowerField":       r.LowerFieldName(v.Columns[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns[0])),
+					"upperField":       r.upperFieldName(v.Columns[0]),
+					"lowerField":       r.lowerFieldName(v.Columns[0]),
+					"upperFieldPlural": r.plural(r.upperFieldName(v.Columns[0])),
+					"lowerFieldPlural": r.plural(r.lowerFieldName(v.Columns[0])),
 					"dataType":         r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -701,10 +701,10 @@ func (r *Repo) generateDelMethods() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns[0]),
-					"lowerField":       r.LowerFieldName(v.Columns[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns[0])),
+					"upperField":       r.upperFieldName(v.Columns[0]),
+					"lowerField":       r.lowerFieldName(v.Columns[0]),
+					"upperFieldPlural": r.plural(r.upperFieldName(v.Columns[0])),
+					"lowerFieldPlural": r.plural(r.lowerFieldName(v.Columns[0])),
 					"dataType":         r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -718,15 +718,15 @@ func (r *Repo) generateDelMethods() (string, error) {
 			var upperFields string
 			var fieldAndDataTypes string
 			for _, vv := range v.Columns {
-				upperFields += r.UpperFieldName(vv)
-				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(vv), r.columnNameToDataType[vv])
+				upperFields += r.upperFieldName(vv)
+				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.lowerFieldName(vv), r.columnNameToDataType[vv])
 			}
 			interfaceDeleteOneCacheByFields, err := template.NewTemplate("InterfaceDeleteOneCacheByFields").Parse(InterfaceDeleteOneCacheByFields).Execute(map[string]any{
 				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperFieldName(v.Columns[0]),
-				"lowerField":        r.LowerFieldName(v.Columns[0]),
+				"upperField":        r.upperFieldName(v.Columns[0]),
+				"lowerField":        r.lowerFieldName(v.Columns[0]),
 				"upperFields":       upperFields,
 				"dataType":          r.columnNameToDataType[v.Columns[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
@@ -739,8 +739,8 @@ func (r *Repo) generateDelMethods() (string, error) {
 				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperFieldName(v.Columns[0]),
-				"lowerField":        r.LowerFieldName(v.Columns[0]),
+				"upperField":        r.upperFieldName(v.Columns[0]),
+				"lowerField":        r.lowerFieldName(v.Columns[0]),
 				"upperFields":       upperFields,
 				"dataType":          r.columnNameToDataType[v.Columns[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
@@ -753,8 +753,8 @@ func (r *Repo) generateDelMethods() (string, error) {
 				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperFieldName(v.Columns[0]),
-				"lowerField":        r.LowerFieldName(v.Columns[0]),
+				"upperField":        r.upperFieldName(v.Columns[0]),
+				"lowerField":        r.lowerFieldName(v.Columns[0]),
 				"upperFields":       upperFields,
 				"dataType":          r.columnNameToDataType[v.Columns[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
@@ -767,8 +767,8 @@ func (r *Repo) generateDelMethods() (string, error) {
 				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperFieldName(v.Columns[0]),
-				"lowerField":        r.LowerFieldName(v.Columns[0]),
+				"upperField":        r.upperFieldName(v.Columns[0]),
+				"lowerField":        r.lowerFieldName(v.Columns[0]),
 				"upperFields":       upperFields,
 				"dataType":          r.columnNameToDataType[v.Columns[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
@@ -925,7 +925,7 @@ func (r *Repo) generateCreateFunc() (string, error) {
 func (r *Repo) generateReadFunc() (string, error) {
 	var readFunc string
 	for _, v := range r.index {
-		if r.CheckDaoFieldType(v.Columns) {
+		if r.checkDaoFieldType(v.Columns) {
 			continue
 		}
 		// 唯一 && 字段数于1
@@ -934,17 +934,17 @@ func (r *Repo) generateReadFunc() (string, error) {
 			columnNameToDataType := r.columnNameToDataType[v.Columns[0]]
 			switch columnNameToDataType {
 			case "bool":
-				whereField += fmt.Sprintf("dao.%s.Is(%s),", r.UpperFieldName(v.Columns[0]), r.LowerFieldName(v.Columns[0]))
+				whereField += fmt.Sprintf("dao.%s.Is(%s),", r.upperFieldName(v.Columns[0]), r.lowerFieldName(v.Columns[0]))
 			default:
-				whereField += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperFieldName(v.Columns[0]), r.LowerFieldName(v.Columns[0]))
+				whereField += fmt.Sprintf("dao.%s.Eq(%s),", r.upperFieldName(v.Columns[0]), r.lowerFieldName(v.Columns[0]))
 			}
 			findOneCacheByField, err := template.NewTemplate("findOneCacheByField").Parse(FindOneCacheByField).Execute(map[string]any{
 				"firstTableChar": r.firstTableChar,
 				"dbName":         r.dbName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperFieldName(v.Columns[0]),
-				"lowerField":     r.LowerFieldName(v.Columns[0]),
+				"upperField":     r.upperFieldName(v.Columns[0]),
+				"lowerField":     r.lowerFieldName(v.Columns[0]),
 				"dataType":       r.columnNameToDataType[v.Columns[0]],
 				"whereField":     whereField,
 			})
@@ -957,8 +957,8 @@ func (r *Repo) generateReadFunc() (string, error) {
 				"dbName":         r.dbName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperFieldName(v.Columns[0]),
-				"lowerField":     r.LowerFieldName(v.Columns[0]),
+				"upperField":     r.upperFieldName(v.Columns[0]),
+				"lowerField":     r.lowerFieldName(v.Columns[0]),
 				"dataType":       r.columnNameToDataType[v.Columns[0]],
 				"whereField":     whereField,
 			})
@@ -975,10 +975,10 @@ func (r *Repo) generateReadFunc() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns[0]),
-					"lowerField":       r.LowerFieldName(v.Columns[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns[0])),
+					"upperField":       r.upperFieldName(v.Columns[0]),
+					"lowerField":       r.lowerFieldName(v.Columns[0]),
+					"upperFieldPlural": r.plural(r.upperFieldName(v.Columns[0])),
+					"lowerFieldPlural": r.plural(r.lowerFieldName(v.Columns[0])),
 					"dataType":         r.columnNameToDataType[v.Columns[0]],
 					"whereField":       whereField,
 				})
@@ -989,11 +989,11 @@ func (r *Repo) generateReadFunc() (string, error) {
 				findMultiByFieldPlural, err := template.NewTemplate("findMultiByFieldPlural").Parse(FindMultiByFieldPlural).Execute(map[string]any{
 					"firstTableChar":   r.firstTableChar,
 					"dbName":           r.dbName,
-					"upperField":       r.UpperFieldName(v.Columns[0]),
+					"upperField":       r.upperFieldName(v.Columns[0]),
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns[0])),
+					"upperFieldPlural": r.plural(r.upperFieldName(v.Columns[0])),
+					"lowerFieldPlural": r.plural(r.lowerFieldName(v.Columns[0])),
 					"dataType":         r.columnNameToDataType[v.Columns[0]],
 					"whereField":       whereField,
 				})
@@ -1010,14 +1010,14 @@ func (r *Repo) generateReadFunc() (string, error) {
 			var lowerFieldsJoin string
 			var whereFields string
 			for _, v := range v.Columns {
-				upperFields += r.UpperFieldName(v)
-				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(v), r.columnNameToDataType[v])
-				lowerFieldsJoin += fmt.Sprintf("%s,", r.LowerFieldName(v))
+				upperFields += r.upperFieldName(v)
+				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.lowerFieldName(v), r.columnNameToDataType[v])
+				lowerFieldsJoin += fmt.Sprintf("%s,", r.lowerFieldName(v))
 				switch r.columnNameToDataType[v] {
 				case "bool":
-					whereFields += fmt.Sprintf("dao.%s.Is(%s),", r.UpperFieldName(v), r.LowerFieldName(v))
+					whereFields += fmt.Sprintf("dao.%s.Is(%s),", r.upperFieldName(v), r.lowerFieldName(v))
 				default:
-					whereFields += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperFieldName(v), r.LowerFieldName(v))
+					whereFields += fmt.Sprintf("dao.%s.Eq(%s),", r.upperFieldName(v), r.lowerFieldName(v))
 				}
 			}
 			findOneCacheByFields, err := template.NewTemplate("findOneCacheByFields").Parse(FindOneCacheByFields).Execute(map[string]any{
@@ -1054,17 +1054,17 @@ func (r *Repo) generateReadFunc() (string, error) {
 			columnNameToDataType := r.columnNameToDataType[v.Columns[0]]
 			switch columnNameToDataType {
 			case "bool":
-				whereField += fmt.Sprintf("dao.%s.Is(%s),", r.UpperFieldName(v.Columns[0]), r.LowerFieldName(v.Columns[0]))
+				whereField += fmt.Sprintf("dao.%s.Is(%s),", r.upperFieldName(v.Columns[0]), r.lowerFieldName(v.Columns[0]))
 			default:
-				whereField += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperFieldName(v.Columns[0]), r.LowerFieldName(v.Columns[0]))
+				whereField += fmt.Sprintf("dao.%s.Eq(%s),", r.upperFieldName(v.Columns[0]), r.lowerFieldName(v.Columns[0]))
 			}
 			findMultiByField, err := template.NewTemplate("findMultiByField").Parse(FindMultiByField).Execute(map[string]any{
 				"firstTableChar": r.firstTableChar,
 				"dbName":         r.dbName,
 				"upperTableName": r.upperTableName,
 				"lowerTableName": r.lowerTableName,
-				"upperField":     r.UpperFieldName(v.Columns[0]),
-				"lowerField":     r.LowerFieldName(v.Columns[0]),
+				"upperField":     r.upperFieldName(v.Columns[0]),
+				"lowerField":     r.lowerFieldName(v.Columns[0]),
 				"dataType":       r.columnNameToDataType[v.Columns[0]],
 				"whereField":     whereField,
 			})
@@ -1078,11 +1078,11 @@ func (r *Repo) generateReadFunc() (string, error) {
 				findMultiByFieldPlural, err := template.NewTemplate("findMultiByFieldPlural").Parse(FindMultiByFieldPlural).Execute(map[string]any{
 					"firstTableChar":   r.firstTableChar,
 					"dbName":           r.dbName,
-					"upperField":       r.UpperFieldName(v.Columns[0]),
+					"upperField":       r.upperFieldName(v.Columns[0]),
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns[0])),
+					"upperFieldPlural": r.plural(r.upperFieldName(v.Columns[0])),
+					"lowerFieldPlural": r.plural(r.lowerFieldName(v.Columns[0])),
 					"dataType":         r.columnNameToDataType[v.Columns[0]],
 					"whereField":       whereField,
 				})
@@ -1098,13 +1098,13 @@ func (r *Repo) generateReadFunc() (string, error) {
 			var fieldAndDataTypes string
 			var whereFields string
 			for _, v := range v.Columns {
-				upperFields += r.UpperFieldName(v)
-				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(v), r.columnNameToDataType[v])
+				upperFields += r.upperFieldName(v)
+				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.lowerFieldName(v), r.columnNameToDataType[v])
 				switch r.columnNameToDataType[v] {
 				case "bool":
-					whereFields += fmt.Sprintf("dao.%s.Is(%s),", r.UpperFieldName(v), r.LowerFieldName(v))
+					whereFields += fmt.Sprintf("dao.%s.Is(%s),", r.upperFieldName(v), r.lowerFieldName(v))
 				default:
-					whereFields += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperFieldName(v), r.LowerFieldName(v))
+					whereFields += fmt.Sprintf("dao.%s.Eq(%s),", r.upperFieldName(v), r.lowerFieldName(v))
 				}
 			}
 			findMultiByFields, err := template.NewTemplate("findMultiByFields").Parse(FindMultiByFields).Execute(map[string]any{
@@ -1122,7 +1122,7 @@ func (r *Repo) generateReadFunc() (string, error) {
 			readFunc += fmt.Sprintln(findMultiByFields.String())
 		}
 	}
-	findMultiByPaginator, err := template.NewTemplate("FindMultiByPaginator").Parse(FindMultiByPaginator).Execute(map[string]any{
+	findMultiByCustom, err := template.NewTemplate("FindMultiByCustom").Parse(FindMultiByCustom).Execute(map[string]any{
 		"firstTableChar": r.firstTableChar,
 		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
@@ -1131,7 +1131,7 @@ func (r *Repo) generateReadFunc() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	readFunc += fmt.Sprintln(findMultiByPaginator.String())
+	readFunc += fmt.Sprintln(findMultiByCustom.String())
 	return readFunc, nil
 }
 
@@ -1153,7 +1153,7 @@ func (r *Repo) generateUpdateFunc() (string, error) {
 		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
-		"upperField":     r.UpperFieldName(primaryKey),
+		"upperField":     r.upperFieldName(primaryKey),
 	})
 	if err != nil {
 		return "", err
@@ -1164,7 +1164,7 @@ func (r *Repo) generateUpdateFunc() (string, error) {
 		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
-		"upperField":     r.UpperFieldName(primaryKey),
+		"upperField":     r.upperFieldName(primaryKey),
 	})
 	if err != nil {
 		return "", err
@@ -1176,7 +1176,7 @@ func (r *Repo) generateUpdateFunc() (string, error) {
 		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
-		"upperField":     r.UpperFieldName(primaryKey),
+		"upperField":     r.upperFieldName(primaryKey),
 	})
 	if err != nil {
 		return "", err
@@ -1187,7 +1187,7 @@ func (r *Repo) generateUpdateFunc() (string, error) {
 		"dbName":         r.dbName,
 		"upperTableName": r.upperTableName,
 		"lowerTableName": r.lowerTableName,
-		"upperField":     r.UpperFieldName(primaryKey),
+		"upperField":     r.upperFieldName(primaryKey),
 	})
 	if err != nil {
 		return "", err
@@ -1202,7 +1202,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 	var varCacheDelKeys string
 	var haveUnique bool
 	for _, v := range r.index {
-		if r.CheckDaoFieldType(v.Columns) {
+		if r.checkDaoFieldType(v.Columns) {
 			continue
 		}
 		if v.Unique {
@@ -1210,8 +1210,8 @@ func (r *Repo) generateDelFunc() (string, error) {
 			var cacheField string
 			cacheFieldsJoinSli := make([]string, 0)
 			for _, column := range v.Columns {
-				cacheField += r.UpperFieldName(column)
-				cacheFieldsJoinSli = append(cacheFieldsJoinSli, fmt.Sprintf("v.%s", r.UpperFieldName(column)))
+				cacheField += r.upperFieldName(column)
+				cacheFieldsJoinSli = append(cacheFieldsJoinSli, fmt.Sprintf("v.%s", r.upperFieldName(column)))
 			}
 			varCacheDelKeyTpl, err := template.NewTemplate("VarCacheDelKey").Parse(VarCacheDelKey).Execute(map[string]any{
 				"firstTableChar":  r.firstTableChar,
@@ -1235,8 +1235,8 @@ func (r *Repo) generateDelFunc() (string, error) {
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns[0]),
-					"lowerField":     r.LowerFieldName(v.Columns[0]),
+					"upperField":     r.upperFieldName(v.Columns[0]),
+					"lowerField":     r.lowerFieldName(v.Columns[0]),
 					"dataType":       r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -1248,8 +1248,8 @@ func (r *Repo) generateDelFunc() (string, error) {
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns[0]),
-					"lowerField":     r.LowerFieldName(v.Columns[0]),
+					"upperField":     r.upperFieldName(v.Columns[0]),
+					"lowerField":     r.lowerFieldName(v.Columns[0]),
 					"dataType":       r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -1261,8 +1261,8 @@ func (r *Repo) generateDelFunc() (string, error) {
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns[0]),
-					"lowerField":     r.LowerFieldName(v.Columns[0]),
+					"upperField":     r.upperFieldName(v.Columns[0]),
+					"lowerField":     r.lowerFieldName(v.Columns[0]),
 					"dataType":       r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -1274,8 +1274,8 @@ func (r *Repo) generateDelFunc() (string, error) {
 					"dbName":         r.dbName,
 					"upperTableName": r.upperTableName,
 					"lowerTableName": r.lowerTableName,
-					"upperField":     r.UpperFieldName(v.Columns[0]),
-					"lowerField":     r.LowerFieldName(v.Columns[0]),
+					"upperField":     r.upperFieldName(v.Columns[0]),
+					"lowerField":     r.lowerFieldName(v.Columns[0]),
 					"dataType":       r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -1287,10 +1287,10 @@ func (r *Repo) generateDelFunc() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns[0]),
-					"lowerField":       r.LowerFieldName(v.Columns[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns[0])),
+					"upperField":       r.upperFieldName(v.Columns[0]),
+					"lowerField":       r.lowerFieldName(v.Columns[0]),
+					"upperFieldPlural": r.plural(r.upperFieldName(v.Columns[0])),
+					"lowerFieldPlural": r.plural(r.lowerFieldName(v.Columns[0])),
 					"dataType":         r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -1302,10 +1302,10 @@ func (r *Repo) generateDelFunc() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns[0]),
-					"lowerField":       r.LowerFieldName(v.Columns[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns[0])),
+					"upperField":       r.upperFieldName(v.Columns[0]),
+					"lowerField":       r.lowerFieldName(v.Columns[0]),
+					"upperFieldPlural": r.plural(r.upperFieldName(v.Columns[0])),
+					"lowerFieldPlural": r.plural(r.lowerFieldName(v.Columns[0])),
 					"dataType":         r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -1317,10 +1317,10 @@ func (r *Repo) generateDelFunc() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns[0]),
-					"lowerField":       r.LowerFieldName(v.Columns[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns[0])),
+					"upperField":       r.upperFieldName(v.Columns[0]),
+					"lowerField":       r.lowerFieldName(v.Columns[0]),
+					"upperFieldPlural": r.plural(r.upperFieldName(v.Columns[0])),
+					"lowerFieldPlural": r.plural(r.lowerFieldName(v.Columns[0])),
 					"dataType":         r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -1332,10 +1332,10 @@ func (r *Repo) generateDelFunc() (string, error) {
 					"dbName":           r.dbName,
 					"upperTableName":   r.upperTableName,
 					"lowerTableName":   r.lowerTableName,
-					"upperField":       r.UpperFieldName(v.Columns[0]),
-					"lowerField":       r.LowerFieldName(v.Columns[0]),
-					"upperFieldPlural": r.Plural(r.UpperFieldName(v.Columns[0])),
-					"lowerFieldPlural": r.Plural(r.LowerFieldName(v.Columns[0])),
+					"upperField":       r.upperFieldName(v.Columns[0]),
+					"lowerField":       r.lowerFieldName(v.Columns[0]),
+					"upperFieldPlural": r.plural(r.upperFieldName(v.Columns[0])),
+					"lowerFieldPlural": r.plural(r.lowerFieldName(v.Columns[0])),
 					"dataType":         r.columnNameToDataType[v.Columns[0]],
 				})
 				if err != nil {
@@ -1350,13 +1350,13 @@ func (r *Repo) generateDelFunc() (string, error) {
 			var fieldAndDataTypes string
 			var whereFields string
 			for _, v := range v.Columns {
-				upperFields += r.UpperFieldName(v)
-				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.LowerFieldName(v), r.columnNameToDataType[v])
+				upperFields += r.upperFieldName(v)
+				fieldAndDataTypes += fmt.Sprintf("%s %s,", r.lowerFieldName(v), r.columnNameToDataType[v])
 				switch r.columnNameToDataType[v] {
 				case "bool":
-					whereFields += fmt.Sprintf("dao.%s.Is(%s),", r.UpperFieldName(v), r.LowerFieldName(v))
+					whereFields += fmt.Sprintf("dao.%s.Is(%s),", r.upperFieldName(v), r.lowerFieldName(v))
 				default:
-					whereFields += fmt.Sprintf("dao.%s.Eq(%s),", r.UpperFieldName(v), r.LowerFieldName(v))
+					whereFields += fmt.Sprintf("dao.%s.Eq(%s),", r.upperFieldName(v), r.lowerFieldName(v))
 				}
 			}
 			deleteOneCacheByFields, err := template.NewTemplate("DeleteOneCacheByFields").Parse(DeleteOneCacheByFields).Execute(map[string]any{
@@ -1364,8 +1364,8 @@ func (r *Repo) generateDelFunc() (string, error) {
 				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperFieldName(v.Columns[0]),
-				"lowerField":        r.LowerFieldName(v.Columns[0]),
+				"upperField":        r.upperFieldName(v.Columns[0]),
+				"lowerField":        r.lowerFieldName(v.Columns[0]),
 				"upperFields":       upperFields,
 				"dataType":          r.columnNameToDataType[v.Columns[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
@@ -1380,8 +1380,8 @@ func (r *Repo) generateDelFunc() (string, error) {
 				"dbName":            r.dbName,
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
-				"upperField":        r.UpperFieldName(v.Columns[0]),
-				"lowerField":        r.LowerFieldName(v.Columns[0]),
+				"upperField":        r.upperFieldName(v.Columns[0]),
+				"lowerField":        r.lowerFieldName(v.Columns[0]),
 				"upperFields":       upperFields,
 				"dataType":          r.columnNameToDataType[v.Columns[0]],
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
@@ -1397,7 +1397,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperFields":       upperFields,
-				"lowerField":        r.LowerFieldName(v.Columns[0]),
+				"lowerField":        r.lowerFieldName(v.Columns[0]),
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
 				"whereFields":       strings.Trim(whereFields, ","),
 			})
@@ -1411,7 +1411,7 @@ func (r *Repo) generateDelFunc() (string, error) {
 				"upperTableName":    r.upperTableName,
 				"lowerTableName":    r.lowerTableName,
 				"upperFields":       upperFields,
-				"lowerField":        r.LowerFieldName(v.Columns[0]),
+				"lowerField":        r.lowerFieldName(v.Columns[0]),
 				"fieldAndDataTypes": strings.Trim(fieldAndDataTypes, ","),
 				"whereFields":       strings.Trim(whereFields, ","),
 			})
@@ -1446,14 +1446,14 @@ func (r *Repo) generateDelFunc() (string, error) {
 	return delMethods, nil
 }
 
-// UpperFieldName 字段名称大写
-func (r *Repo) UpperFieldName(s string) string {
+// upperFieldName 字段名称大写
+func (r *Repo) upperFieldName(s string) string {
 	return r.columnNameToName[s]
 }
 
-// LowerFieldName 字段名称小写
-func (r *Repo) LowerFieldName(s string) string {
-	str := r.UpperFieldName(s)
+// lowerFieldName 字段名称小写
+func (r *Repo) lowerFieldName(s string) string {
+	str := r.upperFieldName(s)
 	if str == "" {
 		return str
 	}
@@ -1475,14 +1475,14 @@ func (r *Repo) LowerFieldName(s string) string {
 	return str
 }
 
-// UpperName 大写
-func (r *Repo) UpperName(s string) string {
+// upperName 大写
+func (r *Repo) upperName(s string) string {
 	return r.gorm.NamingStrategy.SchemaName(s)
 }
 
-// LowerName 小写
-func (r *Repo) LowerName(s string) string {
-	str := r.UpperName(s)
+// lowerName 小写
+func (r *Repo) lowerName(s string) string {
+	str := r.upperName(s)
 	if str == "" {
 		return str
 	}
@@ -1501,17 +1501,17 @@ func (r *Repo) LowerName(s string) string {
 	return str
 }
 
-// Plural 复数形式
-func (r *Repo) Plural(s string) string {
+// plural 复数形式
+func (r *Repo) plural(s string) string {
 	str := inflection.Plural(s)
 	if str == s {
-		str += "Plural"
+		str += "plural"
 	}
 	return str
 }
 
-// CheckDaoFieldType  检查字段状态
-func (r *Repo) CheckDaoFieldType(s []string) bool {
+// checkDaoFieldType  检查字段状态
+func (r *Repo) checkDaoFieldType(s []string) bool {
 	for _, v := range s {
 		if r.columnNameToFieldType[v] == "Field" {
 			return true

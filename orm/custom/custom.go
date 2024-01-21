@@ -1,4 +1,4 @@
-package paginator
+package custom
 
 import (
 	"fmt"

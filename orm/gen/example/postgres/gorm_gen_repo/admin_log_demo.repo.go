@@ -9,10 +9,10 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/fzf-labs/fpkg/orm/custom"
 	"github.com/fzf-labs/fpkg/orm/gen/cache"
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_dao"
 	"github.com/fzf-labs/fpkg/orm/gen/example/postgres/gorm_gen_model"
-	"github.com/fzf-labs/fpkg/orm/paginator"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -55,8 +55,8 @@ type (
 		FindMultiCacheByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.AdminLogDemo, error)
 		// FindMultiByIDS 根据IDS查询多条数据
 		FindMultiByIDS(ctx context.Context, IDS []string) ([]*gorm_gen_model.AdminLogDemo, error)
-		// FindMultiByPaginator 查询分页数据(通用)
-		FindMultiByPaginator(ctx context.Context, paginatorReq *paginator.PaginatorReq) ([]*gorm_gen_model.AdminLogDemo, *paginator.PaginatorReply, error)
+		// FindMultiByCustom 自定义查询数据(通用)
+		FindMultiByCustom(ctx context.Context, customReq *custom.PaginatorReq) ([]*gorm_gen_model.AdminLogDemo, *custom.PaginatorReply, error)
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
 		DeleteOneCacheByID(ctx context.Context, ID string) error
 		// DeleteOneCacheByID 根据ID删除一条数据并清理缓存
@@ -470,11 +470,11 @@ func (a *AdminLogDemoRepo) FindMultiByIDS(ctx context.Context, IDS []string) ([]
 	return result, nil
 }
 
-// FindMultiByPaginator 查询分页数据(通用)
-func (a *AdminLogDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorReq *paginator.PaginatorReq) ([]*gorm_gen_model.AdminLogDemo, *paginator.PaginatorReply, error) {
+// FindMultiByCustom 自定义查询数据(通用)
+func (a *AdminLogDemoRepo) FindMultiByCustom(ctx context.Context, customReq *custom.PaginatorReq) ([]*gorm_gen_model.AdminLogDemo, *custom.PaginatorReply, error) {
 	result := make([]*gorm_gen_model.AdminLogDemo, 0)
 	var total int64
-	whereExpressions, orderExpressions, err := paginatorReq.ConvertToGormExpression(gorm_gen_model.AdminLogDemo{})
+	whereExpressions, orderExpressions, err := customReq.ConvertToGormExpression(gorm_gen_model.AdminLogDemo{})
 	if err != nil {
 		return result, nil, err
 	}
@@ -485,18 +485,18 @@ func (a *AdminLogDemoRepo) FindMultiByPaginator(ctx context.Context, paginatorRe
 	if total == 0 {
 		return result, nil, nil
 	}
-	paginatorReply, err := paginatorReq.ConvertToPage(int32(total))
+	customReply, err := customReq.ConvertToPage(int32(total))
 	if err != nil {
 		return result, nil, err
 	}
 	query := a.db.WithContext(ctx).Model(&gorm_gen_model.AdminLogDemo{}).Clauses(whereExpressions...).Clauses(orderExpressions...)
-	if paginatorReply.Page != 0 && paginatorReply.PageSize != 0 {
-		query = query.Offset(int((paginatorReply.Page - 1) * paginatorReply.PageSize))
-		query = query.Limit(int(paginatorReply.PageSize))
+	if customReply.Page != 0 && customReply.PageSize != 0 {
+		query = query.Offset(int((customReply.Page - 1) * customReply.PageSize))
+		query = query.Limit(int(customReply.PageSize))
 	}
 	err = query.Find(&result).Error
 	if err != nil {
 		return result, nil, err
 	}
-	return result, paginatorReply, err
+	return result, customReply, err
 }
