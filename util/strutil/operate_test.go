@@ -39,6 +39,6 @@ func TestSubstrReturnRight(t *testing.T) {
 }
 
 func TestCamelCase(t *testing.T) {
-	camelCase := CamelCase("AppRangePrice")
+	camelCase := CamelCase("App-Range-Price")
 	assert.Equal(t, "appRangePrice", camelCase)
 }

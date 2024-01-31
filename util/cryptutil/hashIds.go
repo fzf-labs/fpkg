@@ -1,4 +1,4 @@
-package crypt
+package cryptutil
 
 import "github.com/speps/go-hashids"
 

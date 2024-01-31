@@ -1,5 +1,5 @@
 //nolint:all
-package crypt
+package cryptutil
 
 import (
 	"bytes"

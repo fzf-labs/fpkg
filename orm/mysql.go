@@ -69,7 +69,7 @@ func NewGormMysqlClient(cfg *GormMysqlClientConfig) (*gorm.DB, error) {
 }
 
 // DumpMySQL 导出创建语句
-func DumpMySQL(db *gorm.DB, outPath string) {
+func DumpMySQL(db *gorm.DB, tables []string, outPath string) {
 	tables, err := db.Migrator().GetTables()
 	if err != nil {
 		return
@@ -82,14 +82,14 @@ func DumpMySQL(db *gorm.DB, outPath string) {
 	}
 	for _, v := range tables {
 		result := make(map[string]any)
-		err := db.Raw(fmt.Sprintf("SHOW CREATE TABLE `%s`.`%s`", db.Migrator().CurrentDatabase(), v)).Scan(result).Error
+		err = db.Raw(fmt.Sprintf("SHOW CREATE TABLE `%s`.`%s`", db.Migrator().CurrentDatabase(), v)).Scan(result).Error
 		if err != nil {
 			slog.Error("DumpMySQL sql err:", err)
 			return
 		}
 		tableContent := conv.String(result["Create Table"])
 		if tableContent != "" {
-			err := fileutil.WriteContentCover(filepath.Join(outPath, fmt.Sprintf("%s.sql", v)), tableContent)
+			err = fileutil.WriteContentCover(filepath.Join(outPath, fmt.Sprintf("%s.sql", v)), tableContent)
 			if err != nil {
 				slog.Error("DumpMySQL file write err:", err)
 				return

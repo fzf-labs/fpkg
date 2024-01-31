@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"database/sql"
 	"fmt"
+	"log"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -72,16 +73,23 @@ func NewGormPostgresClient(cfg *GormPostgresClientConfig) (*gorm.DB, error) {
 }
 
 // DumpPostgres 导出创建语句
-func DumpPostgres(db *gorm.DB, dsn, outPath string) {
+func DumpPostgres(dsn string, tables []string, outPath string) {
 	// 查找命令的可执行文件
 	_, err := exec.LookPath("pg_dump")
 	if err != nil {
 		slog.Error("command pg_dump not found,please install")
 		return
 	}
-	tables, err := db.Migrator().GetTables()
-	if err != nil {
-		return
+	if len(tables) == 0 {
+		db, err2 := gorm.Open(postgres.Open(dsn))
+		if err2 != nil {
+			log.Fatal("open db err2:", err2.Error())
+			return
+		}
+		tables, err2 = db.Migrator().GetTables()
+		if err2 != nil {
+			return
+		}
 	}
 	dsnParse := PostgresDsnParse(dsn)
 	outPath = filepath.Join(strings.Trim(outPath, "/"), dsnParse.Dbname)
