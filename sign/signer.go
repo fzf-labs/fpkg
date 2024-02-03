@@ -2,12 +2,12 @@ package sign
 
 import (
 	"fmt"
+	"math/rand"
 	"net/url"
 	"sort"
 	"strconv"
 	"strings"
-
-	"github.com/fzf-labs/fpkg/util/strutil"
+	"time"
 )
 
 // CryptoFunc 签名加密函数
@@ -103,7 +103,7 @@ func (s *Signer) GetAppID() string {
 
 // RandNonceStr 自动生成16位随机字符串参数
 func (s *Signer) RandNonceStr() *Signer {
-	return s.SetNonceStr(strutil.Random(16))
+	return s.SetNonceStr(random(16))
 }
 
 // SetSignBodyPrefix 设置签名字符串的前缀字符串
@@ -192,4 +192,17 @@ func SortKVPairs(m url.Values) string {
 		pairs[i] = key + "=" + strings.Join(m[key], ",")
 	}
 	return strings.Join(pairs, "&")
+}
+
+// Random 随机字符串
+func random(n int) string {
+	cs := make([]byte, n)
+	str := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	sl := len(str)
+	for i := 0; i < n; i++ {
+		// 1607400451937462000
+		idx := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(sl) // 0 - 25
+		cs[i] = str[idx]
+	}
+	return string(cs)
 }

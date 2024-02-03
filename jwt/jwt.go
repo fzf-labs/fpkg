@@ -2,13 +2,14 @@ package jwt
 
 import (
 	"context"
+
 	"strconv"
 	"time"
 
-	"github.com/fzf-labs/fpkg/conv"
 	jwts "github.com/golang-jwt/jwt"
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
+	"github.com/spf13/cast"
 )
 
 var (
@@ -181,7 +182,7 @@ func (j *Jwt) GetPayloads(claims jwts.MapClaims) map[string]string {
 			case JwtAudience, JwtExpired, JwtID, JwtIssueAt, JwtIssuer, JwtNotBefore, JwtSubject, JwtRefresh:
 
 			default:
-				kv[k] = conv.String(claims[k])
+				kv[k] = cast.ToString(claims[k])
 			}
 		}
 	}
@@ -189,7 +190,7 @@ func (j *Jwt) GetPayloads(claims jwts.MapClaims) map[string]string {
 }
 
 func (j *Jwt) GetUID(claims jwts.MapClaims) int64 {
-	return conv.Int64(claims[JwtUID])
+	return cast.ToInt64(claims[JwtUID])
 }
 
 type ContextWithValueKey string
@@ -218,7 +219,7 @@ func (j *Jwt) buildBlackCacheKey(jwtUID, jwtID string) string {
 
 // JwtBlackTokenStore 黑名单 防止刷新和请求时出现问题
 func (j *Jwt) JwtBlackTokenStore(oldClaims jwts.MapClaims, newToken string) error {
-	cacheKey := j.buildBlackCacheKey(conv.String(oldClaims[JwtUID]), conv.String(oldClaims[JwtID]))
+	cacheKey := j.buildBlackCacheKey(cast.ToString(oldClaims[JwtUID]), cast.ToString(oldClaims[JwtID]))
 	err := j.cache.Set(context.Background(), cacheKey, newToken, time.Second*time.Duration(10))
 	if err != nil {
 		return err
@@ -228,7 +229,7 @@ func (j *Jwt) JwtBlackTokenStore(oldClaims jwts.MapClaims, newToken string) erro
 
 // JwtBlackTokenCheck Token黑名单检测  在黑名单中时 暂时允许通过
 func (j *Jwt) JwtBlackTokenCheck(oldClaims jwts.MapClaims) (bool, *Token) {
-	cacheKey := j.buildBlackCacheKey(conv.String(oldClaims[JwtUID]), conv.String(oldClaims[JwtID]))
+	cacheKey := j.buildBlackCacheKey(cast.ToString(oldClaims[JwtUID]), cast.ToString(oldClaims[JwtID]))
 	newToken, err := j.cache.Get(context.Background(), cacheKey)
 	if err != nil {
 		return false, nil
@@ -243,17 +244,17 @@ func (j *Jwt) JwtBlackTokenCheck(oldClaims jwts.MapClaims) (bool, *Token) {
 	}
 	return true, &Token{
 		Token:     newToken,
-		ExpiredAt: conv.Int64(newClaims[JwtExpired]),
-		RefreshAt: conv.Int64(newClaims[JwtRefresh]),
+		ExpiredAt: cast.ToInt64(newClaims[JwtExpired]),
+		RefreshAt: cast.ToInt64(newClaims[JwtRefresh]),
 	}
 }
 
 // JwtTokenStore 要做单一登录 即保存当前jwt的编号
 func (j *Jwt) JwtTokenStore(claims jwts.MapClaims) error {
-	cacheKey := j.buildCacheKey(conv.String(claims[JwtUID]))
-	refreshTime := time.Unix(conv.Int64(claims[JwtRefresh]), 0)
+	cacheKey := j.buildCacheKey(cast.ToString(claims[JwtUID]))
+	refreshTime := time.Unix(cast.ToInt64(claims[JwtRefresh]), 0)
 	expiresAt := time.Until(refreshTime)
-	err := j.cache.Set(context.Background(), cacheKey, conv.String(claims[JwtID]), expiresAt)
+	err := j.cache.Set(context.Background(), cacheKey, cast.ToString(claims[JwtID]), expiresAt)
 	if err != nil {
 		return err
 	}
@@ -262,14 +263,14 @@ func (j *Jwt) JwtTokenStore(claims jwts.MapClaims) error {
 
 // JwtTokenCheck Token检测
 func (j *Jwt) JwtTokenCheck(claims jwts.MapClaims) error {
-	cacheKey := j.buildCacheKey(conv.String(claims[JwtUID]))
+	cacheKey := j.buildCacheKey(cast.ToString(claims[JwtUID]))
 	result, err := j.cache.Get(context.Background(), cacheKey)
 	if err != nil {
-		if err != redis.Nil {
+		if !errors.Is(err, redis.Nil) {
 			return TokenGetErr
 		}
 	}
-	jwtID := conv.Int64(claims[JwtID])
+	jwtID := cast.ToInt64(claims[JwtID])
 	if result != strconv.Itoa(int(jwtID)) {
 		return TokenCheckErr
 	}

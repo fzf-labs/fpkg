@@ -3,9 +3,9 @@ package apple
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Timothylock/go-signin-with-apple/apple"
-	"github.com/fzf-labs/fpkg/util/strutil"
 	"github.com/pkg/errors"
 	"github.com/pyihe/apple_validator"
 )
@@ -32,7 +32,7 @@ func NewSignInWithApple(cfg *SignInWithAppleConfig) *SignInWithApple {
 
 // CheckByAuthorizationCode 验证authorizationCode 直接请求校验接口
 func (s *SignInWithApple) CheckByAuthorizationCode(code string) (uniqueID string, err error) {
-	privateKey := strutil.FormatPrivateKey(s.Cfg.Secret)
+	privateKey := s.FormatPrivateKey(s.Cfg.Secret)
 	// 生成用于向 Apple 验证服务器进行身份验证的客户端密码
 	clientSecret, err := apple.GenerateClientSecret(privateKey, s.Cfg.TeamID, s.Cfg.ClientID, s.Cfg.KeyID)
 	if err != nil {
@@ -74,4 +74,31 @@ func (s *SignInWithApple) CheckIdentityToken(token string) (uniqueID string, err
 		return "", errors.New("CheckIdentityToken IsValid err: " + err.Error())
 	}
 	return jwtToken.Sub(), nil
+}
+
+func (s *SignInWithApple) FormatPrivateKey(privateKey string) (pKey string) {
+	var buffer strings.Builder
+	buffer.WriteString("-----BEGIN RSA PRIVATE KEY-----\n")
+	rawLen := 64
+	keyLen := len(privateKey)
+	raws := keyLen / rawLen
+	temp := keyLen % rawLen
+	if temp > 0 {
+		raws++
+	}
+	start := 0
+	end := start + rawLen
+	for i := 0; i < raws; i++ {
+		if i == raws-1 {
+			buffer.WriteString(privateKey[start:])
+		} else {
+			buffer.WriteString(privateKey[start:end])
+		}
+		buffer.WriteByte('\n')
+		start += rawLen
+		end = start + rawLen
+	}
+	buffer.WriteString("-----END RSA PRIVATE KEY-----\n")
+	pKey = buffer.String()
+	return
 }

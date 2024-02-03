@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fzf-labs/fpkg/util/uuidutil"
+	"github.com/google/uuid"
 	"github.com/imroc/req/v3"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
@@ -52,7 +52,7 @@ func NewAuthQq(conf *AuthConfig) *AuthQq {
 
 func (a *AuthQq) GetState(state string) string {
 	if state == "" {
-		return uuidutil.GenUUID()
+		return uuid.NewString()
 	}
 	return state
 }

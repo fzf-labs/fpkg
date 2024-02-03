@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fzf-labs/fpkg/conv"
 	"github.com/pkg/errors"
+	"github.com/spf13/cast"
 )
 
 // Verifier define struct
@@ -71,7 +71,7 @@ func (v *Verifier) MustStrings(key string) []string {
 
 // MustInt64 获取Int64值
 func (v *Verifier) MustInt64(key string) int64 {
-	return conv.Int64(v.MustString(key))
+	return cast.ToInt64(v.MustString(key))
 }
 
 // MustHasKeys 必须包含指定的字段参数
