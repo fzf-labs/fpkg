@@ -205,7 +205,7 @@ func (scraper *Scraper) parseDocument(doc *Document) error {
 				if cleanStr(attr.Key) == "href" {
 					href = attr.Val
 				}
-				if len(href) > 0 && canonical && link != href {
+				if href != "" && canonical && link != href {
 					hasCanonical = true
 					var err error
 					canonicalURL, err = url.Parse(href)
@@ -213,7 +213,7 @@ func (scraper *Scraper) parseDocument(doc *Document) error {
 						return err
 					}
 				}
-				if len(href) > 0 && hasIcon {
+				if href != "" && hasIcon {
 					doc.Preview.Icon = href
 				}
 			}
@@ -315,7 +315,7 @@ func (scraper *Scraper) parseDocument(doc *Document) error {
 			*doc = *fdoc
 			return scraper.parseDocument(doc)
 		}
-		if len(doc.Preview.Title) > 0 && len(doc.Preview.Description) > 0 && ogImage && headPassed {
+		if doc.Preview.Title != "" && doc.Preview.Description != "" && ogImage && headPassed {
 			return nil
 		}
 	}

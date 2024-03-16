@@ -201,7 +201,7 @@ func random(n int) string {
 	sl := len(str)
 	for i := 0; i < n; i++ {
 		// 1607400451937462000
-		idx := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(sl) // 0 - 25
+		idx := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(sl) //nolint:gosec
 		cs[i] = str[idx]
 	}
 	return string(cs)

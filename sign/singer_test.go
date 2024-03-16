@@ -54,6 +54,6 @@ func TestSigner_AddBody(t *testing.T) {
 
 	fmt.Println("重新生成签字字符串：" + resigner.GetSignBodyString())
 	fmt.Println("重新输出URL字符串：" + resigner.GetSignedQuery())
-	assert.True(t, len(resigner.GetSignBodyString()) > 0)
-	assert.True(t, len(resigner.GetSignedQuery()) > 0)
+	assert.True(t, resigner.GetSignBodyString() != "")
+	assert.True(t, resigner.GetSignedQuery() != "")
 }

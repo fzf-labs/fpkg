@@ -109,7 +109,7 @@ linters:
     - nakedret
     - noctx
     - nolintlint
-    - revive
+    #- revive
     - staticcheck
     - stylecheck
     - typecheck

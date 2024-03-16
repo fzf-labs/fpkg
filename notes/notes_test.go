@@ -8,5 +8,5 @@ import (
 
 func TestNoteOne(t *testing.T) {
 	one := NoteOne()
-	assert.True(t, true, len(one) > 0)
+	assert.True(t, true, one != "")
 }

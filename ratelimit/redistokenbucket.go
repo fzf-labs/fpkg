@@ -2,6 +2,7 @@ package ratelimit
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"sync"
@@ -59,8 +60,8 @@ type RedisTokenBucket struct {
 
 // NewTokenLimiter 返回一个新的令牌限制器，该令牌限制器允许事件达到速率，并允许最多突发令牌的突发。
 func NewTokenLimiter(rate, burst int, store *redis.Client, key string) *RedisTokenBucket {
-	tokenKey := fmt.Sprintf("{%s}.tokens", key)
-	timestampKey := fmt.Sprintf("{%s}.ts", key)
+	tokenKey := fmt.Sprintf("%s:tokens", key)
+	timestampKey := fmt.Sprintf("%s:ts", key)
 	return &RedisTokenBucket{
 		rate:          rate,
 		burst:         burst,
@@ -101,7 +102,7 @@ func (lim *RedisTokenBucket) reserveN(now time.Time, n int) bool {
 		}).Result()
 	// redis allowed == false
 	// Lua boolean false -> r Nil bulk reply
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		return false
 	} else if err != nil {
 		fmt.Printf("fail to use rate limiter: %s, use in-process limiter for rescue", err)
@@ -122,14 +123,11 @@ func (lim *RedisTokenBucket) reserveN(now time.Time, n int) bool {
 func (lim *RedisTokenBucket) startMonitor() {
 	lim.rescueLock.Lock()
 	defer lim.rescueLock.Unlock()
-
 	if lim.monitorStarted {
 		return
 	}
-
 	lim.monitorStarted = true
 	atomic.StoreUint32(&lim.redisAlive, 0)
-
 	go lim.waitForRedis()
 }
 
@@ -141,7 +139,6 @@ func (lim *RedisTokenBucket) waitForRedis() {
 		lim.monitorStarted = false
 		lim.rescueLock.Unlock()
 	}()
-
 	for range ticker.C {
 		val, _ := lim.store.Ping(context.Background()).Result()
 		if val == "PONG" {
